@@ -319,7 +319,7 @@ func (p *Parser) setFuncParams(f *function, tks *obj.Tokens) {
 	pname, defaultDef := true, false
 	bc := 1
 	var lstp param
-	for i := 1; i < len(*tks); i++ {
+	for i := 0; i < len(*tks); i++ {
 		pr := (*tks)[i]
 		if pr.T == fract.Brace {
 			switch pr.V {
