@@ -12,7 +12,6 @@ import (
 
 // Import content into destination interpeter.
 func (p *Parser) Import() {
-	p.ready()
 	// Interpret all lines.
 	for p.i = 0; p.i < len(p.Tks); p.i++ {
 		switch tks := p.Tks[p.i]; tks[0].T {
@@ -80,12 +79,9 @@ func (p *Parser) procImport(tks obj.Tokens) {
 	src.AddBuiltInFuncs()
 	var imppath string
 	if tks[j].T == fract.Name {
-		if !strings.HasPrefix(tks[j].V, "std") {
-			fract.IPanic(tks[j], obj.ValuePanic, "Standard import should be starts with 'std' directory.")
-		}
 		switch tks[j].V {
 		default:
-			imppath = strings.ReplaceAll(tks[j].V, ".", string(os.PathSeparator))
+			imppath = strings.ReplaceAll(`std.`+tks[j].V, ".", string(os.PathSeparator))
 		}
 	} else {
 		imppath = tks[0].F.P[:strings.LastIndex(tks[0].F.P, string(os.PathSeparator))+1] + p.procVal(obj.Tokens{tks[j]}).String()
@@ -100,19 +96,6 @@ func (p *Parser) procImport(tks obj.Tokens) {
 	if err != nil {
 		fract.IPanic(tks[1], obj.PlainPanic, "There is a problem on import: "+err.Error())
 	}
-	// TODO: Improve naming.
-	var name string
-	if j == 1 {
-		name = info.Name()
-	} else {
-		name = tks[1].V
-	}
-	// Check name.
-	for _, imp := range p.Imports {
-		if imp.Name == name {
-			fract.IPanic(tks[1], obj.NamePanic, "\""+name+"\" is already defined!")
-		}
-	}
 	for _, i := range infos {
 		// Skip directories.
 		if i.IsDir() || !strings.HasSuffix(i.Name(), fract.Ext) {
@@ -120,12 +103,21 @@ func (p *Parser) procImport(tks obj.Tokens) {
 		}
 		isrc := New(imppath + string(os.PathSeparator) + i.Name())
 		isrc.loopCount = -1 //! Tag as import source.
+		isrc.ready()
+		for _, imp := range p.Imports {
+			if imp.Name == isrc.pkg {
+				fract.IPanic(tks[1], obj.NamePanic, "\""+isrc.pkg+"\" is already defined!")
+			}
+		}
 		isrc.Import()
+		isrc.importPackage() // Import other package files.
 		isrc.loopCount = 0
 		src.funcs = append(src.funcs, isrc.funcs...)
 		src.vars = append(src.vars, isrc.vars...)
 		src.Imports = append(src.Imports, isrc.Imports...)
+		src.pkg = isrc.pkg
 		isrc.AddBuiltInFuncs()
+		break
 	}
-	p.Imports = append(p.Imports, importInfo{Name: name, Src: src})
+	p.Imports = append(p.Imports, importInfo{Name: src.pkg, Src: src})
 }

@@ -10,6 +10,8 @@
 // String utilities.
 //
 
+package strings
+
 // Converts the first character to uppercase.
 protected func Capitalize(str) {
 	if str == '' {

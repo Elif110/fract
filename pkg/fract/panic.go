@@ -36,3 +36,9 @@ func IPanicC(f *obj.File, ln, col int, t, m string) {
 
 // Interpreter panic.
 func IPanic(tk obj.Token, t, m string) { IPanicC(tk.F, tk.Ln, tk.Col, t, m) }
+
+// Error is text interpreter panic.
+func Error(f *obj.File, ln, col int, m string) {
+	fmt.Printf("File: %s\nPosition: %d:%d\n%s\n", f.P, ln, col, m)
+	panic("")
+}

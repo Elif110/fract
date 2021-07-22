@@ -28,6 +28,7 @@ type Parser struct {
 	funcCount    int
 	i            int
 	retVal       *value.Val // Pointer of last return value.
+	pkg          string     // Package name.
 
 	L       *lex.Lex
 	Tks     []obj.Tokens // All Tokens of code file.
@@ -68,9 +69,30 @@ func (p *Parser) ready() {
 			p.Tks = append(p.Tks, ctks)
 		}
 	}
+	// Detect package.
+	if len(p.Tks) == 0 {
+		fract.Error(p.L.F, 1, 1, "Package is not defined!")
+	}
+	tks := p.Tks[0]
+	if tks[0].T != fract.Package {
+		tk := tks[0]
+		fract.Error(p.L.F, tk.Ln, tk.Col, "Package is must be define at first line!")
+	}
+	if len(tks) < 2 {
+		tks[0].Col += len(tks[0].V)
+		fract.IPanic(tks[0], obj.SyntaxPanic, "Package name is not given!")
+	}
+	n := tks[1]
+	if n.T != fract.Name {
+		fract.IPanic(n, obj.SyntaxPanic, "Invalid package name!")
+	}
+	p.pkg = n.V
+	if len(tks) > 2 {
+		fract.IPanic(tks[2], obj.SyntaxPanic, "Invalid syntax!")
+	}
 }
 
-func (p *Parser) importLocal() {
+func (p *Parser) importPackage() {
 	dir, _ := os.Getwd()
 	if pdir := path.Dir(p.L.F.P); pdir != "." {
 		dir = path.Join(dir, pdir)
@@ -87,6 +109,11 @@ func (p *Parser) importLocal() {
 		}
 		src := New(path.Join(dir, info.Name()))
 		src.loopCount = -1 //! Tag as import source.
+		src.ready()
+		if src.pkg != p.pkg {
+			tk := src.Tks[0][0]
+			fract.Error(src.L.F, tk.Ln, tk.Col, "Package is not same!")
+		}
 		src.Import()
 		p.funcs = append(p.funcs, src.funcs...)
 		p.vars = append(p.vars, src.vars...)
@@ -107,9 +134,9 @@ func (p *Parser) Interpret() {
 		return
 	}
 	p.ready()
-	p.importLocal()
+	p.importPackage()
 	// Interpret all lines.
-	for p.i = 0; p.i < len(p.Tks); p.i++ {
+	for p.i = 1; p.i < len(p.Tks); p.i++ {
 		p.process(p.Tks[p.i])
 	}
 end:

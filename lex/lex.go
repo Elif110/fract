@@ -501,6 +501,9 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "go"):
 		tk.V = "go"
 		tk.T = fract.Go
+	case isKeyword(ln, "package"):
+		tk.V = "package"
+		tk.T = fract.Package
 	default: // Alternates
 		// Check variable name.
 		if chk := getName(ln); chk != "" { // Name.

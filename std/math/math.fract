@@ -10,6 +10,8 @@
 // Math utilities.
 //
 
+package math
+
 // Returns absolute of value.
 protected func Abs(x) {
 	if x < 0 {

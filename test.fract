@@ -1,3 +1,5 @@
+package test
+
 /*
 try {} ; ; protected func a() {
     println('TEST'); if false { ret 0 } else { ret 1 }
@@ -48,9 +50,16 @@ println(b)
 println(c)
 */
 
+/*
 // Varset.
 a := [1, 20, 30, 4]
 b := [a, 90, 100]
 b[0][[1, 2]] += 1000
 println(a)
 println(b)
+*/
+
+// Imports.
+open math
+println(math.Pi)
+println(math.Abs(9))

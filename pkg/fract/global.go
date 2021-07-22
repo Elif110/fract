@@ -33,6 +33,7 @@ const (
 	Defer               uint8 = 33
 	Go                  uint8 = 34
 	Colon               uint8 = 35
+	Package             uint8 = 36
 
 	LOOPBreak    uint8 = 1
 	LOOPContinue uint8 = 2
