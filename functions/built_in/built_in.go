@@ -116,10 +116,10 @@ func Realloc(tk obj.Token, args []obj.Var) value.Val {
 
 // Print values to cli.
 func Print(tk obj.Token, args []obj.Var) {
-	if args[0].V.D == nil {
-		fract.Panic(tk, obj.ValuePanic, "Value is not printable!")
-	}
 	for _, d := range args[0].V.D.(value.ArrayModel) {
+		if d.T == 0 {
+			fract.Panic(tk, obj.ValuePanic, "Value is not printable!")
+		}
 		fmt.Print(d)
 	}
 }
