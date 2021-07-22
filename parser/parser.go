@@ -9,7 +9,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/fract-lang/fract/lexer"
+	"github.com/fract-lang/fract/lex"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
 	"github.com/fract-lang/fract/pkg/value"
@@ -29,7 +29,7 @@ type Parser struct {
 	i            int
 	retVal       *value.Val // Pointer of last return value.
 
-	L       *lexer.Lexer
+	L       *lex.Lex
 	Tks     []obj.Tokens // All Tokens of code file.
 	Imports []importInfo
 }
@@ -45,7 +45,7 @@ func New(fp string) *Parser {
 	}
 	return &Parser{
 		funcTempVars: -1,
-		L:            &lexer.Lexer{F: sf, Ln: 1},
+		L:            &lex.Lex{F: sf, Ln: 1},
 	}
 }
 
@@ -53,7 +53,7 @@ func New(fp string) *Parser {
 func NewStdin() *Parser {
 	return &Parser{
 		funcTempVars: -1,
-		L: &lexer.Lexer{
+		L: &lex.Lex{
 			F:  &obj.File{P: "<stdin>"},
 			Ln: 1,
 		},

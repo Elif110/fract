@@ -9,8 +9,9 @@ import (
 
 // Val instance.
 type Val struct {
-	D interface{}
-	T uint8
+	D   interface{}
+	T   uint8
+	Mut bool
 }
 
 // Returns immutable copy.

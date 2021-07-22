@@ -50,13 +50,13 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 	if p.funcTempVars != -1 {
 		p.funcTempVars++
 	}
+	v.Mut = md.mut
 	p.vars = append(p.vars,
 		obj.Var{
 			Name:      name.V,
 			V:         v,
 			Ln:        name.Ln,
 			Const:     md.constant,
-			Mut:       md.mut,
 			Protected: md.protected,
 		})
 }

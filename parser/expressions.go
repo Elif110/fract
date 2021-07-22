@@ -427,13 +427,18 @@ func applyMinus(minus obj.Token, v value.Val) value.Val {
 }
 
 // Select enumerable object elements.
-func (p *Parser) selectEnum(v value.Val, tk obj.Token, s interface{}) value.Val {
+func (p *Parser) selectEnum(mut bool, v value.Val, tk obj.Token, s interface{}) value.Val {
 	var r value.Val
 	switch v.T {
 	case value.Array:
 		i := s.([]int)
 		if len(i) == 1 {
-			return v.D.(value.ArrayModel)[i[0]]
+			v := v.D.(value.ArrayModel)[i[0]]
+			if !v.Mut && !mut { //! Immutability.
+				v = v.Immut()
+			}
+			v.Mut = v.Mut || mut
+			return v
 		}
 		r = value.Val{D: value.ArrayModel{}, T: value.Array}
 		for _, pos := range i {
@@ -475,6 +480,7 @@ type valPartInfo struct {
 
 // Process value part.
 func (p *Parser) procValPart(i valPartInfo) value.Val {
+	var rv value.Val
 	if i.tks[0].T == fract.Var && i.tks[0].V == "mut" {
 		if len(i.tks) == 1 {
 			fract.IPanic(i.tks[0], obj.SyntaxPanic, "Value is not given!")
@@ -495,21 +501,22 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 			}
 			switch t {
 			case 'f': // Function.
-				return value.Val{D: src.funcs[vi], T: value.Func}
+				rv = value.Val{D: src.funcs[vi], T: value.Func}
 			case 'v': // Value.
 				v := src.vars[vi]
 				var val value.Val
-				if !v.Mut && !i.mut { //! Immutability.
+				if !v.V.Mut && !i.mut { //! Immutability.
 					val = v.V.Immut()
 				} else {
 					val = v.V
 				}
-				return applyMinus(tk, val)
+				val.Mut = v.V.Mut || i.mut
+				rv = applyMinus(tk, val)
 			}
 		} else if tk.V[0] == '\'' || tk.V[0] == '"' {
-			return value.Val{D: tk.V[1 : len(tk.V)-1], T: value.Str}
+			rv = value.Val{D: tk.V[1 : len(tk.V)-1], T: value.Str}
 		} else if tk.V == "true" || tk.V == "false" {
-			return value.Val{D: tk.V, T: value.Bool}
+			rv = value.Val{D: tk.V, T: value.Bool}
 		} else if tk.T == fract.Value {
 			if strings.Contains(tk.V, ".") || strings.ContainsAny(tk.V, "eE") {
 				tk.T = value.Float
@@ -521,12 +528,13 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 				val, _ := prs.Float64()
 				tk.V = fmt.Sprint(val)
 			}
-			return value.Val{D: tk.V, T: tk.T}
+			rv = value.Val{D: tk.V, T: tk.T}
 		} else if strings.HasPrefix(tk.V, "object.func") {
-			return value.Val{D: tk.V, T: value.Func}
+			rv = value.Val{D: tk.V, T: value.Func}
 		} else {
 			fract.IPanic(tk, obj.ValuePanic, "Invalid value!")
 		}
+		goto end
 	}
 	switch j, tk := len(i.tks)-1, i.tks[len(i.tks)-1]; tk.T {
 	case fract.Brace:
@@ -556,14 +564,16 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 				if len(i.tks) == 0 {
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
-				return applyMinus(tk, p.procVal(i.tks))
+				rv = applyMinus(tk, p.procVal(i.tks))
+				goto end
 			}
 			// Function call.
 			v := p.procValPart(valPartInfo{tks: vtks})
 			if v.T != value.Func {
 				fract.IPanic(i.tks[len(vtks)], obj.ValuePanic, "Value is not function!")
 			}
-			return applyMinus(tk, p.funcCallModel(v.D.(function), i.tks[len(vtks):]).call())
+			rv = applyMinus(tk, p.funcCallModel(v.D.(function), i.tks[len(vtks):]).call())
+			goto end
 		case "]":
 			var vtks obj.Tokens
 			for ; j >= 0; j-- {
@@ -584,13 +594,15 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 				break
 			}
 			if len(vtks) == 0 && bc == 0 {
-				return applyMinus(tk, p.procEnumerableVal(i.tks))
+				rv = applyMinus(tk, p.procEnumerableVal(i.tks))
+				goto end
 			}
-			v := p.procValPart(valPartInfo{tks: vtks})
+			v := p.procValPart(valPartInfo{mut: i.mut, tks: vtks})
 			if v.T != value.Array && v.T != value.Map && v.T != value.Str {
 				fract.IPanic(vtks[0], obj.ValuePanic, "Index accessor is cannot used with not enumerable values!")
 			}
-			return applyMinus(tk, p.selectEnum(v, tk, selections(v, p.procVal(i.tks[len(vtks)+1:len(i.tks)-1]), tk)))
+			rv = applyMinus(tk, p.selectEnum(i.mut, v, tk, selections(v, p.procVal(i.tks[len(vtks)+1:len(i.tks)-1]), tk)))
+			goto end
 		case "}":
 			var vtks obj.Tokens
 			for ; j >= 0; j-- {
@@ -612,7 +624,8 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 			}
 			l := len(vtks)
 			if l == 0 && bc == 0 || vtks[0].T != fract.Func {
-				return applyMinus(tk, p.procEnumerableVal(i.tks))
+				rv = applyMinus(tk, p.procEnumerableVal(i.tks))
+				goto end
 			} else if l > 1 && (vtks[1].T != fract.Brace || vtks[1].V != "(") {
 				fract.IPanic(vtks[1], obj.SyntaxPanic, "Invalid syntax!")
 			} else if l > 1 && (vtks[l-1].T != fract.Brace || vtks[l-1].V != ")") {
@@ -630,11 +643,14 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 				vtks = vtks[1:]
 				p.setFuncParams(&f, &vtks)
 			}
-			return value.Val{D: f, T: value.Func}
+			rv = value.Val{D: f, T: value.Func}
+			goto end
 		}
 	}
 	fract.IPanic(tk, obj.ValuePanic, "Invalid value!")
-	return value.Val{}
+end:
+	rv.Mut = i.mut
+	return rv
 }
 
 // Process array value.

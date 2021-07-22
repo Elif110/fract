@@ -12,7 +12,6 @@ type Var struct {
 	Ln        int // Line of define.
 	V         value.Val
 	Const     bool
-	Mut       bool
 	Protected bool
 }
 
