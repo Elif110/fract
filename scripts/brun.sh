@@ -28,10 +28,10 @@ else
   MAIN_FILE="../cmd/main.go"
 fi
 
-go build -v $MAIN_FILE
+go build -o fract -v $MAIN_FILE
 
 if [ $? -eq 0 ]; then
-  ./main $@
+  ./fract $@
 else
   echo "-----------------------------------------------------------------------"
   echo "An unexpected error occurred while compiling Fract. Check errors above."

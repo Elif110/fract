@@ -23,16 +23,16 @@
 
 @echo off
 
-if exist .\main.exe ( del /f main.exe )
+if exist .\fract.exe ( del /f fract.exe )
 
 if exist cmd\main.go (
-  go build -v cmd\main.go
+  go build -o fract -v cmd\main.go
 ) else (
-  go build -v ..\cmd\main.go
+  go build -o fract -v ..\cmd\main.go
 )
 
-if exist .\main.exe (
-  .\main.exe %*
+if exist .\fract.exe (
+  .\fract.exe %*
 ) else (
   echo on
   echo -----------------------------------------------------------------------
