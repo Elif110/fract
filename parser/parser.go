@@ -108,16 +108,19 @@ func (p *Parser) importPackage() {
 			continue
 		}
 		src := New(path.Join(dir, info.Name()))
-		src.loopCount = -1 //! Tag as import source.
 		src.ready()
 		if src.pkg != p.pkg {
 			tk := src.Tks[0][0]
 			fract.Error(src.L.F, tk.Ln, tk.Col, "Package is not same!")
 		}
+		src.AddBuiltInFuncs()
+		bifl := len(src.funcs)
+		src.loopCount = -1 //! Tag as import source.
 		src.Import()
-		p.funcs = append(p.funcs, src.funcs...)
+		p.funcs = append(p.funcs, src.funcs[bifl:]...)
 		p.vars = append(p.vars, src.vars...)
 		p.Imports = append(p.Imports, src.Imports...)
+		src = nil
 	}
 }
 

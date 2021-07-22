@@ -23,6 +23,8 @@
 ## What look like Fract code?
 
 ```go
+package main
+
 func fib(a, b) {
     val := a + b
     println(val)

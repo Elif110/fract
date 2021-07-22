@@ -59,7 +59,7 @@ println(a)
 println(b)
 */
 
-// Imports.
+// Imports & packages.
 open math
 println(math.Pi)
 println(math.Abs(9))

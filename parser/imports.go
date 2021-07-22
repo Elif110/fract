@@ -13,7 +13,7 @@ import (
 // Import content into destination interpeter.
 func (p *Parser) Import() {
 	// Interpret all lines.
-	for p.i = 0; p.i < len(p.Tks); p.i++ {
+	for p.i = 1; p.i < len(p.Tks); p.i++ {
 		switch tks := p.Tks[p.i]; tks[0].T {
 		case fract.Protected: // Protected declaration.
 			if len(tks) < 2 {
@@ -104,19 +104,15 @@ func (p *Parser) procImport(tks obj.Tokens) {
 		isrc := New(imppath + string(os.PathSeparator) + i.Name())
 		isrc.loopCount = -1 //! Tag as import source.
 		isrc.ready()
-		for _, imp := range p.Imports {
-			if imp.Name == isrc.pkg {
-				fract.IPanic(tks[1], obj.NamePanic, "\""+isrc.pkg+"\" is already defined!")
-			}
-		}
+		isrc.AddBuiltInFuncs()
+		bifl := len(isrc.funcs)
 		isrc.Import()
 		isrc.importPackage() // Import other package files.
 		isrc.loopCount = 0
-		src.funcs = append(src.funcs, isrc.funcs...)
+		src.funcs = append(src.funcs, isrc.funcs[bifl:]...)
 		src.vars = append(src.vars, isrc.vars...)
 		src.Imports = append(src.Imports, isrc.Imports...)
 		src.pkg = isrc.pkg
-		isrc.AddBuiltInFuncs()
 		break
 	}
 	p.Imports = append(p.Imports, importInfo{Name: src.pkg, Src: src})
