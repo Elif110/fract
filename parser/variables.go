@@ -143,48 +143,49 @@ func (p *Parser) varset(tks obj.Tokens) {
 	}
 	var (
 		s      interface{}
-		setter = tks[1]
+		vtks   obj.Tokens
+		setter obj.Token
 	)
-	// Array setter?
-	if setter.T == fract.Brace && setter.V == "[" {
-		// Variable is not array?
-		if v.V.T != value.Array && v.V.T != value.Map && v.V.T != value.Str {
-			fract.IPanic(setter, obj.ValuePanic, "Variable is not enumerable!")
-		}
-		bc := 1
-		// Find close bracket.
-		for j := 2; j < len(tks); j++ {
-			t := tks[j]
-			if t.T == fract.Brace {
-				switch t.V {
-				case "[":
-					bc++
-				case "]":
-					bc--
+	bc := 0
+	lbc := -1
+	for i, tk := range tks {
+		if tk.T == fract.Brace {
+			switch tk.V {
+			case "[":
+				bc++
+				if bc == 1 {
+					lbc = i
 				}
+			case "]":
+				bc--
 			}
-			if bc > 0 {
-				continue
+		}
+		if bc > 0 {
+			continue
+		}
+		if tk.T == fract.Operator && tk.V[len(tk.V)-1] == '=' {
+			setter = tk
+			if lbc == -1 {
+				vtks = tks[i+1:]
+				break
 			}
-			vtks := tks.Sub(2, j-2)
+			v.V = p.procValPart(valPartInfo{mut: true, tks: tks[:lbc]})
+			vtks = tks[lbc+1 : i-1]
 			// Index value is empty?
-			if vtks == nil {
+			if len(vtks) == 0 {
 				fract.IPanic(setter, obj.SyntaxPanic, "Index is not given!")
 			}
-			tks = append(obj.Tokens{tks[1]}, tks[j+1:]...)
-			s = selections(v.V, p.procVal(*vtks), tks[0])
-			vtks = nil
+			s = selections(v.V, p.procVal(vtks), setter)
+			vtks = tks[i+1:]
 			break
 		}
 	}
-	setter = tks[1]
-	// Value are not defined?
-	if len(tks) < 3 {
+	if vtks == nil || len(vtks) == 0 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
 	}
-	val := p.procVal(*tks.Sub(2, len(tks)-2))
+	val := p.procVal(vtks)
 	if val.D == nil {
-		fract.IPanic(tks[2], obj.ValuePanic, "Invalid value!")
+		fract.IPanic(setter, obj.ValuePanic, "Invalid value!")
 	}
 	opr := obj.Token{V: string(setter.V[:len(setter.V)-1])}
 	if s == nil {
@@ -302,5 +303,4 @@ func (p *Parser) varset(tks obj.Tokens) {
 			}
 		}
 	}
-	p.vars[j] = v
 }
