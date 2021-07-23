@@ -22,7 +22,7 @@ var (
 // Parser of Fract.
 type Parser struct {
 	vars         []obj.Var
-	funcs        []function
+	funcs        []obj.Func
 	packages     []importInfo
 	funcTempVars int // Count of function temporary variables.
 	loopCount    int
@@ -319,8 +319,8 @@ func (p *Parser) definedName(name obj.Token) int {
 		name.V = name.V[1:]
 	}
 	for _, f := range p.funcs {
-		if f.name == name.V {
-			return f.ln
+		if f.Name == name.V {
+			return f.Ln
 		}
 	}
 	for _, v := range p.vars {
@@ -345,7 +345,7 @@ func (p *Parser) funcIndexByName(name obj.Token) (int, *Parser) {
 		name.V = name.V[1:]
 	}
 	for j, f := range p.funcs {
-		if f.name == name.V {
+		if f.Name == name.V {
 			return j, p
 		}
 	}
@@ -598,104 +598,104 @@ func conditionalProcesses(tks obj.Tokens, opr string) []obj.Tokens {
 // ApplyBuildInFunctions to parser source.
 func (p *Parser) AddBuiltInFuncs() {
 	p.funcs = append(p.funcs,
-		function{ // print function.
-			name:              "print",
-			protected:         true,
-			defaultParamCount: 2,
-			params: []param{{
-				name:   "value",
-				params: true,
-				defval: value.Val{D: "", T: value.Str},
+		obj.Func{ // print function.
+			Name:          "print",
+			Protected:     true,
+			DefParamCount: 2,
+			Params: []obj.Param{{
+				Name:   "value",
+				Params: true,
+				Defval: value.Val{D: "", T: value.Str},
 			}},
-		}, function{ // println function.
-			name:              "println",
-			protected:         true,
-			defaultParamCount: 2,
-			params: []param{{
-				name:   "value",
-				params: true,
-				defval: value.Val{D: value.ArrayModel{{D: "", T: value.Str}}, T: value.Array},
+		}, obj.Func{ // println function.
+			Name:          "println",
+			Protected:     true,
+			DefParamCount: 2,
+			Params: []obj.Param{{
+				Name:   "value",
+				Params: true,
+				Defval: value.Val{D: value.ArrayModel{{D: "", T: value.Str}}, T: value.Array},
 			}},
-		}, function{ // input function.
-			name:              "input",
-			protected:         true,
-			defaultParamCount: 1,
-			params: []param{{
-				name:   "message",
-				defval: value.Val{D: "", T: value.Str},
+		}, obj.Func{ // input function.
+			Name:          "input",
+			Protected:     true,
+			DefParamCount: 1,
+			Params: []obj.Param{{
+				Name:   "message",
+				Defval: value.Val{D: "", T: value.Str},
 			}},
-		}, function{ // exit function.
-			name:              "exit",
-			protected:         true,
-			defaultParamCount: 1,
-			params: []param{{
-				name:   "code",
-				defval: value.Val{D: "0", T: value.Int},
+		}, obj.Func{ // exit function.
+			Name:          "exit",
+			Protected:     true,
+			DefParamCount: 1,
+			Params: []obj.Param{{
+				Name:   "code",
+				Defval: value.Val{D: "0", T: value.Int},
 			}},
-		}, function{ // len function.
-			name:              "len",
-			protected:         true,
-			defaultParamCount: 0,
-			params:            []param{{name: "object"}},
-		}, function{ // range function.
-			name:              "range",
-			protected:         true,
-			defaultParamCount: 1,
-			params: []param{
-				{name: "start"},
-				{name: "to"},
+		}, obj.Func{ // len function.
+			Name:          "len",
+			Protected:     true,
+			DefParamCount: 0,
+			Params:        []obj.Param{{Name: "object"}},
+		}, obj.Func{ // range function.
+			Name:          "range",
+			Protected:     true,
+			DefParamCount: 1,
+			Params: []obj.Param{
+				{Name: "start"},
+				{Name: "to"},
 				{
-					name:   "step",
-					defval: value.Val{D: "1", T: value.Int},
+					Name:   "step",
+					Defval: value.Val{D: "1", T: value.Int},
 				},
 			},
-		}, function{ // calloc function.
-			name:              "calloc",
-			protected:         true,
-			defaultParamCount: 0,
-			params:            []param{{name: "size"}},
-		}, function{ // realloc function.
-			name:              "realloc",
-			protected:         true,
-			defaultParamCount: 0,
-			params:            []param{{name: "base"}, {name: "size"}},
-		}, function{ // memset function.
-			name:              "memset",
-			protected:         true,
-			defaultParamCount: 0,
-			params:            []param{{name: "mem"}, {name: "val"}},
-		}, function{ // string function.
-			name:              "string",
-			protected:         true,
-			defaultParamCount: 1,
-			params: []param{
-				{name: "object"},
+		}, obj.Func{ // calloc function.
+			Name:          "calloc",
+			Protected:     true,
+			DefParamCount: 0,
+			Params:        []obj.Param{{Name: "size"}},
+		}, obj.Func{ // realloc function.
+			Name:          "realloc",
+			Protected:     true,
+			DefParamCount: 0,
+			Params:        []obj.Param{{Name: "base"}, {Name: "size"}},
+		}, obj.Func{ // memset function.
+			Name:          "memset",
+			Protected:     true,
+			DefParamCount: 0,
+			Params:        []obj.Param{{Name: "mem"}, {Name: "val"}},
+		}, obj.Func{ // string function.
+			Name:          "string",
+			Protected:     true,
+			DefParamCount: 1,
+			Params: []obj.Param{
+				{Name: "object"},
 				{
-					name:   "type",
-					defval: value.Val{D: "parse", T: value.Str},
+					Name:   "type",
+					Defval: value.Val{D: "parse", T: value.Str},
 				},
 			},
-		}, function{ // int function.
-			name:              "int",
-			protected:         true,
-			defaultParamCount: 1,
-			params: []param{
-				{name: "object"},
+		}, obj.Func{ // int function.
+			Name:          "int",
+			Protected:     true,
+			DefParamCount: 1,
+			Params: []obj.Param{
+				{Name: "object"},
 				{
-					name:   "type",
-					defval: value.Val{D: "parse", T: value.Str},
+					Name:   "type",
+					Defval: value.Val{D: "parse", T: value.Str},
 				},
 			},
-		}, function{ // float function.
-			name:              "float",
-			protected:         true,
-			defaultParamCount: 0,
-			params:            []param{{name: "object"}},
-		}, function{ // append function.
-			name:              "append",
-			protected:         true,
-			defaultParamCount: 0,
-			params:            []param{{name: "dest"}, {name: "src", params: true}},
+		}, obj.Func{ // float function.
+			Name:          "float",
+			Protected:     true,
+			DefParamCount: 0,
+			Params:        []obj.Param{{Name: "object"}},
+		}, obj.Func{ // append function.
+			Name:          "append",
+			Protected:     true,
+			DefParamCount: 0,
+			Params:        []obj.Param{{Name: "dest"}, {Name: "src", Params: true}},
 		},
 	)
 }
@@ -846,14 +846,14 @@ func (p *Parser) procDel(tks obj.Tokens) {
 		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Define(s) is not given!")
 	}
 	if tks[1].V == "(" {
-		fdel := function{
-			name:   "del",
-			src:    p,
-			params: []param{{name: "map"}, {name: "key"}},
+		fdel := obj.Func{
+			Name:   "del",
+			Src:    p,
+			Params: []obj.Param{{Name: "map"}, {Name: "key"}},
 		}
 		p.funcCallModel(fdel, tks).call()
-		fdel.params = nil
-		fdel.src = nil
+		fdel.Params = nil
+		fdel.Src = nil
 		return
 	}
 	comma := false
@@ -878,13 +878,13 @@ func (p *Parser) procDel(tks obj.Tokens) {
 				fract.IPanic(t, obj.NamePanic, "\""+t.V+"\" is not defined!")
 			}
 			// Protected?
-			if src.funcs[pos].protected {
+			if src.funcs[pos].Protected {
 				fract.IPanic(t, obj.MemoryPanic, "Protected objects cannot be deleted manually from memory!")
 			}
 			f := &src.funcs[pos]
-			f.params = nil
-			f.src = nil
-			f.tks = nil
+			f.Params = nil
+			f.Src = nil
+			f.Tks = nil
 			src.funcs = append(src.funcs[:pos], src.funcs[pos+1:]...)
 			continue
 		}
@@ -1027,9 +1027,9 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 			fract.IPanic(tks[len(vtks)], obj.ValuePanic, "Value is not function!")
 		}
 		if fst.T == fract.Defer {
-			defers = append(defers, p.funcCallModel(v.D.(function), tks[len(vtks):]))
+			defers = append(defers, p.funcCallModel(v.D.(obj.Func), tks[len(vtks):]))
 		} else {
-			go p.funcCallModel(v.D.(function), tks[len(vtks):]).call()
+			go p.funcCallModel(v.D.(obj.Func), tks[len(vtks):]).call()
 		}
 	default:
 		fract.IPanic(fst, obj.SyntaxPanic, "Invalid syntax!")

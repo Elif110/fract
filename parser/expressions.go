@@ -606,7 +606,7 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 			if v.T != value.Func {
 				fract.IPanic(i.tks[len(vtks)], obj.ValuePanic, "Value is not function!")
 			}
-			rv = applyMinus(tk, p.funcCallModel(v.D.(function), i.tks[len(vtks):]).call())
+			rv = applyMinus(tk, p.funcCallModel(v.D.(obj.Func), i.tks[len(vtks):]).call())
 			goto end
 		case "]":
 			var vtks obj.Tokens
@@ -665,13 +665,13 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 			} else if l > 1 && (vtks[l-1].T != fract.Brace || vtks[l-1].V != ")") {
 				fract.IPanic(vtks[l-1], obj.SyntaxPanic, "Invalid syntax!")
 			}
-			f := function{
-				name: "anonymous",
-				src:  p,
-				tks:  p.getBlock(i.tks[len(vtks):]),
+			f := obj.Func{
+				Name: "anonymous",
+				Src:  p,
+				Tks:  p.getBlock(i.tks[len(vtks):]),
 			}
-			if f.tks == nil {
-				f.tks = []obj.Tokens{}
+			if f.Tks == nil {
+				f.Tks = []obj.Tokens{}
 			}
 			if l > 1 {
 				vtks = vtks[1:]
