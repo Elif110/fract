@@ -5,13 +5,14 @@ import (
 )
 
 const (
-	Int   uint8 = 1
-	Float uint8 = 2
-	Str   uint8 = 3
-	Bool  uint8 = 4
-	Func  uint8 = 5
-	Array uint8 = 6
-	Map   uint8 = 7
+	Int     uint8 = 1
+	Float   uint8 = 2
+	Str     uint8 = 3
+	Bool    uint8 = 4
+	Func    uint8 = 5
+	Array   uint8 = 6
+	Map     uint8 = 7
+	Package uint8 = 8
 )
 
 type ArrayModel []Val

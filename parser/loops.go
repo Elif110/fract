@@ -64,7 +64,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	bi := findBlock(tks)
 	btks, tks := p.getBlock(tks[bi:]), tks[1:bi]
 	flen := len(p.funcs)
-	ilen := len(p.Imports)
+	ilen := len(p.packages)
 	brk := false
 	kws := fract.None
 	ptks := p.Tks
@@ -94,7 +94,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 				// Remove temporary functions.
 				p.funcs = p.funcs[:flen]
 				// Remove temporary imports.
-				p.Imports = p.Imports[:ilen]
+				p.packages = p.packages[:ilen]
 				goto infinity
 			}
 		while:
@@ -121,7 +121,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 			// Remove temporary functions.
 			p.funcs = p.funcs[:flen]
 			// Remove temporary imports.
-			p.Imports = p.Imports[:ilen]
+			p.packages = p.packages[:ilen]
 			c = p.procCondition(tks)
 			if brk || c != "true" {
 				p.Tks = ptks
@@ -198,7 +198,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 		// Remove temporary functions.
 		p.funcs = p.funcs[:flen]
 		// Remove temporary imports.
-		p.Imports = p.Imports[:ilen]
+		p.packages = p.packages[:ilen]
 		l.end = brk
 	})
 	p.Tks = ptks

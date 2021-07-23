@@ -148,7 +148,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 func arith(tks obj.Token, d value.Val) string {
 	ret := d.String()
 	switch d.T {
-	case value.Func:
+	case value.Func, value.Package:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\""+ret+"\" is not compatible with arithmetic processes!")
 	case value.Map:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\"object.map\" is not compatible with arithmetic processes!")
@@ -502,6 +502,8 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 			switch t {
 			case 'f': // Function.
 				rv = value.Val{D: src.funcs[vi], T: value.Func}
+			case 'p': // Package.
+				rv = value.Val{D: src.packages[vi], T: value.Package}
 			case 'v': // Value.
 				v := src.vars[vi]
 				var val value.Val

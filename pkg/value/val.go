@@ -38,6 +38,8 @@ func (d Val) String() string {
 	switch d.T {
 	case Func:
 		return "object.func"
+	case Package:
+		return "object.packageref"
 	case Array:
 		return fmt.Sprint(d.D)
 	case Map:

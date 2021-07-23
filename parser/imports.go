@@ -39,7 +39,7 @@ func (p *Parser) Import() {
 			src.procImport(tks)
 			p.vars = append(p.vars, src.vars...)
 			p.funcs = append(p.funcs, src.funcs...)
-			p.Imports = append(p.Imports, src.Imports...)
+			p.packages = append(p.packages, src.packages...)
 		case fract.Macro: // Macro.
 			p.procPragma(tks)
 			if p.loopCount != -1 { // Breaked import.
@@ -51,8 +51,9 @@ func (p *Parser) Import() {
 
 // Information of import.
 type importInfo struct {
-	Name string  // Package name.
-	Src  *Parser // Source of package.
+	name string  // Package name.
+	src  *Parser // Source of package.
+	ln   int     // Defined line.
 }
 
 func (p *Parser) procImport(tks obj.Tokens) {
@@ -111,9 +112,9 @@ func (p *Parser) procImport(tks obj.Tokens) {
 		isrc.loopCount = 0
 		src.funcs = append(src.funcs, isrc.funcs[bifl:]...)
 		src.vars = append(src.vars, isrc.vars...)
-		src.Imports = append(src.Imports, isrc.Imports...)
+		src.packages = append(src.packages, isrc.packages...)
 		src.pkg = isrc.pkg
 		break
 	}
-	p.Imports = append(p.Imports, importInfo{Name: src.pkg, Src: src})
+	p.packages = append(p.packages, importInfo{name: src.pkg, src: src, ln: tks[0].Ln})
 }

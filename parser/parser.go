@@ -23,6 +23,7 @@ var (
 type Parser struct {
 	vars         []obj.Var
 	funcs        []function
+	packages     []importInfo
 	funcTempVars int // Count of function temporary variables.
 	loopCount    int
 	funcCount    int
@@ -30,9 +31,8 @@ type Parser struct {
 	retVal       *value.Val // Pointer of last return value.
 	pkg          string     // Package name.
 
-	L       *lex.Lex
-	Tks     []obj.Tokens // All Tokens of code file.
-	Imports []importInfo
+	L   *lex.Lex
+	Tks []obj.Tokens // All Tokens of code file.
 }
 
 // New returns instance of parser related to file.
@@ -119,7 +119,7 @@ func (p *Parser) importPackage() {
 		src.Import()
 		p.funcs = append(p.funcs, src.funcs[bifl:]...)
 		p.vars = append(p.vars, src.vars...)
-		p.Imports = append(p.Imports, src.Imports...)
+		p.packages = append(p.packages, src.packages...)
 		src = nil
 	}
 }
@@ -295,6 +295,7 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 // TYPES
 // 'f' -> Function.
 // 'v' -> Variable.
+// 'p' -> Package.
 // Returns define by name.
 func (p *Parser) defByName(name obj.Token) (int, rune, *Parser) {
 	pos, src := p.funcIndexByName(name)
@@ -304,6 +305,10 @@ func (p *Parser) defByName(name obj.Token) (int, rune, *Parser) {
 	pos, src = p.varIndexByName(name)
 	if pos != -1 {
 		return pos, 'v', src
+	}
+	pos = p.packageIndexByName(name.V)
+	if pos != -1 {
+		return pos, 'p', p
 	}
 	return -1, '-', nil
 }
@@ -323,6 +328,11 @@ func (p *Parser) definedName(name obj.Token) int {
 			return v.Ln
 		}
 	}
+	for _, i := range p.packages {
+		if i.name == name.V {
+			return i.ln
+		}
+	}
 	return -1
 }
 
@@ -335,10 +345,10 @@ func (p *Parser) funcIndexByName(name obj.Token) (int, *Parser) {
 		name.V = name.V[1:]
 	}
 	if i := strings.IndexByte(name.V, '.'); i != -1 {
-		if p.importIndexByName(name.V[:i]) == -1 {
+		if p.packageIndexByName(name.V[:i]) == -1 {
 			fract.IPanic(name, obj.NamePanic, "'"+name.V[:i]+"' is not defined!")
 		}
-		p = p.Imports[p.importIndexByName(name.V[:i])].Src
+		p = p.packages[p.packageIndexByName(name.V[:i])].src
 		name.V = name.V[i+1:]
 		for i, current := range p.funcs {
 			if (current.tks == nil || unicode.IsUpper(rune(current.name[0]))) && current.name == name.V {
@@ -364,10 +374,10 @@ func (p *Parser) varIndexByName(name obj.Token) (int, *Parser) {
 		name.V = name.V[1:]
 	}
 	if i := strings.IndexByte(name.V, '.'); i != -1 {
-		if iindex := p.importIndexByName(name.V[:i]); iindex == -1 {
+		if iindex := p.packageIndexByName(name.V[:i]); iindex == -1 {
 			fract.IPanic(name, obj.NamePanic, "'"+name.V[:i]+"' is not defined!")
 		} else {
-			p = p.Imports[iindex].Src
+			p = p.packages[iindex].src
 		}
 		name.V = name.V[i+1:]
 		for i, v := range p.vars {
@@ -385,10 +395,10 @@ func (p *Parser) varIndexByName(name obj.Token) (int, *Parser) {
 	return -1, nil
 }
 
-// importIndexByName returns index of import by name.
-func (p *Parser) importIndexByName(name string) int {
-	for i, imp := range p.Imports {
-		if imp.Name == name {
+// packageIndexByName returns index of package by name.
+func (p *Parser) packageIndexByName(name string) int {
+	for i, imp := range p.packages {
+		if imp.name == name {
 			return i
 		}
 	}
@@ -729,7 +739,7 @@ func (p *Parser) procIf(tks obj.Tokens) uint8 {
 	s := p.procCondition(ctks)
 	vlen := len(p.vars)
 	flen := len(p.funcs)
-	ilen := len(p.Imports)
+	ilen := len(p.packages)
 	kws := fract.None
 	for _, tks := range btks {
 		// Condition is true?
@@ -791,7 +801,7 @@ rep:
 end:
 	p.vars = p.vars[:vlen]
 	p.funcs = p.funcs[:flen]
-	p.Imports = p.Imports[:ilen]
+	p.packages = p.packages[:ilen]
 	return kws
 }
 
@@ -801,7 +811,7 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 	var (
 		vlen = len(p.vars)
 		flen = len(p.funcs)
-		ilen = len(p.Imports)
+		ilen = len(p.packages)
 		dlen = len(defers)
 		kws  = fract.None
 	)
@@ -818,7 +828,7 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 			fract.TryCount--
 			p.vars = p.vars[:vlen]
 			p.funcs = p.funcs[:flen]
-			p.Imports = p.Imports[:ilen]
+			p.packages = p.packages[:ilen]
 			for index := len(defers) - 1; index >= dlen; index-- {
 				defers[index].call()
 			}
@@ -829,7 +839,7 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 			fract.TryCount--
 			p.vars = p.vars[:vlen]
 			p.funcs = p.funcs[:flen]
-			p.Imports = p.Imports[:ilen]
+			p.packages = p.packages[:ilen]
 			defers = defers[:dlen]
 			p.i++
 			tks = p.Tks[p.i]
