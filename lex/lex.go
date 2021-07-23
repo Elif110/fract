@@ -105,8 +105,8 @@ tokenize:
 }
 
 var (
-	numericRgx = *regexp.MustCompile(`^(-|)((\d+((\.\d+)|(\.\d+)?(e|E)(\-|\+)\d+)?)|(0x[[:xdigit:]]+))(\s|[[:punct:]]|$)`)
-	nameRgx    = *regexp.MustCompile(`^(-|)([\p{L}|_])([\p{L}0-9_]+)?(\.([\p{L}0-9_]+))*([[:punct:]]|\s|$)`)
+	numRgx  = *regexp.MustCompile(`^(-|)((\d+((\.\d+)|(\.\d+)?(e|E)(\-|\+)\d+)?)|(0x[[:xdigit:]]+))(\s|[[:punct:]]|$)`)
+	nameRgx = *regexp.MustCompile(`^(-|)([\p{L}|_])([\p{L}0-9_]+)?([[:punct:]]|\s|$)`)
 )
 
 // isKeyword returns true if part is keyword, false if not.
@@ -118,7 +118,7 @@ func isKeyword(ln, kw string) bool {
 func getName(ln string) string { return nameRgx.FindString(ln) }
 
 // getNumeric returns numeric if next token is numeric, returns empty string if not.
-func getNumeric(ln string) string { return numericRgx.FindString(ln) }
+func getNumeric(ln string) string { return numRgx.FindString(ln) }
 
 // Process string espace sequence.
 func (l *Lex) strseq(sb *strings.Builder, fln string) bool {
@@ -180,20 +180,11 @@ func (l *Lex) lexstr(tk *obj.Token, quote byte, fln string) {
 
 func (l *Lex) lexname(tk *obj.Token, chk string) bool {
 	// Remove punct.
-	if chk[len(chk)-1] != '_' && chk[len(chk)-1] != '.' {
+	if chk[len(chk)-1] != '_' {
 		r, _ := regexp.MatchString(`(\s|[[:punct:]])$`, chk)
 		if r {
 			chk = chk[:len(chk)-1]
 		}
-	}
-	// Name is finished with dot?
-	if chk[len(chk)-1] == '.' {
-		if l.RangeComment { // Ignore comment content.
-			l.Col++
-			tk.T = fract.Ignore
-			return false
-		}
-		l.error("Invalid token!")
 	}
 	tk.V = chk
 	tk.T = fract.Name
@@ -278,21 +269,24 @@ func (l *Lex) Token() obj.Token {
 		tk.V = chk
 		tk.T = fract.Value
 		return tk
-	case strings.HasPrefix(ln, "//"): // Singleline comment.
+	case strings.HasPrefix(ln, "//"):
 		l.F.Lns[l.Ln-1] = l.F.Lns[l.Ln-1][:l.Col-1] // Remove comment from original line.
 		return tk
-	case strings.HasPrefix(ln, "/*"): // Range comment open.
+	case strings.HasPrefix(ln, "/*"):
 		l.RangeComment = true
 		tk.V = "/*"
 		tk.T = fract.Ignore
-	case ln[0] == '#': // Macro.
+	case ln[0] == '#':
 		tk.V = "#"
 		tk.T = fract.Macro
-	case ln[0] == '\'': // String.
+	case ln[0] == '\'':
 		l.lexstr(&tk, '\'', fln)
-	case ln[0] == '"': // String.
+	case ln[0] == '"':
 		l.lexstr(&tk, '"', fln)
-	case ln[0] == ';': // Statement terminator.
+	case ln[0] == '.':
+		tk.V = "."
+		tk.T = fract.Dot
+	case ln[0] == ';':
 		tk.V = ";"
 		tk.T = fract.StatementTerminator
 		l.Ln--

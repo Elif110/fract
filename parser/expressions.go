@@ -478,6 +478,31 @@ type valPartInfo struct {
 	mut bool // Force to mutability.
 }
 
+func (p *Parser) procNameVal(mut bool, tk obj.Token) value.Val {
+	var rv value.Val
+	vi, t, src := p.defByName(tk)
+	if vi == -1 {
+		fract.IPanic(tk, obj.NamePanic, "Name is not defined: "+tk.V)
+	}
+	switch t {
+	case 'f': // Function.
+		rv = value.Val{D: src.funcs[vi], T: value.Func}
+	case 'p': // Package.
+		rv = value.Val{D: src.packages[vi], T: value.Package}
+	case 'v': // Value.
+		v := src.vars[vi]
+		var val value.Val
+		if !v.V.Mut && !mut { //! Immutability.
+			val = v.V.Immut()
+		} else {
+			val = v.V
+		}
+		val.Mut = v.V.Mut || mut
+		rv = applyMinus(tk, val)
+	}
+	return rv
+}
+
 // Process value part.
 func (p *Parser) procValPart(i valPartInfo) value.Val {
 	var rv value.Val
@@ -494,31 +519,12 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 	)
 	// Single value.
 	if len(i.tks) == 1 {
-		if tk.T == fract.Name {
-			vi, t, src := p.defByName(tk)
-			if vi == -1 {
-				fract.IPanic(tk, obj.NamePanic, "Name is not defined: "+tk.V)
-			}
-			switch t {
-			case 'f': // Function.
-				rv = value.Val{D: src.funcs[vi], T: value.Func}
-			case 'p': // Package.
-				rv = value.Val{D: src.packages[vi], T: value.Package}
-			case 'v': // Value.
-				v := src.vars[vi]
-				var val value.Val
-				if !v.V.Mut && !i.mut { //! Immutability.
-					val = v.V.Immut()
-				} else {
-					val = v.V
-				}
-				val.Mut = v.V.Mut || i.mut
-				rv = applyMinus(tk, val)
-			}
-		} else if tk.V[0] == '\'' || tk.V[0] == '"' {
+		if tk.V[0] == '\'' || tk.V[0] == '"' {
 			rv = value.Val{D: tk.V[1 : len(tk.V)-1], T: value.Str}
+			goto end
 		} else if tk.V == "true" || tk.V == "false" {
 			rv = value.Val{D: tk.V, T: value.Bool}
+			goto end
 		} else if tk.T == fract.Value {
 			if strings.Contains(tk.V, ".") || strings.ContainsAny(tk.V, "eE") {
 				tk.T = value.Float
@@ -531,14 +537,34 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 				tk.V = fmt.Sprint(val)
 			}
 			rv = value.Val{D: tk.V, T: tk.T}
-		} else if strings.HasPrefix(tk.V, "object.func") {
-			rv = value.Val{D: tk.V, T: value.Func}
+			goto end
 		} else {
-			fract.IPanic(tk, obj.ValuePanic, "Invalid value!")
+			if tk.T != fract.Name {
+				fract.IPanic(tk, obj.ValuePanic, "Invalid value!")
+			}
 		}
-		goto end
 	}
 	switch j, tk := len(i.tks)-1, i.tks[len(i.tks)-1]; tk.T {
+	case fract.Name:
+		if j > 0 {
+			j--
+			if j == 0 || i.tks[j].T != fract.Dot {
+				fract.IPanic(i.tks[j], obj.SyntaxPanic, "Invalid syntax!")
+			}
+			n := i.tks[j+1]
+			d := i.tks[j]
+			i.tks = i.tks[:j]
+			v := p.procValPart(i)
+			switch v.T {
+			case value.Package:
+				rv = v.D.(importInfo).src.procNameVal(i.mut, n)
+				goto end
+			default:
+				fract.IPanic(d, obj.ValuePanic, "Object is not support sub fields!")
+			}
+		}
+		rv = p.procNameVal(i.mut, tk)
+		goto end
 	case fract.Brace:
 		bc := 0
 		switch tk.V {

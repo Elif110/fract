@@ -206,7 +206,7 @@ func init() {
 }
 
 func main() {
-	fmt.Println("Fract " + fract.Ver + " (c) MIT License.\n" + "Developed by Fract Developer Team.\n")
+	fmt.Println("Fract " + fract.Ver + " (c) MIT License.\n" + "Fract Developer Team.\n")
 	fract.InteractiveSh = true
 	p = parser.NewStdin()
 	p.AddBuiltInFuncs()
