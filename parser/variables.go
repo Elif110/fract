@@ -43,7 +43,7 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 	if tksLen < 3 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
 	}
-	v := p.procVal(*tks.Sub(2, tksLen-2))
+	v := p.procValTks(*tks.Sub(2, tksLen-2))
 	if v.D == nil {
 		fract.IPanic(tks[2], obj.ValuePanic, "Invalid value!")
 	}
@@ -175,7 +175,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 			if len(vtks) == 0 {
 				fract.IPanic(setter, obj.SyntaxPanic, "Index is not given!")
 			}
-			s = selections(v.V, p.procVal(vtks), setter)
+			s = selections(v.V, p.procValTks(vtks), setter)
 			vtks = tks[i+1:]
 			break
 		}
@@ -183,7 +183,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 	if vtks == nil || len(vtks) == 0 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
 	}
-	val := p.procVal(vtks)
+	val := p.procValTks(vtks)
 	if val.D == nil {
 		fract.IPanic(setter, obj.ValuePanic, "Invalid value!")
 	}

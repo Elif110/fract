@@ -146,7 +146,7 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) value.Val {
 				retv.D = data
 				return retv
 			}
-			v := p.procVal(*vtks)
+			v := p.procValTks(*vtks)
 			vtks = nil
 			data = append(data, v)
 			*lstComma = *i + 1
@@ -158,7 +158,7 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) value.Val {
 			*i -= 4
 			return retv
 		}
-		v := p.procVal(vtks)
+		v := p.procValTks(vtks)
 		data = append(data, v)
 	}
 	retv.D = data
@@ -210,7 +210,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) obj.Var {
 					*i.lstComma += 2
 					retv.V = p.paramsArgVals(i.tks, i.index, i.lstComma)
 				} else {
-					retv.V = p.procVal(vtks[2:])
+					retv.V = p.procValTks(vtks[2:])
 				}
 				return retv
 			}
@@ -226,7 +226,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) obj.Var {
 	if param.params {
 		v.V = p.paramsArgVals(i.tks, i.index, i.lstComma)
 	} else {
-		v.V = p.procVal(vtks)
+		v.V = p.procValTks(vtks)
 	}
 	vtks = nil
 	return v
@@ -370,7 +370,7 @@ func (p *Parser) setFuncParams(f *function, tks *obj.Tokens) {
 				if i-start < 1 {
 					fract.IPanic((*tks)[start-1], obj.SyntaxPanic, "Value is not given!")
 				}
-				lstp.defval = p.procVal((*tks)[start:i])
+				lstp.defval = p.procValTks((*tks)[start:i])
 				if lstp.params && lstp.defval.T != value.Array {
 					fract.IPanic(pr, obj.ValuePanic, "Params parameter is can only take array values!")
 				}

@@ -165,7 +165,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	} else {
 		fract.IPanic(inTk, obj.SyntaxPanic, "Value is not given!")
 	}
-	v := p.procVal(tks)
+	v := p.procValTks(tks)
 	// Type is not array?
 	if !v.IsEnum() {
 		fract.IPanic(tks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")

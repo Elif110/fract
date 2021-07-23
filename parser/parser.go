@@ -934,7 +934,7 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 			}
 		}
 		// Print value if live interpreting.
-		if v := p.procVal(tks); fract.InteractiveSh {
+		if v := p.procValTks(tks); fract.InteractiveSh {
 			if v.Print() {
 				println()
 			}
@@ -979,7 +979,7 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 			fract.IPanic(fst, obj.SyntaxPanic, "Return keyword only used in functions!")
 		}
 		if len(tks) > 1 {
-			value := p.procVal(tks[1:])
+			value := p.procValTks(tks[1:])
 			p.retVal = &value
 		} else {
 			p.retVal = nil
