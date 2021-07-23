@@ -344,19 +344,6 @@ func (p *Parser) funcIndexByName(name obj.Token) (int, *Parser) {
 	if name.V[0] == '-' { // Ignore minus.
 		name.V = name.V[1:]
 	}
-	if i := strings.IndexByte(name.V, '.'); i != -1 {
-		if p.packageIndexByName(name.V[:i]) == -1 {
-			fract.IPanic(name, obj.NamePanic, "'"+name.V[:i]+"' is not defined!")
-		}
-		p = p.packages[p.packageIndexByName(name.V[:i])].src
-		name.V = name.V[i+1:]
-		for i, current := range p.funcs {
-			if (current.tks == nil || unicode.IsUpper(rune(current.name[0]))) && current.name == name.V {
-				return i, p
-			}
-		}
-		return -1, nil
-	}
 	for j, f := range p.funcs {
 		if f.name == name.V {
 			return j, p
@@ -372,20 +359,6 @@ func (p *Parser) funcIndexByName(name obj.Token) (int, *Parser) {
 func (p *Parser) varIndexByName(name obj.Token) (int, *Parser) {
 	if name.V[0] == '-' { // Ignore minus.
 		name.V = name.V[1:]
-	}
-	if i := strings.IndexByte(name.V, '.'); i != -1 {
-		if iindex := p.packageIndexByName(name.V[:i]); iindex == -1 {
-			fract.IPanic(name, obj.NamePanic, "'"+name.V[:i]+"' is not defined!")
-		} else {
-			p = p.packages[iindex].src
-		}
-		name.V = name.V[i+1:]
-		for i, v := range p.vars {
-			if (v.Ln == -1 || unicode.IsUpper(rune(v.Name[0]))) && v.Name == name.V {
-				return i, p
-			}
-		}
-		return -1, nil
 	}
 	for j, v := range p.vars {
 		if v.Name == name.V {

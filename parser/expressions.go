@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
@@ -557,6 +558,9 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 			v := p.procValPart(i)
 			switch v.T {
 			case value.Package:
+				if !unicode.IsUpper(rune(n.V[0])) {
+					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
+				}
 				rv = v.D.(importInfo).src.procNameVal(i.mut, n)
 				goto end
 			default:
