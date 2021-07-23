@@ -213,11 +213,7 @@ func Append(tk obj.Token, args []obj.Var) value.Val {
 	if src.T != value.Array {
 		fract.Panic(tk, obj.ValuePanic, "\"src\" must be array!")
 	}
-	data := args[1].V.D.(value.ArrayModel)
-	for _, d := range data {
-		data = append(data, value.Val{D: d.D, T: d.T})
-	}
-	src.D = data
+	src.D = append(args[0].V.D.(value.ArrayModel), args[1].V.D.(value.ArrayModel)...)
 	return src
 }
 
