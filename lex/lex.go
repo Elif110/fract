@@ -227,12 +227,14 @@ func (l *Lex) Token() obj.Token {
 	// ************
 
 	if l.RangeComment { // Range comment.
+		tk.T = fract.Ignore
 		if strings.HasPrefix(ln, "*/") { // Range comment close.
 			l.RangeComment = false
 			l.Col += 2 // len("<#")
-			tk.T = fract.Ignore
 			return tk
 		}
+		l.Col++
+		return tk
 	}
 
 	switch chk := getNumeric(ln); {
@@ -504,12 +506,7 @@ func (l *Lex) Token() obj.Token {
 			if !l.lexname(&tk, chk) {
 				return tk
 			}
-		} else { // Error exactly
-			if l.RangeComment { // Ignore comment content.
-				l.Col++
-				tk.T = fract.Ignore
-				return tk
-			}
+		} else {
 			l.error("Invalid token!")
 		}
 	}

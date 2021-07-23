@@ -598,7 +598,7 @@ func (p *Parser) procValPart(i valPartInfo) value.Val {
 				if len(i.tks) == 0 {
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
-				rv = applyMinus(tk, p.procVal(i.tks, true))
+				rv = applyMinus(tk, p.procVal(i.tks, i.mut))
 				goto end
 			}
 			// Function call.
