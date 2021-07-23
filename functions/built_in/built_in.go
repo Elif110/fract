@@ -159,15 +159,11 @@ func Range(tk obj.Token, args []obj.Var) value.Val {
 	var data value.ArrayModel
 	if startV <= toV {
 		for ; startV <= toV; startV += stepV {
-			d := value.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t}
-			d.D = d.Format()
-			data = append(data, d)
+			data = append(data, value.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
 		}
 	} else {
 		for ; startV >= toV; startV -= stepV {
-			d := value.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t}
-			d.D = d.Format()
-			data = append(data, d)
+			data = append(data, value.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
 		}
 	}
 	return value.Val{D: data, T: value.Array}
@@ -206,7 +202,8 @@ func String(args []obj.Var) value.Val {
 		}
 		return value.Val{D: sb.String(), T: value.Str}
 	default: // Object.
-		return value.Val{D: fmt.Sprint(args[0].V), T: value.Str}
+		arg := args[0]
+		return value.Val{D: fmt.Sprintf("{data:%s type:%d}", arg.V.D, arg.V.T), T: value.Str}
 	}
 }
 

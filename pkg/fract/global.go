@@ -3,7 +3,7 @@ package fract
 const (
 	Ver         = "0.0.1"  // Version of Fract.
 	Ext         = ".fract" // File extension of Fract.
-	FloatFormat = "%g"     // Float format.
+	FloatFormat = "%f"     // Float format.
 
 	None                uint8 = 0
 	Ignore              uint8 = 1

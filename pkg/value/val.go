@@ -2,9 +2,7 @@ package value
 
 import (
 	"fmt"
-	"math/big"
 	"reflect"
-	"strings"
 )
 
 // Val instance.
@@ -51,26 +49,6 @@ func (d Val) String() string {
 		}
 		return d.D.(string)
 	}
-}
-
-func (d Val) Format() string {
-	if d.T != Int && d.T != Float {
-		return d.String()
-	}
-	dt := d.String()
-	if dt != "NaN" {
-		if d.T == Int {
-			bf, _ := new(big.Float).SetString(dt)
-			dt = bf.String()
-			return dt
-		}
-		b, _ := new(big.Float).SetString(dt)
-		dt = b.String()
-		if !strings.Contains(dt, ".") {
-			dt = dt + ".0"
-		}
-	}
-	return dt
 }
 
 func (v Val) Print() bool {
