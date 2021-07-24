@@ -10,6 +10,7 @@ import (
 	"unicode"
 
 	"github.com/fract-lang/fract/lex"
+	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
 	"github.com/fract-lang/fract/pkg/value"
@@ -21,8 +22,7 @@ var (
 
 // Parser of Fract.
 type Parser struct {
-	vars         []obj.Var
-	funcs        []obj.Func
+	s            oop.DefMap
 	packages     []importInfo
 	funcTempVars int // Count of function temporary variables.
 	loopCount    int
@@ -114,11 +114,11 @@ func (p *Parser) importPackage() {
 			fract.Error(src.L.F, tk.Ln, tk.Col, "Package is not same!")
 		}
 		src.AddBuiltInFuncs()
-		bifl := len(src.funcs)
+		bifl := len(src.s.Funcs)
 		src.loopCount = -1 //! Tag as import source.
 		src.Import()
-		p.funcs = append(p.funcs, src.funcs[bifl:]...)
-		p.vars = append(p.vars, src.vars...)
+		p.s.Funcs = append(p.s.Funcs, src.s.Funcs[bifl:]...)
+		p.s.Vars = append(p.s.Vars, src.s.Vars...)
 		p.packages = append(p.packages, src.packages...)
 		src = nil
 	}
@@ -297,20 +297,20 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 // 'v' -> Variable.
 // 'p' -> Package.
 // Returns define by name.
-func (p *Parser) defByName(name obj.Token) (int, rune, *Parser) {
-	pos, src := p.funcIndexByName(name)
+func (p *Parser) defByName(name obj.Token) (int, rune) {
+	pos := p.s.FuncIndexByName(name)
 	if pos != -1 {
-		return pos, 'f', src
+		return pos, 'f'
 	}
-	pos, src = p.varIndexByName(name)
+	pos = p.s.VarIndexByName(name)
 	if pos != -1 {
-		return pos, 'v', src
+		return pos, 'v'
 	}
 	pos = p.packageIndexByName(name.V)
 	if pos != -1 {
-		return pos, 'p', p
+		return pos, 'p'
 	}
-	return -1, '-', nil
+	return -1, '-'
 }
 
 // Returns index of name is exist name, returns -1 if not.
@@ -318,12 +318,12 @@ func (p *Parser) definedName(name obj.Token) int {
 	if name.V[0] == '-' { // Ignore minus.
 		name.V = name.V[1:]
 	}
-	for _, f := range p.funcs {
+	for _, f := range p.s.Funcs {
 		if f.Name == name.V {
 			return f.Ln
 		}
 	}
-	for _, v := range p.vars {
+	for _, v := range p.s.Vars {
 		if v.Name == name.V {
 			return v.Ln
 		}
@@ -334,38 +334,6 @@ func (p *Parser) definedName(name obj.Token) int {
 		}
 	}
 	return -1
-}
-
-//! This code block very like to varIndexByName function.
-//! If you change here, probably you must change there too.
-
-// funcIndexByName returns index of function by name.
-func (p *Parser) funcIndexByName(name obj.Token) (int, *Parser) {
-	if name.V[0] == '-' { // Ignore minus.
-		name.V = name.V[1:]
-	}
-	for j, f := range p.funcs {
-		if f.Name == name.V {
-			return j, p
-		}
-	}
-	return -1, nil
-}
-
-//! This code block very like to funcIndexByName function.
-//! If you change here, probably you must change there too.
-
-// varIndexByName returns index of variable by name.
-func (p *Parser) varIndexByName(name obj.Token) (int, *Parser) {
-	if name.V[0] == '-' { // Ignore minus.
-		name.V = name.V[1:]
-	}
-	for j, v := range p.vars {
-		if v.Name == name.V {
-			return j, p
-		}
-	}
-	return -1, nil
 }
 
 // packageIndexByName returns index of package by name.
@@ -597,7 +565,7 @@ func conditionalProcesses(tks obj.Tokens, opr string) []obj.Tokens {
 
 // ApplyBuildInFunctions to parser source.
 func (p *Parser) AddBuiltInFuncs() {
-	p.funcs = append(p.funcs,
+	p.s.Funcs = append(p.s.Funcs,
 		obj.Func{ // print function.
 			Name:          "print",
 			DefParamCount: 2,
@@ -697,8 +665,8 @@ func (p *Parser) procIf(tks obj.Tokens) uint8 {
 		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Condition is empty!")
 	}
 	s := p.procCondition(ctks)
-	vlen := len(p.vars)
-	flen := len(p.funcs)
+	vlen := len(p.s.Vars)
+	flen := len(p.s.Funcs)
 	ilen := len(p.packages)
 	kws := fract.None
 	for _, tks := range btks {
@@ -759,8 +727,8 @@ rep:
 		}
 	}
 end:
-	p.vars = p.vars[:vlen]
-	p.funcs = p.funcs[:flen]
+	p.s.Vars = p.s.Vars[:vlen]
+	p.s.Funcs = p.s.Funcs[:flen]
 	p.packages = p.packages[:ilen]
 	return kws
 }
@@ -769,8 +737,8 @@ end:
 func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 	fract.TryCount++
 	var (
-		vlen = len(p.vars)
-		flen = len(p.funcs)
+		vlen = len(p.s.Vars)
+		flen = len(p.s.Funcs)
 		ilen = len(p.packages)
 		dlen = len(defers)
 		kws  = fract.None
@@ -786,8 +754,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 				p.i++
 			}
 			fract.TryCount--
-			p.vars = p.vars[:vlen]
-			p.funcs = p.funcs[:flen]
+			p.s.Vars = p.s.Vars[:vlen]
+			p.s.Funcs = p.s.Funcs[:flen]
 			p.packages = p.packages[:ilen]
 			for index := len(defers) - 1; index >= dlen; index-- {
 				defers[index].call()
@@ -797,8 +765,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 		Catch: func(cp obj.Panic) {
 			p.loopCount = 0
 			fract.TryCount--
-			p.vars = p.vars[:vlen]
-			p.funcs = p.funcs[:flen]
+			p.s.Vars = p.s.Vars[:vlen]
+			p.s.Funcs = p.s.Funcs[:flen]
 			p.packages = p.packages[:ilen]
 			defers = defers[:dlen]
 			p.i++
@@ -812,8 +780,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 					break
 				}
 			}
-			p.vars = p.vars[:vlen]
-			p.funcs = p.funcs[:flen]
+			p.s.Vars = p.s.Vars[:vlen]
+			p.s.Funcs = p.s.Funcs[:flen]
 			for i := len(defers) - 1; i >= dlen; i-- {
 				defers[i].call()
 			}

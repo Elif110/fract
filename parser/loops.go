@@ -63,7 +63,7 @@ func prockws(kws uint8) uint8 {
 func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	bi := findBlock(tks)
 	btks, tks := p.getBlock(tks[bi:]), tks[1:bi]
-	flen := len(p.funcs)
+	flen := len(p.s.Funcs)
 	ilen := len(p.packages)
 	brk := false
 	kws := fract.None
@@ -74,7 +74,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	//*************
 	if len(tks) == 0 || len(tks) >= 1 {
 		if len(tks) == 0 || len(tks) == 1 || len(tks) >= 1 && tks[1].T != fract.In && tks[1].T != fract.Comma {
-			vlen := len(p.vars)
+			vlen := len(p.s.Vars)
 			// Infinity loop.
 			if len(tks) == 0 {
 			infinity:
@@ -90,9 +90,9 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 					}
 				}
 				// Remove temporary variables.
-				p.vars = p.vars[:vlen]
+				p.s.Vars = p.s.Vars[:vlen]
 				// Remove temporary functions.
-				p.funcs = p.funcs[:flen]
+				p.s.Funcs = p.s.Funcs[:flen]
 				// Remove temporary imports.
 				p.packages = p.packages[:ilen]
 				goto infinity
@@ -117,9 +117,9 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 				}
 			}
 			// Remove temporary variables.
-			p.vars = p.vars[:vlen]
+			p.s.Vars = p.s.Vars[:vlen]
 			// Remove temporary functions.
-			p.funcs = p.funcs[:flen]
+			p.s.Funcs = p.s.Funcs[:flen]
 			// Remove temporary imports.
 			p.packages = p.packages[:ilen]
 			c = p.procCondition(tks)
@@ -170,14 +170,14 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	if !v.IsEnum() {
 		fract.IPanic(tks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	p.vars = append(p.vars,
+	p.s.Vars = append(p.s.Vars,
 		obj.Var{Name: nametk.V, V: value.Val{D: "0", T: value.Int}},
 		obj.Var{Name: ename},
 	)
-	vlen := len(p.vars)
-	index := &p.vars[vlen-2]
-	element := &p.vars[vlen-1]
-	vars := p.vars
+	vlen := len(p.s.Vars)
+	index := &p.s.Vars[vlen-2]
+	element := &p.s.Vars[vlen-1]
+	vars := p.s.Vars
 	// Interpret block.
 	l := loop{enum: v}
 	l.run(func() {
@@ -194,9 +194,9 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 			}
 		}
 		// Remove temporary variables.
-		p.vars = vars
+		p.s.Vars = vars
 		// Remove temporary functions.
-		p.funcs = p.funcs[:flen]
+		p.s.Funcs = p.s.Funcs[:flen]
 		// Remove temporary imports.
 		p.packages = p.packages[:ilen]
 		l.end = brk
@@ -204,6 +204,6 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	p.Tks = ptks
 	p.i = pi
 	// Remove loop variables.
-	p.vars = vars[:len(vars)-2]
+	p.s.Vars = vars[:len(vars)-2]
 	return prockws(kws)
 }

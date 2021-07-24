@@ -50,7 +50,7 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 		p.funcTempVars++
 	}
 	v.Mut = md.mut
-	p.vars = append(p.vars,
+	p.s.Vars = append(p.s.Vars,
 		obj.Var{
 			Name:  name.V,
 			V:     v,
@@ -129,11 +129,11 @@ func (p *Parser) varset(tks obj.Tokens) {
 	} else if name.V == "_" {
 		fract.IPanic(name, obj.SyntaxPanic, "Ignore operator is cannot set!")
 	}
-	j, _ := p.varIndexByName(name)
+	j := p.s.VarIndexByName(name)
 	if j == -1 {
 		fract.IPanic(name, obj.NamePanic, "Variable is not defined in this name: "+name.V)
 	}
-	v := p.vars[j]
+	v := p.s.Vars[j]
 	// Check const state.
 	if v.Const {
 		fract.IPanic(tks[1], obj.SyntaxPanic, "Values is cannot changed of constant defines!")
@@ -198,7 +198,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 				sv:  val,
 			})
 		}
-		p.vars[j] = v
+		p.s.Vars[j] = v
 		return
 	}
 	switch v.V.T {

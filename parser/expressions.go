@@ -485,17 +485,17 @@ type valPartInfo struct {
 
 func (p *Parser) procNameVal(mut bool, tk obj.Token) value.Val {
 	var rv value.Val
-	vi, t, src := p.defByName(tk)
+	vi, t := p.defByName(tk)
 	if vi == -1 {
 		fract.IPanic(tk, obj.NamePanic, "Name is not defined: "+tk.V)
 	}
 	switch t {
 	case 'f': // Function.
-		rv = value.Val{D: src.funcs[vi], T: value.Func}
+		rv = value.Val{D: p.s.Funcs[vi], T: value.Func}
 	case 'p': // Package.
-		rv = value.Val{D: src.packages[vi], T: value.Package}
+		rv = value.Val{D: p.packages[vi], T: value.Package}
 	case 'v': // Value.
-		v := src.vars[vi]
+		v := p.s.Vars[vi]
 		var val value.Val
 		if !v.V.Mut && !mut { //! Immutability.
 			val = v.V.Immut()
@@ -899,9 +899,9 @@ func (p *Parser) procListComprehension(tks obj.Tokens) value.Val {
 	if !varr.IsEnum() {
 		fract.IPanic(ltks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	p.vars = append(p.vars, obj.Var{Name: nametk.V})
-	vlen := len(p.vars)
-	element := &p.vars[vlen-1]
+	p.s.Vars = append(p.s.Vars, obj.Var{Name: nametk.V})
+	vlen := len(p.s.Vars)
+	element := &p.s.Vars[vlen-1]
 	if element.Name == "_" {
 		element.Name = ""
 	}
@@ -915,7 +915,7 @@ func (p *Parser) procListComprehension(tks obj.Tokens) value.Val {
 			v.D = append(v.D.(value.ArrayModel), val)
 		}
 	})
-	p.vars = p.vars[:vlen-1] // Remove variables.
+	p.s.Vars = p.s.Vars[:vlen-1] // Remove variables.
 	return v
 }
 

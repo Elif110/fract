@@ -23,8 +23,8 @@ func (p *Parser) Import() {
 			src := new(Parser)
 			src.AddBuiltInFuncs()
 			src.procImport(tks)
-			p.vars = append(p.vars, src.vars...)
-			p.funcs = append(p.funcs, src.funcs...)
+			p.s.Vars = append(p.s.Vars, src.s.Vars...)
+			p.s.Funcs = append(p.s.Funcs, src.s.Funcs...)
 			p.packages = append(p.packages, src.packages...)
 		case fract.Macro: // Macro.
 			p.procPragma(tks)
@@ -92,12 +92,12 @@ func (p *Parser) procImport(tks obj.Tokens) {
 		isrc.loopCount = -1 //! Tag as import source.
 		isrc.ready()
 		isrc.AddBuiltInFuncs()
-		bifl := len(isrc.funcs)
+		bifl := len(isrc.s.Funcs)
 		isrc.Import()
 		isrc.importPackage() // Import other package files.
 		isrc.loopCount = 0
-		src.funcs = append(src.funcs, isrc.funcs[bifl:]...)
-		src.vars = append(src.vars, isrc.vars...)
+		src.s.Funcs = append(src.s.Funcs, isrc.s.Funcs[bifl:]...)
+		src.s.Vars = append(src.s.Vars, isrc.s.Vars...)
 		src.packages = append(src.packages, isrc.packages...)
 		src.pkg = isrc.pkg
 		break

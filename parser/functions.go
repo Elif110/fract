@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/fract-lang/fract/functions/built_in"
+	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
 	"github.com/fract-lang/fract/pkg/value"
@@ -55,8 +56,7 @@ func (c funcCall) call() value.Val {
 	dlen := len(defers)
 	src := c.f.Src.(*Parser)
 	p := Parser{
-		vars:         nil,
-		funcs:        src.funcs,
+		s:            oop.DefMap{Funcs: src.s.Funcs},
 		packages:     src.packages,
 		funcTempVars: src.funcTempVars,
 		loopCount:    0,
@@ -67,9 +67,9 @@ func (c funcCall) call() value.Val {
 		p.funcTempVars = 0
 	}
 	if p.funcTempVars == 0 {
-		p.vars = append(c.args, src.vars...)
+		p.s.Vars = append(c.args, src.s.Vars...)
 	} else {
-		p.vars = append(c.args, src.vars[:len(src.vars)-p.funcTempVars]...)
+		p.s.Vars = append(c.args, src.s.Vars[:len(src.s.Vars)-p.funcTempVars]...)
 	}
 	p.funcTempVars = len(c.args)
 	// Interpret block.
@@ -409,5 +409,5 @@ func (p *Parser) funcdec(tks obj.Tokens) {
 		f.Tks = []obj.Tokens{}
 	}
 	f.Ln = name.Ln
-	p.funcs = append(p.funcs, f)
+	p.s.Funcs = append(p.s.Funcs, f)
 }
