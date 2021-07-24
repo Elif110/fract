@@ -13,7 +13,7 @@
 package strings
 
 // Converts the first character to uppercase.
-protected func Capitalize(str) {
+func Capitalize(str) {
 	if str == '' {
 		ret str
 	}
@@ -25,7 +25,7 @@ protected func Capitalize(str) {
 
 // A string is considered a valid identifier if it only contains alphanumeric letters (a-z) and (0-9),
 // or underscores (_). A valid identifier cannot start with a number, or contain any spaces.
-protected func IsIdentifier(str) {
+func IsIdentifier(str) {
 	if str == '' {
 		ret false
 	}
@@ -55,12 +55,12 @@ protected func IsIdentifier(str) {
 }
 
 // Returns true if char is letter, false if not.
-protected func IsLetter(char) {
+func IsLetter(char) {
 	ret (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
 }
 
 // Returns true if string is lowercase, false if not.
-protected func IsLower(str) {
+func IsLower(str) {
 	if str == '' {
 		ret false
 	}
@@ -77,7 +77,7 @@ protected func IsLower(str) {
 }
 
 // Check if all the characters in the text are whitespaces.
-protected func IsSpace(str) {
+func IsSpace(str) {
 	if str == '' {
 		ret false
 	}
@@ -90,7 +90,7 @@ protected func IsSpace(str) {
 }
 
 // Returns true if string is uppercase, false if not.
-protected func IsUpper(str) {
+func IsUpper(str) {
 	if str == '' {
 		ret false
 	}
@@ -107,7 +107,7 @@ protected func IsUpper(str) {
 }
 
 // Returns strings as lowercase.
-protected func Lower(str) {
+func Lower(str) {
 	for index, char in str {
 		if IsLetter(char) == false {
 			continue
@@ -120,7 +120,7 @@ protected func Lower(str) {
 }
 
 // Returns subbed string.
-protected func Substring(str, start, length) {
+func Substring(str, start, length) {
 	if start < 0 || length < 0 {
 		ret ''
 	}
@@ -138,7 +138,7 @@ protected func Substring(str, start, length) {
 }
 
 // Swaps cases, lowercase becomes uppercase and vice versa.
-protected func SwapCase(str) {
+func SwapCase(str) {
 	for index, char in str {
 		if IsLetter(char) == false {
 			continue
@@ -153,7 +153,7 @@ protected func SwapCase(str) {
 }
 
 // Returns strings as uppercase.
-protected func Upper(str) {
+func Upper(str) {
 	for index, char in str {
 		if IsLetter(char) == false {
 			continue

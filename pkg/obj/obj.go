@@ -8,11 +8,10 @@ import (
 
 // Var instance.
 type Var struct {
-	Name      string
-	Ln        int // Line of define.
-	V         value.Val
-	Const     bool
-	Protected bool
+	Name  string
+	Ln    int // Line of define.
+	V     value.Val
+	Const bool
 }
 
 // Func instance.
@@ -23,7 +22,6 @@ type Func struct {
 	Tks           []Tokens
 	Params        []Param
 	DefParamCount int
-	Protected     bool
 }
 
 // Param instance.

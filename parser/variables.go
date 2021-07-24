@@ -11,10 +11,9 @@ import (
 
 // Metadata of variable declaration.
 type varinfo struct {
-	sdec      bool
-	constant  bool
-	mut       bool
-	protected bool
+	sdec     bool
+	constant bool
+	mut      bool
 }
 
 // Append variable to source.
@@ -53,25 +52,23 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 	v.Mut = md.mut
 	p.vars = append(p.vars,
 		obj.Var{
-			Name:      name.V,
-			V:         v,
-			Ln:        name.Ln,
-			Const:     md.constant,
-			Protected: md.protected,
+			Name:  name.V,
+			V:     v,
+			Ln:    name.Ln,
+			Const: md.constant,
 		})
 }
 
 // Process variable declaration.
-func (p *Parser) vardec(tks obj.Tokens, protected bool) {
+func (p *Parser) vardec(tks obj.Tokens) {
 	// Name is not defined?
 	if len(tks) < 2 {
 		first := tks[0]
 		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Name is not given!")
 	}
 	md := varinfo{
-		constant:  tks[0].V == "const",
-		mut:       tks[0].V == "mut",
-		protected: protected,
+		constant: tks[0].V == "const",
+		mut:      tks[0].V == "mut",
 	}
 	pre := tks[1]
 	if pre.T == fract.Name {

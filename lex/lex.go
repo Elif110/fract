@@ -446,12 +446,6 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "const"):
 		tk.V = "const"
 		tk.T = fract.Var
-	case isKeyword(ln, "protected"):
-		tk.V = "protected"
-		tk.T = fract.Protected
-	case isKeyword(ln, "del"):
-		tk.V = "del"
-		tk.T = fract.Delete
 	case isKeyword(ln, "defer"):
 		tk.V = "defer"
 		tk.T = fract.Defer

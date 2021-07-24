@@ -15,24 +15,10 @@ func (p *Parser) Import() {
 	// Interpret all lines.
 	for p.i = 1; p.i < len(p.Tks); p.i++ {
 		switch tks := p.Tks[p.i]; tks[0].T {
-		case fract.Protected: // Protected declaration.
-			if len(tks) < 2 {
-				fract.IPanic(tks[0], obj.SyntaxPanic, "Define is not given!")
-			}
-			second := tks[1]
-			tks = tks[1:]
-			switch second.T {
-			case fract.Var: // Variable definition.
-				p.vardec(tks, true)
-			case fract.Func: // Function definition.
-				p.funcdec(tks, true)
-			default:
-				fract.IPanic(second, obj.SyntaxPanic, "Can protect only deletable objects!")
-			}
 		case fract.Var: // Variable definition.
-			p.vardec(tks, false)
+			p.vardec(tks)
 		case fract.Func: // Function definiton.
-			p.funcdec(tks, false)
+			p.funcdec(tks)
 		case fract.Import: // Import.
 			src := new(Parser)
 			src.AddBuiltInFuncs()

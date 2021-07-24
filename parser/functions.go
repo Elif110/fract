@@ -46,7 +46,7 @@ func (c funcCall) call() value.Val {
 			return built_in.Append(c.errTk, c.args)
 		case "del":
 			built_in.Del(c.errTk, c.args)
-		default:
+		case "exit":
 			built_in.Exit(c.errTk, c.args)
 		}
 		return retv
@@ -375,7 +375,7 @@ func (p *Parser) setFuncParams(f *obj.Func, tks *obj.Tokens) {
 }
 
 // Process function declaration.
-func (p *Parser) funcdec(tks obj.Tokens, protected bool) {
+func (p *Parser) funcdec(tks obj.Tokens) {
 	tkslen := len(tks)
 	name := tks[1]
 	// Name is not name?
@@ -392,10 +392,9 @@ func (p *Parser) funcdec(tks obj.Tokens, protected bool) {
 		fract.IPanicC(name.F, name.Ln, name.Col+len(name.V), obj.SyntaxPanic, "Invalid syntax!")
 	}
 	f := obj.Func{
-		Name:      name.V,
-		Ln:        p.i,
-		Protected: protected,
-		Src:       p,
+		Name: name.V,
+		Ln:   p.i,
+		Src:  p,
 	}
 	// Decompose function parameters.
 	if tks[2].V == "(" {

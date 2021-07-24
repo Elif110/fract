@@ -1,7 +1,7 @@
 package test
 
 /*
-try {} ; ; protected func a() {
+try {} ; ; func a() {
     println('TEST'); if false { ret 0 } else { ret 1 }
 }
 

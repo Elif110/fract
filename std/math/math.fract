@@ -13,7 +13,7 @@
 package math
 
 // Returns absolute of value.
-protected func Abs(x) {
+func Abs(x) {
 	if x < 0 {
 		ret -x
 	}
@@ -21,7 +21,7 @@ protected func Abs(x) {
 }
 
 // Returns the smallest (closest to negative infinity).
-protected func Ceil(x) {
+func Ceil(x) {
 	if x - int(x) == 0 {
 		ret x
 	} else if x - int(x) > 0 {
@@ -31,10 +31,10 @@ protected func Ceil(x) {
 }
 
 // Returns radians to degrees.
-protected func Degrees(radians) { ret radians * 57.295780 }
+func Degrees(radians) { ret radians * 57.295780 }
 
 // Returns factorial of number.
-protected func Fact(x) {
+func Fact(x) {
 	if x < 0 {
 		ret NaN
 	} else if x == 0 {
@@ -44,7 +44,7 @@ protected func Fact(x) {
 }
 
 // Returns the floor of x as an integral.
-protected func Floor(n) {
+func Floor(n) {
 	intN := int(n)
 	if n - intN >= 0 {
 		ret intN
@@ -53,16 +53,16 @@ protected func Floor(n) {
 }
 
 // Returns true if number is NaN, false if not.
-protected func IsNaN(x) { ret x <> x }
+func IsNaN(x) { ret x <> x }
 
 // Returns true if object is numeric, returns false if not.
-protected func IsNumeric(object) {
+func IsNumeric(object) {
 	result := float(object)
 	ret result <> 0 || result == 0 && (object == 0 || object == '0')
 }
 
 // Returns maximum number.
-protected func Max(x, y) {
+func Max(x, y) {
 	if x > y {
 		ret x
 	}

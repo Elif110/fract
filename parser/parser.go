@@ -600,7 +600,6 @@ func (p *Parser) AddBuiltInFuncs() {
 	p.funcs = append(p.funcs,
 		obj.Func{ // print function.
 			Name:          "print",
-			Protected:     true,
 			DefParamCount: 2,
 			Params: []obj.Param{{
 				Name:   "value",
@@ -609,7 +608,6 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, obj.Func{ // println function.
 			Name:          "println",
-			Protected:     true,
 			DefParamCount: 2,
 			Params: []obj.Param{{
 				Name:   "value",
@@ -618,7 +616,6 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, obj.Func{ // input function.
 			Name:          "input",
-			Protected:     true,
 			DefParamCount: 1,
 			Params: []obj.Param{{
 				Name:   "message",
@@ -626,7 +623,6 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, obj.Func{ // exit function.
 			Name:          "exit",
-			Protected:     true,
 			DefParamCount: 1,
 			Params: []obj.Param{{
 				Name:   "code",
@@ -634,12 +630,10 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, obj.Func{ // len function.
 			Name:          "len",
-			Protected:     true,
 			DefParamCount: 0,
 			Params:        []obj.Param{{Name: "object"}},
 		}, obj.Func{ // range function.
 			Name:          "range",
-			Protected:     true,
 			DefParamCount: 1,
 			Params: []obj.Param{
 				{Name: "start"},
@@ -651,22 +645,18 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, obj.Func{ // calloc function.
 			Name:          "calloc",
-			Protected:     true,
 			DefParamCount: 0,
 			Params:        []obj.Param{{Name: "size"}},
 		}, obj.Func{ // realloc function.
 			Name:          "realloc",
-			Protected:     true,
 			DefParamCount: 0,
 			Params:        []obj.Param{{Name: "base"}, {Name: "size"}},
 		}, obj.Func{ // memset function.
 			Name:          "memset",
-			Protected:     true,
 			DefParamCount: 0,
 			Params:        []obj.Param{{Name: "mem"}, {Name: "val"}},
 		}, obj.Func{ // string function.
 			Name:          "string",
-			Protected:     true,
 			DefParamCount: 1,
 			Params: []obj.Param{
 				{Name: "object"},
@@ -677,7 +667,6 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, obj.Func{ // int function.
 			Name:          "int",
-			Protected:     true,
 			DefParamCount: 1,
 			Params: []obj.Param{
 				{Name: "object"},
@@ -688,12 +677,10 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, obj.Func{ // float function.
 			Name:          "float",
-			Protected:     true,
 			DefParamCount: 0,
 			Params:        []obj.Param{{Name: "object"}},
 		}, obj.Func{ // append function.
 			Name:          "append",
-			Protected:     true,
 			DefParamCount: 0,
 			Params:        []obj.Param{{Name: "dest"}, {Name: "src", Params: true}},
 		},
@@ -838,66 +825,6 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 	return kws
 }
 
-func (p *Parser) procDel(tks obj.Tokens) {
-	tkslen := len(tks)
-	// Value is not defined?
-	if tkslen < 2 {
-		first := tks[0]
-		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Define(s) is not given!")
-	}
-	if tks[1].V == "(" {
-		fdel := obj.Func{
-			Name:   "del",
-			Src:    p,
-			Params: []obj.Param{{Name: "map"}, {Name: "key"}},
-		}
-		p.funcCallModel(fdel, tks).call()
-		fdel.Params = nil
-		fdel.Src = nil
-		return
-	}
-	comma := false
-	for j := 1; j < tkslen; j++ {
-		t := tks[j]
-		if comma {
-			if t.T != fract.Comma {
-				fract.IPanic(t, obj.SyntaxPanic, "Comma is not found!")
-			}
-			comma = false
-			continue
-		}
-		// Token is not a deletable object?
-		if t.T != fract.Name {
-			fract.IPanic(t, obj.MemoryPanic, "This is not deletable object!")
-		}
-		pos, src := p.varIndexByName(t)
-		// Name is not defined?
-		if pos == -1 {
-			pos, src := p.funcIndexByName(t)
-			if pos == -1 {
-				fract.IPanic(t, obj.NamePanic, "\""+t.V+"\" is not defined!")
-			}
-			// Protected?
-			if src.funcs[pos].Protected {
-				fract.IPanic(t, obj.MemoryPanic, "Protected objects cannot be deleted manually from memory!")
-			}
-			f := &src.funcs[pos]
-			f.Params = nil
-			f.Src = nil
-			f.Tks = nil
-			src.funcs = append(src.funcs[:pos], src.funcs[pos+1:]...)
-			continue
-		}
-		// Protected?
-		if src.vars[pos].Protected {
-			fract.IPanic(t, obj.MemoryPanic, "Protected objects cannot be deleted manually from memory!")
-		}
-		src.vars[pos].V.D = nil
-		src.vars = append(src.vars[:pos], src.vars[pos+1:]...)
-		comma = true
-	}
-}
-
 // TODO: Add match-case.
 //! A change added here(especially added a code block) must also be compatible with "imports.go" and
 //! add to "isBlock" function of parser.
@@ -939,24 +866,8 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 				println()
 			}
 		}
-	case fract.Protected: // Protected declaration.
-		if len(tks) < 2 {
-			fract.IPanic(fst, obj.SyntaxPanic, "Define is not given!")
-		}
-		second := tks[1]
-		tks = tks[1:]
-		switch second.T {
-		case fract.Var: // Variable definition.
-			p.vardec(tks, true)
-		case fract.Func: // Function definition.
-			p.funcdec(tks, true)
-		default:
-			fract.IPanic(second, obj.SyntaxPanic, "Can protect only deletable objects!")
-		}
 	case fract.Var: // Variable definition.
-		p.vardec(tks, false)
-	case fract.Delete: // Delete from memory.
-		p.procDel(tks)
+		p.vardec(tks)
 	case fract.If: // if-elif-else.
 		return p.procIf(tks)
 	case fract.Loop: // Loop definition.
@@ -986,7 +897,7 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 		}
 		return fract.FUNCReturn
 	case fract.Func: // Function definiton.
-		p.funcdec(tks, false)
+		p.funcdec(tks)
 	case fract.Try: // Try-Catch.
 		return p.procTryCatch(tks)
 	case fract.Import: // Import.
