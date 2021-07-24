@@ -112,10 +112,8 @@ func help(cmd string) {
 		return
 	}
 	d := map[string]string{
-		"make":    "Interprete Fract code.",
 		"version": "Show version.",
 		"help":    "Show help.",
-		"exit":    "Exit.",
 	}
 	mlen := 0
 	for k := range d {
@@ -172,8 +170,6 @@ func proccmd(ns, cmd string) {
 		help(cmd)
 	case "version":
 		version(cmd)
-	case "make":
-		make(cmd)
 	default:
 		if makechk(ns) {
 			make(ns)
