@@ -488,7 +488,7 @@ type valPartInfo struct {
 
 func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 	var rv *oop.Val
-	vi, t := p.defByName(tk)
+	vi, t := p.defByName(tk.V)
 	if vi == -1 {
 		fract.IPanic(tk, obj.NamePanic, "Name is not defined: "+tk.V)
 	}
@@ -568,7 +568,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			case oop.StructureInstance:
 				s := v.D.(oop.StructInstance)
 				checkPublic(s.L, tk)
-				i := s.Fields.VarIndexByName(n)
+				i := s.Fields.VarIndexByName(n.V)
 				if i == -1 {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
 				}
@@ -895,7 +895,7 @@ func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
 	if nametk.T != fract.Name {
 		fract.IPanic(nametk, obj.SyntaxPanic, "This is not a valid name!")
 	}
-	if ln := p.definedName(nametk); ln != -1 {
+	if ln := p.definedName(nametk.V); ln != -1 {
 		fract.IPanic(nametk, obj.NamePanic, "\""+nametk.V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
 	if len(ltks) < 3 {

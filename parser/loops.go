@@ -139,7 +139,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	if nametk.T != fract.Name {
 		fract.IPanic(nametk, obj.SyntaxPanic, "This is not a valid name!")
 	}
-	if ln := p.definedName(nametk); ln != -1 {
+	if ln := p.definedName(nametk.V); ln != -1 {
 		fract.IPanic(nametk, obj.NamePanic, "\""+nametk.V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
 	// Element name?
@@ -150,7 +150,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 		}
 		if tks[2].V != "_" {
 			ename = tks[2].V
-			if ln := p.definedName(tks[2]); ln != -1 {
+			if ln := p.definedName(tks[2].V); ln != -1 {
 				fract.IPanic(tks[2], obj.NamePanic, "\""+ename+"\" is already defined at line: "+fmt.Sprint(ln))
 			}
 		}

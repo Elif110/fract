@@ -51,7 +51,7 @@ func (p *Parser) structdec(tks obj.Tokens) {
 	if name.T != fract.Name {
 		fract.IPanic(tks[1], obj.SyntaxPanic, "Name is not valid!")
 	}
-	if ln := p.definedName(tks[1]); ln != -1 {
+	if ln := p.definedName(tks[1].V); ln != -1 {
 		fract.IPanic(tks[1], obj.NamePanic, "\""+tks[1].V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
 	v := *p.buildStruct(name.V, tks[2:])

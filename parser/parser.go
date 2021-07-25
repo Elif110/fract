@@ -295,7 +295,7 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 // 'v' -> Variable.
 // 'p' -> Package.
 // Returns define by name.
-func (p *Parser) defByName(n obj.Token) (int, rune) {
+func (p *Parser) defByName(n string) (int, rune) {
 	pos := p.defs.FuncIndexByName(n)
 	if pos != -1 {
 		return pos, 'f'
@@ -304,7 +304,7 @@ func (p *Parser) defByName(n obj.Token) (int, rune) {
 	if pos != -1 {
 		return pos, 'v'
 	}
-	pos = p.packageIndexByName(n.V)
+	pos = p.packageIndexByName(n)
 	if pos != -1 {
 		return pos, 'p'
 	}
@@ -312,22 +312,22 @@ func (p *Parser) defByName(n obj.Token) (int, rune) {
 }
 
 // Returns index of name is exist name, returns -1 if not.
-func (p *Parser) definedName(n obj.Token) int {
-	if n.V[0] == '-' { // Ignore minus.
-		n.V = n.V[1:]
+func (p *Parser) definedName(n string) int {
+	if n[0] == '-' { // Ignore minus.
+		n = n[1:]
 	}
 	for _, f := range p.defs.Funcs {
-		if f.Name == n.V {
+		if f.Name == n {
 			return f.Ln
 		}
 	}
 	for _, v := range p.defs.Vars {
-		if v.Name == n.V {
+		if v.Name == n {
 			return v.Ln
 		}
 	}
 	for _, i := range p.packages {
-		if i.name == n.V {
+		if i.name == n {
 			return i.ln
 		}
 	}

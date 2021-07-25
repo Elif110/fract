@@ -25,7 +25,7 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 		fract.IPanic(name, obj.SyntaxPanic, "Ignore operator is cannot be variable name!")
 	}
 	// Name is already defined?
-	if ln := p.definedName(name); ln != -1 {
+	if ln := p.definedName(name.V); ln != -1 {
 		fract.IPanic(name, obj.NamePanic, "\""+name.V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
 	tksLen := len(tks)

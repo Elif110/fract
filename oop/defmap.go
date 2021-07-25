@@ -1,9 +1,5 @@
 package oop
 
-import (
-	"github.com/fract-lang/fract/pkg/obj"
-)
-
 type DefMap struct {
 	Vars  []Var
 	Funcs []Func
@@ -13,12 +9,12 @@ type DefMap struct {
 //! If you change here, probably you must change there too.
 
 // FuncIndexByName returns index of function by name.
-func (s *DefMap) FuncIndexByName(n obj.Token) int {
-	if n.V[0] == '-' { // Ignore minus.
-		n.V = n.V[1:]
+func (s *DefMap) FuncIndexByName(n string) int {
+	if n[0] == '-' { // Ignore minus.
+		n = n[1:]
 	}
 	for j, f := range s.Funcs {
-		if f.Name == n.V {
+		if f.Name == n {
 			return j
 		}
 	}
@@ -29,12 +25,12 @@ func (s *DefMap) FuncIndexByName(n obj.Token) int {
 //! If you change here, probably you must change there too.
 
 // VarIndexByName returns index of variable by name.
-func (s *DefMap) VarIndexByName(n obj.Token) int {
-	if n.V[0] == '-' { // Ignore minus.
-		n.V = n.V[1:]
+func (s *DefMap) VarIndexByName(n string) int {
+	if n[0] == '-' { // Ignore minus.
+		n = n[1:]
 	}
 	for j, v := range s.Vars {
-		if v.Name == n.V {
+		if v.Name == n {
 			return j
 		}
 	}

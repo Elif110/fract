@@ -383,7 +383,7 @@ func (p *Parser) funcdec(tks obj.Tokens) {
 		fract.IPanic(name, obj.SyntaxPanic, "Names is cannot include dot!")
 	}
 	// Name is already defined?
-	if line := p.definedName(name); line != -1 {
+	if line := p.definedName(name.V); line != -1 {
 		fract.IPanic(name, obj.NamePanic, "\""+name.V+"\" is already defined at line: "+fmt.Sprint(line))
 	}
 	if tkslen < 3 {
