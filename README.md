@@ -17,6 +17,8 @@
 + Safety: no null, no undefined values, immutability by default
 + Unreachable codes are not included in debugging
 + Efficient and performance
++ Object Oriented Programming
++ Deferred calls
 + Language level concurrency
 + Pragmas
 
