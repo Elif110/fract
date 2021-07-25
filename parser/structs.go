@@ -54,10 +54,11 @@ func (p *Parser) structdec(tks obj.Tokens) {
 	if ln := p.definedName(tks[1]); ln != -1 {
 		fract.IPanic(tks[1], obj.NamePanic, "\""+tks[1].V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
+	v := *p.buildStruct(name.V, tks[2:])
+	v.Const = true
 	p.defs.Vars = append(p.defs.Vars, oop.Var{
-		Name:  name.V,
-		Const: true,
-		Ln:    tks[0].Ln,
-		V:     *p.buildStruct(name.V, tks[2:]),
+		Name: name.V,
+		Ln:   tks[0].Ln,
+		V:    v,
 	})
 }

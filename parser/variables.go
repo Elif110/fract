@@ -50,11 +50,11 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 		p.funcTempVars++
 	}
 	v.Mut = md.mut
+	v.Const = md.constant
 	p.defs.Vars = append(p.defs.Vars, oop.Var{
-		Name:  name.V,
-		V:     v,
-		Ln:    name.Ln,
-		Const: md.constant,
+		Name: name.V,
+		V:    v,
+		Ln:   name.Ln,
 	})
 }
 
@@ -121,23 +121,8 @@ func (p *Parser) varsdec(tks obj.Tokens) {
 
 // Process variable set statement.
 func (p *Parser) varset(tks obj.Tokens) {
-	name := tks[0]
-	// Name is not name?
-	if name.T != fract.Name {
-		fract.IPanic(name, obj.SyntaxPanic, "Invalid name!")
-	} else if name.V == "_" {
-		fract.IPanic(name, obj.SyntaxPanic, "Ignore operator is cannot set!")
-	}
-	j := p.defs.VarIndexByName(name)
-	if j == -1 {
-		fract.IPanic(name, obj.NamePanic, "Variable is not defined in this name: "+name.V)
-	}
-	v := &p.defs.Vars[j].V
-	// Check const state.
-	if p.defs.Vars[j].Const {
-		fract.IPanic(tks[1], obj.SyntaxPanic, "Values is cannot changed of constant defines!")
-	}
 	var (
+		v      *oop.Val
 		s      interface{}
 		vtks   obj.Tokens
 		setter obj.Token
@@ -179,6 +164,10 @@ func (p *Parser) varset(tks obj.Tokens) {
 	}
 	if vtks == nil || len(vtks) == 0 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
+	}
+	// Check const state.
+	if v.Const {
+		fract.IPanic(setter, obj.SyntaxPanic, "Values is cannot changed of constant defines!")
 	}
 	val := *p.procValTks(vtks)
 	if val.D == nil {

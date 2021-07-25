@@ -26,9 +26,10 @@ type MapModel map[Val]Val
 
 // Val instance.
 type Val struct {
-	D   interface{}
-	T   uint8
-	Mut bool
+	D     interface{}
+	T     uint8
+	Mut   bool
+	Const bool
 }
 
 // Returns immutable copy.

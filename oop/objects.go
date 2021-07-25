@@ -4,10 +4,9 @@ import "github.com/fract-lang/fract/pkg/obj"
 
 // Var instance.
 type Var struct {
-	Name  string
-	Ln    int // Line of define.
-	V     Val
-	Const bool
+	Name string
+	Ln   int // Line of define.
+	V    Val
 }
 
 // Func instance.
