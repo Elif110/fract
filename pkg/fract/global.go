@@ -33,6 +33,7 @@ const (
 	Colon               uint8 = 33
 	Package             uint8 = 34
 	Dot                 uint8 = 35
+	Struct              uint8 = 36
 
 	LOOPBreak    uint8 = 1
 	LOOPContinue uint8 = 2

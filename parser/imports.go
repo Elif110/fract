@@ -15,16 +15,18 @@ func (p *Parser) Import() {
 	// Interpret all lines.
 	for p.i = 1; p.i < len(p.Tks); p.i++ {
 		switch tks := p.Tks[p.i]; tks[0].T {
-		case fract.Var: // Variable definition.
+		case fract.Var:
 			p.vardec(tks)
-		case fract.Func: // Function definiton.
+		case fract.Func:
 			p.funcdec(tks)
+		case fract.Struct:
+			p.structdec(tks)
 		case fract.Import: // Import.
 			src := new(Parser)
 			src.AddBuiltInFuncs()
 			src.procImport(tks)
-			p.s.Vars = append(p.s.Vars, src.s.Vars...)
-			p.s.Funcs = append(p.s.Funcs, src.s.Funcs...)
+			p.defs.Vars = append(p.defs.Vars, src.defs.Vars...)
+			p.defs.Funcs = append(p.defs.Funcs, src.defs.Funcs...)
 			p.packages = append(p.packages, src.packages...)
 		case fract.Macro: // Macro.
 			p.procPragma(tks)
@@ -62,7 +64,7 @@ func (p *Parser) procImport(tks obj.Tokens) {
 	} else if j == 2 && len(tks) != 3 {
 		fract.IPanic(tks[3], obj.SyntaxPanic, "Invalid syntax!")
 	}
-	src := new(Parser)
+	src := &Parser{}
 	src.AddBuiltInFuncs()
 	var imppath string
 	if tks[j].T == fract.Name {
@@ -92,12 +94,12 @@ func (p *Parser) procImport(tks obj.Tokens) {
 		isrc.loopCount = -1 //! Tag as import source.
 		isrc.ready()
 		isrc.AddBuiltInFuncs()
-		bifl := len(isrc.s.Funcs)
+		bifl := len(isrc.defs.Funcs)
 		isrc.Import()
 		isrc.importPackage() // Import other package files.
 		isrc.loopCount = 0
-		src.s.Funcs = append(src.s.Funcs, isrc.s.Funcs[bifl:]...)
-		src.s.Vars = append(src.s.Vars, isrc.s.Vars...)
+		src.defs.Funcs = append(src.defs.Funcs, isrc.defs.Funcs[bifl:]...)
+		src.defs.Vars = append(src.defs.Vars, isrc.defs.Vars...)
 		src.packages = append(src.packages, isrc.packages...)
 		src.pkg = isrc.pkg
 		break

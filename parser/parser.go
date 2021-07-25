@@ -13,7 +13,6 @@ import (
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
-	"github.com/fract-lang/fract/pkg/value"
 )
 
 var (
@@ -22,14 +21,14 @@ var (
 
 // Parser of Fract.
 type Parser struct {
-	s            oop.DefMap
+	defs         oop.DefMap
 	packages     []importInfo
 	funcTempVars int // Count of function temporary variables.
 	loopCount    int
 	funcCount    int
 	i            int
-	retVal       *value.Val // Pointer of last return value.
-	pkg          string     // Package name.
+	retVal       *oop.Val // Pointer of last return oop.
+	pkg          string   // Package name.
 
 	L   *lex.Lex
 	Tks []obj.Tokens // All Tokens of code file.
@@ -114,13 +113,12 @@ func (p *Parser) importPackage() {
 			fract.Error(src.L.F, tk.Ln, tk.Col, "Package is not same!")
 		}
 		src.AddBuiltInFuncs()
-		bifl := len(src.s.Funcs)
+		bifl := len(src.defs.Funcs)
 		src.loopCount = -1 //! Tag as import source.
 		src.Import()
-		p.s.Funcs = append(p.s.Funcs, src.s.Funcs[bifl:]...)
-		p.s.Vars = append(p.s.Vars, src.s.Vars...)
+		p.defs.Funcs = append(p.defs.Funcs, src.defs.Funcs[bifl:]...)
+		p.defs.Vars = append(p.defs.Vars, src.defs.Vars...)
 		p.packages = append(p.packages, src.packages...)
-		src = nil
 	}
 }
 
@@ -164,23 +162,23 @@ func (p *Parser) procPragma(tks []obj.Token) {
 }
 
 // Process enumerable selections for access to elements.
-func selections(enum, val value.Val, tk obj.Token) interface{} {
-	if val.T != value.Array && val.T != value.Str && val.IsEnum() {
+func selections(enum, val oop.Val, tk obj.Token) interface{} {
+	if val.T != oop.Array && val.T != oop.Str && val.IsEnum() {
 		fract.IPanic(tk, obj.ValuePanic, "Element selector is can only be array or single value!")
 	}
-	if enum.T == value.Map {
-		if val.T == value.Array {
-			return val.D.(value.ArrayModel)
+	if enum.T == oop.Map {
+		if val.T == oop.Array {
+			return val.D.(oop.ArrayModel)
 		}
 		return val
 	}
 
 	// Array, String.
 	l := enum.Len()
-	if val.T == value.Array {
+	if val.T == oop.Array {
 		var i []int
-		for _, d := range val.D.(value.ArrayModel) {
-			if d.T != value.Int {
+		for _, d := range val.D.(oop.ArrayModel) {
+			if d.T != oop.Int {
 				fract.IPanic(tk, obj.ValuePanic, "Only integer values can used in index access!")
 			}
 			pos, err := strconv.Atoi(d.String())
@@ -195,7 +193,7 @@ func selections(enum, val value.Val, tk obj.Token) interface{} {
 		}
 		return i
 	}
-	if val.T != value.Int {
+	if val.T != oop.Int {
 		fract.IPanic(tk, obj.ValuePanic, "Only integer values can used in index access!")
 	}
 	pos, err := strconv.Atoi(val.String())
@@ -297,16 +295,16 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 // 'v' -> Variable.
 // 'p' -> Package.
 // Returns define by name.
-func (p *Parser) defByName(name obj.Token) (int, rune) {
-	pos := p.s.FuncIndexByName(name)
+func (p *Parser) defByName(n obj.Token) (int, rune) {
+	pos := p.defs.FuncIndexByName(n)
 	if pos != -1 {
 		return pos, 'f'
 	}
-	pos = p.s.VarIndexByName(name)
+	pos = p.defs.VarIndexByName(n)
 	if pos != -1 {
 		return pos, 'v'
 	}
-	pos = p.packageIndexByName(name.V)
+	pos = p.packageIndexByName(n.V)
 	if pos != -1 {
 		return pos, 'p'
 	}
@@ -314,22 +312,22 @@ func (p *Parser) defByName(name obj.Token) (int, rune) {
 }
 
 // Returns index of name is exist name, returns -1 if not.
-func (p *Parser) definedName(name obj.Token) int {
-	if name.V[0] == '-' { // Ignore minus.
-		name.V = name.V[1:]
+func (p *Parser) definedName(n obj.Token) int {
+	if n.V[0] == '-' { // Ignore minus.
+		n.V = n.V[1:]
 	}
-	for _, f := range p.s.Funcs {
-		if f.Name == name.V {
+	for _, f := range p.defs.Funcs {
+		if f.Name == n.V {
 			return f.Ln
 		}
 	}
-	for _, v := range p.s.Vars {
-		if v.Name == name.V {
+	for _, v := range p.defs.Vars {
+		if v.Name == n.V {
 			return v.Ln
 		}
 	}
 	for _, i := range p.packages {
-		if i.name == name.V {
+		if i.name == n.V {
 			return i.ln
 		}
 	}
@@ -565,92 +563,92 @@ func conditionalProcesses(tks obj.Tokens, opr string) []obj.Tokens {
 
 // ApplyBuildInFunctions to parser source.
 func (p *Parser) AddBuiltInFuncs() {
-	p.s.Funcs = append(p.s.Funcs,
-		obj.Func{ // print function.
+	p.defs.Funcs = append(p.defs.Funcs,
+		oop.Func{ // print function.
 			Name:          "print",
 			DefParamCount: 2,
-			Params: []obj.Param{{
+			Params: []oop.Param{{
 				Name:   "value",
 				Params: true,
-				Defval: value.Val{D: "", T: value.Str},
+				Defval: oop.Val{D: "", T: oop.Str},
 			}},
-		}, obj.Func{ // println function.
+		}, oop.Func{ // println function.
 			Name:          "println",
 			DefParamCount: 2,
-			Params: []obj.Param{{
+			Params: []oop.Param{{
 				Name:   "value",
 				Params: true,
-				Defval: value.Val{D: value.ArrayModel{{D: "", T: value.Str}}, T: value.Array},
+				Defval: oop.Val{D: oop.ArrayModel{{D: "", T: oop.Str}}, T: oop.Array},
 			}},
-		}, obj.Func{ // input function.
+		}, oop.Func{ // input function.
 			Name:          "input",
 			DefParamCount: 1,
-			Params: []obj.Param{{
+			Params: []oop.Param{{
 				Name:   "message",
-				Defval: value.Val{D: "", T: value.Str},
+				Defval: oop.Val{D: "", T: oop.Str},
 			}},
-		}, obj.Func{ // exit function.
+		}, oop.Func{ // exit function.
 			Name:          "exit",
 			DefParamCount: 1,
-			Params: []obj.Param{{
+			Params: []oop.Param{{
 				Name:   "code",
-				Defval: value.Val{D: "0", T: value.Int},
+				Defval: oop.Val{D: "0", T: oop.Int},
 			}},
-		}, obj.Func{ // len function.
+		}, oop.Func{ // len function.
 			Name:          "len",
 			DefParamCount: 0,
-			Params:        []obj.Param{{Name: "object"}},
-		}, obj.Func{ // range function.
+			Params:        []oop.Param{{Name: "object"}},
+		}, oop.Func{ // range function.
 			Name:          "range",
 			DefParamCount: 1,
-			Params: []obj.Param{
+			Params: []oop.Param{
 				{Name: "start"},
 				{Name: "to"},
 				{
 					Name:   "step",
-					Defval: value.Val{D: "1", T: value.Int},
+					Defval: oop.Val{D: "1", T: oop.Int},
 				},
 			},
-		}, obj.Func{ // calloc function.
+		}, oop.Func{ // calloc function.
 			Name:          "calloc",
 			DefParamCount: 0,
-			Params:        []obj.Param{{Name: "size"}},
-		}, obj.Func{ // realloc function.
+			Params:        []oop.Param{{Name: "size"}},
+		}, oop.Func{ // realloc function.
 			Name:          "realloc",
 			DefParamCount: 0,
-			Params:        []obj.Param{{Name: "base"}, {Name: "size"}},
-		}, obj.Func{ // memset function.
+			Params:        []oop.Param{{Name: "base"}, {Name: "size"}},
+		}, oop.Func{ // memset function.
 			Name:          "memset",
 			DefParamCount: 0,
-			Params:        []obj.Param{{Name: "mem"}, {Name: "val"}},
-		}, obj.Func{ // string function.
+			Params:        []oop.Param{{Name: "mem"}, {Name: "val"}},
+		}, oop.Func{ // string function.
 			Name:          "string",
 			DefParamCount: 1,
-			Params: []obj.Param{
+			Params: []oop.Param{
 				{Name: "object"},
 				{
 					Name:   "type",
-					Defval: value.Val{D: "parse", T: value.Str},
+					Defval: oop.Val{D: "parse", T: oop.Str},
 				},
 			},
-		}, obj.Func{ // int function.
+		}, oop.Func{ // int function.
 			Name:          "int",
 			DefParamCount: 1,
-			Params: []obj.Param{
+			Params: []oop.Param{
 				{Name: "object"},
 				{
 					Name:   "type",
-					Defval: value.Val{D: "parse", T: value.Str},
+					Defval: oop.Val{D: "parse", T: oop.Str},
 				},
 			},
-		}, obj.Func{ // float function.
+		}, oop.Func{ // float function.
 			Name:          "float",
 			DefParamCount: 0,
-			Params:        []obj.Param{{Name: "object"}},
-		}, obj.Func{ // append function.
+			Params:        []oop.Param{{Name: "object"}},
+		}, oop.Func{ // append function.
 			Name:          "append",
 			DefParamCount: 0,
-			Params:        []obj.Param{{Name: "dest"}, {Name: "src", Params: true}},
+			Params:        []oop.Param{{Name: "dest"}, {Name: "src", Params: true}},
 		},
 	)
 }
@@ -665,8 +663,8 @@ func (p *Parser) procIf(tks obj.Tokens) uint8 {
 		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Condition is empty!")
 	}
 	s := p.procCondition(ctks)
-	vlen := len(p.s.Vars)
-	flen := len(p.s.Funcs)
+	vlen := len(p.defs.Vars)
+	flen := len(p.defs.Funcs)
 	ilen := len(p.packages)
 	kws := fract.None
 	for _, tks := range btks {
@@ -727,18 +725,29 @@ rep:
 		}
 	}
 end:
-	p.s.Vars = p.s.Vars[:vlen]
-	p.s.Funcs = p.s.Funcs[:flen]
+	p.defs.Vars = p.defs.Vars[:vlen]
+	p.defs.Funcs = p.defs.Funcs[:flen]
 	p.packages = p.packages[:ilen]
 	return kws
+}
+
+func checkPublic(l *lex.Lex, n obj.Token) {
+	if l != nil {
+		if l.F == n.F {
+			return
+		}
+	}
+	if !unicode.IsUpper(rune(n.V[0])) {
+		fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
+	}
 }
 
 // procTryCatch process try-catch blocks and returns keyword state.
 func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 	fract.TryCount++
 	var (
-		vlen = len(p.s.Vars)
-		flen = len(p.s.Funcs)
+		vlen = len(p.defs.Vars)
+		flen = len(p.defs.Funcs)
 		ilen = len(p.packages)
 		dlen = len(defers)
 		kws  = fract.None
@@ -754,8 +763,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 				p.i++
 			}
 			fract.TryCount--
-			p.s.Vars = p.s.Vars[:vlen]
-			p.s.Funcs = p.s.Funcs[:flen]
+			p.defs.Vars = p.defs.Vars[:vlen]
+			p.defs.Funcs = p.defs.Funcs[:flen]
 			p.packages = p.packages[:ilen]
 			for index := len(defers) - 1; index >= dlen; index-- {
 				defers[index].call()
@@ -765,8 +774,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 		Catch: func(cp obj.Panic) {
 			p.loopCount = 0
 			fract.TryCount--
-			p.s.Vars = p.s.Vars[:vlen]
-			p.s.Funcs = p.s.Funcs[:flen]
+			p.defs.Vars = p.defs.Vars[:vlen]
+			p.defs.Funcs = p.defs.Funcs[:flen]
 			p.packages = p.packages[:ilen]
 			defers = defers[:dlen]
 			p.i++
@@ -780,8 +789,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 					break
 				}
 			}
-			p.s.Vars = p.s.Vars[:vlen]
-			p.s.Funcs = p.s.Funcs[:flen]
+			p.defs.Vars = p.defs.Vars[:vlen]
+			p.defs.Funcs = p.defs.Funcs[:flen]
 			for i := len(defers) - 1; i >= dlen; i-- {
 				defers[i].call()
 			}
@@ -834,26 +843,26 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 				println()
 			}
 		}
-	case fract.Var: // Variable definition.
+	case fract.Var:
 		p.vardec(tks)
-	case fract.If: // if-elif-else.
+	case fract.If:
 		return p.procIf(tks)
-	case fract.Loop: // Loop definition.
+	case fract.Loop:
 		p.loopCount++
 		state := p.procLoop(tks)
 		p.loopCount--
 		return state
-	case fract.Break: // Break loop.
+	case fract.Break:
 		if p.loopCount < 1 {
 			fract.IPanic(fst, obj.SyntaxPanic, "Break keyword only used in loops!")
 		}
 		return fract.LOOPBreak
-	case fract.Continue: // Continue loop.
+	case fract.Continue:
 		if p.loopCount < 1 {
 			fract.IPanic(fst, obj.SyntaxPanic, "Continue keyword only used in loops!")
 		}
 		return fract.LOOPContinue
-	case fract.Ret: // Return.
+	case fract.Ret:
 		if p.funcCount < 1 {
 			fract.IPanic(fst, obj.SyntaxPanic, "Return keyword only used in functions!")
 		}
@@ -864,15 +873,17 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 			p.retVal = nil
 		}
 		return fract.FUNCReturn
-	case fract.Func: // Function definiton.
+	case fract.Func:
 		p.funcdec(tks)
-	case fract.Try: // Try-Catch.
+	case fract.Try:
 		return p.procTryCatch(tks)
-	case fract.Import: // Import.
+	case fract.Import:
 		p.procImport(tks)
-	case fract.Macro: // Macro.
+	case fract.Macro:
 		p.procPragma(tks)
-	case fract.Defer, fract.Go: // Deferred or concurrent function calls.
+	case fract.Struct:
+		p.structdec(tks)
+	case fract.Defer, fract.Go:
 		if l := len(tks); l < 2 {
 			fract.IPanic(tks[0], obj.SyntaxPanic, "Function is not given!")
 		} else if t := tks[l-1]; t.T != fract.Brace && t.V != ")" {
@@ -902,13 +913,13 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 		}
 		// Function call.
 		v := p.procValPart(valPartInfo{tks: vtks})
-		if v.T != value.Func {
+		if v.T != oop.Function {
 			fract.IPanic(tks[len(vtks)], obj.ValuePanic, "Value is not function!")
 		}
 		if fst.T == fract.Defer {
-			defers = append(defers, p.funcCallModel(v.D.(obj.Func), tks[len(vtks):]))
+			defers = append(defers, p.funcCallModel(v.D.(oop.Func), tks[len(vtks):]))
 		} else {
-			go p.funcCallModel(v.D.(obj.Func), tks[len(vtks):]).call()
+			go p.funcCallModel(v.D.(oop.Func), tks[len(vtks):]).call()
 		}
 	default:
 		fract.IPanic(fst, obj.SyntaxPanic, "Invalid syntax!")

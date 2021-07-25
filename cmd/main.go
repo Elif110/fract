@@ -123,7 +123,7 @@ func help(cmd string) {
 	}
 	mlen += 5
 	for k := range d {
-		fmt.Println(k + " " + str.Whitespace(mlen-len(k)) + d[k])
+		fmt.Println(k + " " + str.Full(mlen-len(k), ' ') + d[k])
 	}
 }
 

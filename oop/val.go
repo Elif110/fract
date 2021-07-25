@@ -1,9 +1,28 @@
-package value
+package oop
 
 import (
 	"fmt"
 	"reflect"
+	"strings"
+
+	"github.com/fract-lang/fract/pkg/str"
 )
+
+const (
+	Int               uint8 = 1
+	Float             uint8 = 2
+	Str               uint8 = 3
+	Bool              uint8 = 4
+	Function          uint8 = 5
+	Array             uint8 = 6
+	Map               uint8 = 7
+	Package           uint8 = 8
+	Structure         uint8 = 9
+	StructureInstance uint8 = 10
+)
+
+type ArrayModel []Val
+type MapModel map[Val]Val
 
 // Val instance.
 type Val struct {
@@ -34,15 +53,28 @@ func (d Val) Immut() Val {
 
 func (d Val) String() string {
 	switch d.T {
-	case Func:
+	case Function:
 		return "object.func"
 	case Package:
 		return "object.packageref"
+	case Structure:
+		return "object.struct"
 	case Array:
 		return fmt.Sprint(d.D)
 	case Map:
 		s := fmt.Sprint(d.D)
 		return "{" + s[4:len(s)-1] + "}"
+	case StructureInstance:
+		var s strings.Builder
+		d := d.D.(StructInstance)
+		s.WriteString("struct{")
+		for _, f := range d.Fields.Vars {
+			s.WriteString(f.Name)
+			s.WriteRune(':')
+			s.WriteString(f.V.String())
+			s.WriteRune(' ')
+		}
+		return s.String()[:s.Len()-1] + "}"
 	default:
 		if d.D == nil {
 			return ""
@@ -91,17 +123,17 @@ func (v Val) NotEquals(dt Val) bool {
 }
 
 func (v Val) Greater(dt Val) bool {
-	return (v.T == Str && v.String() > dt.String()) || (v.T != Str && Conv(v.String()) > Conv(dt.String()))
+	return (v.T == Str && v.String() > dt.String()) || (v.T != Str && str.Conv(v.String()) > str.Conv(dt.String()))
 }
 
 func (v Val) Less(dt Val) bool {
-	return (v.T == Str && v.String() < dt.String()) || (v.T != Str && Conv(v.String()) < Conv(dt.String()))
+	return (v.T == Str && v.String() < dt.String()) || (v.T != Str && str.Conv(v.String()) < str.Conv(dt.String()))
 }
 
 func (v Val) GreaterEquals(dt Val) bool {
-	return (v.T == Str && v.String() >= dt.String()) || (v.T != Str && Conv(v.String()) >= Conv(dt.String()))
+	return (v.T == Str && v.String() >= dt.String()) || (v.T != Str && str.Conv(v.String()) >= str.Conv(dt.String()))
 }
 
 func (v Val) LessEquals(dt Val) bool {
-	return (v.T == Str && v.String() <= dt.String()) || (v.T != Str && Conv(v.String()) <= Conv(dt.String()))
+	return (v.T == Str && v.String() <= dt.String()) || (v.T != Str && str.Conv(v.String()) <= str.Conv(dt.String()))
 }

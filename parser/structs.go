@@ -1,0 +1,63 @@
+package parser
+
+import (
+	"fmt"
+
+	"github.com/fract-lang/fract/oop"
+	"github.com/fract-lang/fract/pkg/fract"
+	"github.com/fract-lang/fract/pkg/obj"
+)
+
+func (p *Parser) buildStruct(name string, tks obj.Tokens) oop.Val {
+	var s oop.Struct
+	s.Constructor = oop.Func{Name: s.Name + ".constructor", Src: p}
+	s.L = p.L
+	blk := p.getBlock(tks)
+	for _, tks := range blk {
+		var comma bool
+		for _, tk := range tks {
+			switch tk.T {
+			case fract.Comma:
+				if !comma {
+					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+				}
+				comma = false
+			case fract.Name:
+				if comma {
+					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+				}
+				for _, p := range s.Constructor.Params {
+					if p.Name == tk.V {
+						fract.IPanic(tk, obj.NamePanic, "Field is already defined: "+tk.V)
+					}
+				}
+				s.Constructor.Params = append(s.Constructor.Params, oop.Param{Name: tk.V})
+				comma = true
+			default:
+				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+			}
+		}
+	}
+	return oop.Val{D: s, T: oop.Structure}
+}
+
+// Process struct declaration.
+func (p *Parser) structdec(tks obj.Tokens) {
+	l := len(tks)
+	if l < 2 {
+		fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")
+	}
+	name := tks[1]
+	if name.T != fract.Name {
+		fract.IPanic(tks[1], obj.SyntaxPanic, "Name is not valid!")
+	}
+	if ln := p.definedName(tks[1]); ln != -1 {
+		fract.IPanic(tks[1], obj.NamePanic, "\""+tks[1].V+"\" is already defined at line: "+fmt.Sprint(ln))
+	}
+	p.defs.Vars = append(p.defs.Vars, oop.Var{
+		Name:  name.V,
+		Const: true,
+		Ln:    tks[0].Ln,
+		V:     p.buildStruct(name.V, tks[2:]),
+	})
+}

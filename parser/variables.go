@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
-	"github.com/fract-lang/fract/pkg/value"
 )
 
 // Metadata of variable declaration.
@@ -50,8 +50,8 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 		p.funcTempVars++
 	}
 	v.Mut = md.mut
-	p.s.Vars = append(p.s.Vars,
-		obj.Var{
+	p.defs.Vars = append(p.defs.Vars,
+		oop.Var{
 			Name:  name.V,
 			V:     v,
 			Ln:    name.Ln,
@@ -129,11 +129,11 @@ func (p *Parser) varset(tks obj.Tokens) {
 	} else if name.V == "_" {
 		fract.IPanic(name, obj.SyntaxPanic, "Ignore operator is cannot set!")
 	}
-	j := p.s.VarIndexByName(name)
+	j := p.defs.VarIndexByName(name)
 	if j == -1 {
 		fract.IPanic(name, obj.NamePanic, "Variable is not defined in this name: "+name.V)
 	}
-	v := p.s.Vars[j]
+	v := p.defs.Vars[j]
 	// Check const state.
 	if v.Const {
 		fract.IPanic(tks[1], obj.SyntaxPanic, "Values is cannot changed of constant defines!")
@@ -198,25 +198,24 @@ func (p *Parser) varset(tks obj.Tokens) {
 				sv:  val,
 			})
 		}
-		p.s.Vars[j] = v
 		return
 	}
 	switch v.V.T {
-	case value.Map:
-		m := v.V.D.(value.MapModel)
+	case oop.Map:
+		m := v.V.D.(oop.MapModel)
 		switch setter.V {
 		case "=":
 			switch t := s.(type) {
-			case value.ArrayModel:
+			case oop.ArrayModel:
 				for _, k := range t {
 					m[k] = val
 				}
-			case value.Val:
+			case oop.Val:
 				m[t] = val
 			}
 		default: // Other assignments.
 			switch t := s.(type) {
-			case value.ArrayModel:
+			case oop.ArrayModel:
 				for _, s := range t {
 					d, ok := m[s]
 					if !ok {
@@ -231,7 +230,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 						sv:  val,
 					})
 				}
-			case value.Val:
+			case oop.Val:
 				d, ok := m[t]
 				if !ok {
 					m[t] = val
@@ -246,26 +245,26 @@ func (p *Parser) varset(tks obj.Tokens) {
 				})
 			}
 		}
-	case value.Array:
+	case oop.Array:
 		for _, pos := range s.([]int) {
 			switch setter.V {
 			case "=":
-				v.V.D.(value.ArrayModel)[pos] = val
+				v.V.D.(oop.ArrayModel)[pos] = val
 			default: // Other assignments.
-				v.V.D.(value.ArrayModel)[pos] = solveProc(process{
+				v.V.D.(oop.ArrayModel)[pos] = solveProc(process{
 					opr: opr,
 					f:   tks,
-					fv:  v.V.D.(value.ArrayModel)[pos],
+					fv:  v.V.D.(oop.ArrayModel)[pos],
 					s:   obj.Tokens{setter},
 					sv:  val,
 				})
 			}
 		}
-	case value.Str:
+	case oop.Str:
 		for _, pos := range s.([]int) {
 			switch setter.V {
 			case "=":
-				if val.T != value.Str {
+				if val.T != oop.Str {
 					fract.IPanic(setter, obj.ValuePanic, "Value type is not string!")
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")
@@ -281,11 +280,11 @@ func (p *Parser) varset(tks obj.Tokens) {
 				val = solveProc(process{
 					opr: opr,
 					f:   tks,
-					fv:  value.Val{D: v.V.D.(string)[pos], T: value.Int},
+					fv:  oop.Val{D: v.V.D.(string)[pos], T: oop.Int},
 					s:   obj.Tokens{setter},
 					sv:  val,
 				})
-				if val.T != value.Str {
+				if val.T != oop.Str {
 					fract.IPanic(setter, obj.ValuePanic, "Value type is not string!")
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")

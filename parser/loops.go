@@ -3,24 +3,24 @@ package parser
 import (
 	"fmt"
 
+	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
-	"github.com/fract-lang/fract/pkg/value"
 )
 
 // Loop.
 type loop struct {
-	a    value.Val
-	b    value.Val
-	enum value.Val
+	a    oop.Val
+	b    oop.Val
+	enum oop.Val
 	end  bool
 }
 
 func (l *loop) run(b func()) {
 	switch l.enum.T {
-	case value.Array:
-		l.a.T = value.Int
-		for i, e := range l.enum.D.(value.ArrayModel) {
+	case oop.Array:
+		l.a.T = oop.Int
+		for i, e := range l.enum.D.(oop.ArrayModel) {
 			l.a.D = fmt.Sprint(i)
 			l.b = e
 			b()
@@ -28,9 +28,9 @@ func (l *loop) run(b func()) {
 				break
 			}
 		}
-	case value.Str:
-		l.a.T = value.Int
-		l.b.T = value.Str
+	case oop.Str:
+		l.a.T = oop.Int
+		l.b.T = oop.Str
 		for i, e := range l.enum.D.(string) {
 			l.a.D = fmt.Sprint(i)
 			l.b.D = string(e)
@@ -39,8 +39,8 @@ func (l *loop) run(b func()) {
 				break
 			}
 		}
-	case value.Map:
-		for k, v := range l.enum.D.(value.MapModel) {
+	case oop.Map:
+		for k, v := range l.enum.D.(oop.MapModel) {
 			l.a = k
 			l.b = v
 			b()
@@ -63,7 +63,7 @@ func prockws(kws uint8) uint8 {
 func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	bi := findBlock(tks)
 	btks, tks := p.getBlock(tks[bi:]), tks[1:bi]
-	flen := len(p.s.Funcs)
+	flen := len(p.defs.Funcs)
 	ilen := len(p.packages)
 	brk := false
 	kws := fract.None
@@ -74,7 +74,7 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	//*************
 	if len(tks) == 0 || len(tks) >= 1 {
 		if len(tks) == 0 || len(tks) == 1 || len(tks) >= 1 && tks[1].T != fract.In && tks[1].T != fract.Comma {
-			vlen := len(p.s.Vars)
+			vlen := len(p.defs.Vars)
 			// Infinity loop.
 			if len(tks) == 0 {
 			infinity:
@@ -90,9 +90,9 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 					}
 				}
 				// Remove temporary variables.
-				p.s.Vars = p.s.Vars[:vlen]
+				p.defs.Vars = p.defs.Vars[:vlen]
 				// Remove temporary functions.
-				p.s.Funcs = p.s.Funcs[:flen]
+				p.defs.Funcs = p.defs.Funcs[:flen]
 				// Remove temporary imports.
 				p.packages = p.packages[:ilen]
 				goto infinity
@@ -117,9 +117,9 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 				}
 			}
 			// Remove temporary variables.
-			p.s.Vars = p.s.Vars[:vlen]
+			p.defs.Vars = p.defs.Vars[:vlen]
 			// Remove temporary functions.
-			p.s.Funcs = p.s.Funcs[:flen]
+			p.defs.Funcs = p.defs.Funcs[:flen]
 			// Remove temporary imports.
 			p.packages = p.packages[:ilen]
 			c = p.procCondition(tks)
@@ -170,14 +170,14 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	if !v.IsEnum() {
 		fract.IPanic(tks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	p.s.Vars = append(p.s.Vars,
-		obj.Var{Name: nametk.V, V: value.Val{D: "0", T: value.Int}},
-		obj.Var{Name: ename},
+	p.defs.Vars = append(p.defs.Vars,
+		oop.Var{Name: nametk.V, V: oop.Val{D: "0", T: oop.Int}},
+		oop.Var{Name: ename},
 	)
-	vlen := len(p.s.Vars)
-	index := &p.s.Vars[vlen-2]
-	element := &p.s.Vars[vlen-1]
-	vars := p.s.Vars
+	vlen := len(p.defs.Vars)
+	index := &p.defs.Vars[vlen-2]
+	element := &p.defs.Vars[vlen-1]
+	vars := p.defs.Vars
 	// Interpret block.
 	l := loop{enum: v}
 	l.run(func() {
@@ -194,9 +194,9 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 			}
 		}
 		// Remove temporary variables.
-		p.s.Vars = vars
+		p.defs.Vars = vars
 		// Remove temporary functions.
-		p.s.Funcs = p.s.Funcs[:flen]
+		p.defs.Funcs = p.defs.Funcs[:flen]
 		// Remove temporary imports.
 		p.packages = p.packages[:ilen]
 		l.end = brk
@@ -204,6 +204,6 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 	p.Tks = ptks
 	p.i = pi
 	// Remove loop variables.
-	p.s.Vars = vars[:len(vars)-2]
+	p.defs.Vars = vars[:len(vars)-2]
 	return prockws(kws)
 }

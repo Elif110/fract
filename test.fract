@@ -59,7 +59,22 @@ println(a)
 println(b)
 */
 
+/*
 // Imports & packages.
 open math
 println(math.Pi)
 println(math.Abs(9))
+*/
+
+// Structs.
+struct person {
+    name
+    surname
+}
+
+p := person('Daniel', 'McVollo')
+println(p)
+println(struct{name; surname}('Daniel', 'McVollo'))
+println(p.name)
+p.name = 'Dan'
+println(p.name)

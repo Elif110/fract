@@ -8,18 +8,17 @@ import (
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
-	"github.com/fract-lang/fract/pkg/value"
 )
 
 // Instance for function calls.
 type funcCall struct {
-	f     obj.Func
+	f     oop.Func
 	errTk obj.Token
-	args  []obj.Var
+	args  []oop.Var
 }
 
-func (c funcCall) call() value.Val {
-	var retv value.Val
+func (c funcCall) call() oop.Val {
+	var retv oop.Val
 	// Is built-in function?
 	if c.f.Tks == nil {
 		switch c.f.Name {
@@ -56,7 +55,7 @@ func (c funcCall) call() value.Val {
 	dlen := len(defers)
 	src := c.f.Src.(*Parser)
 	p := Parser{
-		s:            oop.DefMap{Funcs: src.s.Funcs},
+		defs:         oop.DefMap{Funcs: src.defs.Funcs},
 		packages:     src.packages,
 		funcTempVars: src.funcTempVars,
 		loopCount:    0,
@@ -67,9 +66,9 @@ func (c funcCall) call() value.Val {
 		p.funcTempVars = 0
 	}
 	if p.funcTempVars == 0 {
-		p.s.Vars = append(c.args, src.s.Vars...)
+		p.defs.Vars = append(c.args, src.defs.Vars...)
 	} else {
-		p.s.Vars = append(c.args, src.s.Vars[:len(src.s.Vars)-p.funcTempVars]...)
+		p.defs.Vars = append(c.args, src.defs.Vars[:len(src.defs.Vars)-p.funcTempVars]...)
 	}
 	p.funcTempVars = len(c.args)
 	// Interpret block.
@@ -106,9 +105,9 @@ func isParamSet(tks obj.Tokens) bool {
 }
 
 // paramsArgVals decompose and returns params values.
-func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) value.Val {
-	var data value.ArrayModel
-	retv := value.Val{T: value.Array}
+func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
+	var data oop.ArrayModel
+	retv := oop.Val{T: oop.Array}
 	bc := 0
 	for ; *i < len(tks); *i++ {
 		switch tk := tks[*i]; tk.T {
@@ -149,7 +148,7 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) value.Val {
 }
 
 type funcArgInfo struct {
-	f        obj.Func
+	f        oop.Func
 	names    *[]string
 	tks      obj.Tokens
 	tk       obj.Token
@@ -159,7 +158,7 @@ type funcArgInfo struct {
 }
 
 // Process function argument.
-func (p *Parser) procFuncArg(i funcArgInfo) obj.Var {
+func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 	var paramSet bool
 	l := *i.index - *i.lstComma
 	if l < 1 {
@@ -168,7 +167,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) obj.Var {
 		fract.IPanic(i.tk, obj.SyntaxPanic, "Argument overflow!")
 	}
 	param := i.f.Params[*i.count]
-	v := obj.Var{Name: param.Name}
+	v := oop.Var{Name: param.Name}
 	vtks := *i.tks.Sub(*i.lstComma, l)
 	i.tk = vtks[0]
 	// Check param set.
@@ -187,7 +186,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) obj.Var {
 				*i.count++
 				paramSet = true
 				*i.names = append(*i.names, i.tk.V)
-				retv := obj.Var{Name: i.tk.V}
+				retv := oop.Var{Name: i.tk.V}
 				//Parameter is params typed?
 				if pr.Params {
 					*i.lstComma += 2
@@ -216,10 +215,10 @@ func (p *Parser) procFuncArg(i funcArgInfo) obj.Var {
 }
 
 // Process function call model and initialize model instance.
-func (p *Parser) funcCallModel(f obj.Func, tks obj.Tokens) funcCall {
+func (p *Parser) funcCallModel(f oop.Func, tks obj.Tokens) funcCall {
 	var (
 		names []string
-		args  []obj.Var
+		args  []oop.Var
 		count = 0
 		tk    = tks[0]
 	)
@@ -287,7 +286,7 @@ func (p *Parser) funcCallModel(f obj.Func, tks obj.Tokens) funcCall {
 	for ; count < len(f.Params); count++ {
 		p := f.Params[count]
 		if p.Defval.D != nil {
-			args = append(args, obj.Var{Name: p.Name, V: p.Defval})
+			args = append(args, oop.Var{Name: p.Name, V: p.Defval})
 		}
 	}
 	return funcCall{
@@ -298,10 +297,10 @@ func (p *Parser) funcCallModel(f obj.Func, tks obj.Tokens) funcCall {
 }
 
 // Decompose function parameters.
-func (p *Parser) setFuncParams(f *obj.Func, tks *obj.Tokens) {
+func (p *Parser) setFuncParams(f *oop.Func, tks *obj.Tokens) {
 	pname, defaultDef := true, false
 	bc := 1
-	var lstp obj.Param
+	var lstp oop.Param
 	for i := 0; i < len(*tks); i++ {
 		pr := (*tks)[i]
 		if pr.T == fract.Brace {
@@ -326,7 +325,7 @@ func (p *Parser) setFuncParams(f *obj.Func, tks *obj.Tokens) {
 				}
 				fract.IPanic(pr, obj.SyntaxPanic, "Parameter name is not found!")
 			}
-			lstp = obj.Param{Name: pr.V, Params: i > 0 && (*tks)[i-1].T == fract.Params}
+			lstp = oop.Param{Name: pr.V, Params: i > 0 && (*tks)[i-1].T == fract.Params}
 			f.Params = append(f.Params, lstp)
 			pname = false
 			continue
@@ -354,7 +353,7 @@ func (p *Parser) setFuncParams(f *obj.Func, tks *obj.Tokens) {
 					fract.IPanic((*tks)[start-1], obj.SyntaxPanic, "Value is not given!")
 				}
 				lstp.Defval = p.procValTks((*tks)[start:i])
-				if lstp.Params && lstp.Defval.T != value.Array {
+				if lstp.Params && lstp.Defval.T != oop.Array {
 					fract.IPanic(pr, obj.ValuePanic, "Params parameter is can only take array values!")
 				}
 				f.Params[len(f.Params)-1] = lstp
@@ -391,7 +390,7 @@ func (p *Parser) funcdec(tks obj.Tokens) {
 	if tkslen < 3 {
 		fract.IPanicC(name.F, name.Ln, name.Col+len(name.V), obj.SyntaxPanic, "Invalid syntax!")
 	}
-	f := obj.Func{
+	f := oop.Func{
 		Name: name.V,
 		Ln:   p.i,
 		Src:  p,
@@ -409,5 +408,5 @@ func (p *Parser) funcdec(tks obj.Tokens) {
 		f.Tks = []obj.Tokens{}
 	}
 	f.Ln = name.Ln
-	p.s.Funcs = append(p.s.Funcs, f)
+	p.defs.Funcs = append(p.defs.Funcs, f)
 }

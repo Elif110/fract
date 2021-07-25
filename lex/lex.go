@@ -31,7 +31,7 @@ func (l Lex) error(msg string) {
 	fmt.Printf("File: %s\nPosition: %d:%d\n", l.F.P, l.Ln, l.Col)
 	if !l.RangeComment { // Ignore multiline comment error.
 		fmt.Println("    " + strings.ReplaceAll(l.F.Lns[l.Ln-1], "\t", " "))
-		fmt.Println(str.Whitespace(4+l.Col-2) + "^")
+		fmt.Println(str.Full(4+l.Col-2, ' ') + "^")
 	}
 	fmt.Println(msg)
 	panic(nil)
@@ -244,7 +244,7 @@ func (l *Lex) Token() obj.Token {
 			l.lastTk.T == fract.StatementTerminator || l.lastTk.T == fract.Loop ||
 			l.lastTk.T == fract.Comma || l.lastTk.T == fract.In || l.lastTk.T == fract.If ||
 			l.lastTk.T == fract.Else || l.lastTk.T == fract.Ret || l.lastTk.T == fract.Colon)) ||
-		isKeyword(ln, "NaN"): // Numeric value.
+		isKeyword(ln, "NaN"): // Numeric oop.
 		if chk == "" {
 			chk = "NaN"
 			l.Col += 3
@@ -494,6 +494,9 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "package"):
 		tk.V = "package"
 		tk.T = fract.Package
+	case isKeyword(ln, "struct"):
+		tk.V = "struct"
+		tk.T = fract.Struct
 	default: // Alternates
 		// Check variable name.
 		if chk := getName(ln); chk != "" { // Name.
