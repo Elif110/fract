@@ -772,6 +772,9 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 			defers = defers[:dlen]
 		},
 		Catch: func(cp obj.Panic) {
+			for index := len(defers) - 1; index >= dlen; index-- {
+				defers[index].call()
+			}
 			p.loopCount = 0
 			fract.TryCount--
 			p.defs.Vars = p.defs.Vars[:vlen]
