@@ -112,7 +112,7 @@ func (v Val) Len() int {
 	case Map:
 		return len(v.D.(MapModel))
 	}
-	return 0
+	return -1
 }
 
 func (v Val) Equals(dt Val) bool {
