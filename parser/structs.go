@@ -8,7 +8,7 @@ import (
 	"github.com/fract-lang/fract/pkg/obj"
 )
 
-func (p *Parser) buildStruct(name string, tks obj.Tokens) oop.Val {
+func (p *Parser) buildStruct(name string, tks obj.Tokens) *oop.Val {
 	var s oop.Struct
 	s.Constructor = oop.Func{Name: s.Name + ".constructor", Src: p}
 	s.L = p.L
@@ -38,7 +38,7 @@ func (p *Parser) buildStruct(name string, tks obj.Tokens) oop.Val {
 			}
 		}
 	}
-	return oop.Val{D: s, T: oop.Structure}
+	return &oop.Val{D: s, T: oop.Structure}
 }
 
 // Process struct declaration.
@@ -58,6 +58,6 @@ func (p *Parser) structdec(tks obj.Tokens) {
 		Name:  name.V,
 		Const: true,
 		Ln:    tks[0].Ln,
-		V:     p.buildStruct(name.V, tks[2:]),
+		V:     *p.buildStruct(name.V, tks[2:]),
 	})
 }

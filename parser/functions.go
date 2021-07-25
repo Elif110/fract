@@ -17,7 +17,7 @@ type funcCall struct {
 	args  []oop.Var
 }
 
-func (c funcCall) call() oop.Val {
+func (c funcCall) call() *oop.Val {
 	var retv oop.Val
 	// Is built-in function?
 	if c.f.Tks == nil {
@@ -27,29 +27,29 @@ func (c funcCall) call() oop.Val {
 		case "println":
 			built_in.Println(c.errTk, c.args)
 		case "input":
-			return built_in.Input(c.args)
+			retv = built_in.Input(c.args)
 		case "len":
-			return built_in.Len(c.args)
+			retv = built_in.Len(c.args)
 		case "range":
-			return built_in.Range(c.errTk, c.args)
+			retv = built_in.Range(c.errTk, c.args)
 		case "calloc":
-			return built_in.Calloc(c.errTk, c.args)
+			retv = built_in.Calloc(c.errTk, c.args)
 		case "realloc":
-			return built_in.Realloc(c.errTk, c.args)
+			retv = built_in.Realloc(c.errTk, c.args)
 		case "string":
-			return built_in.String(c.args)
+			retv = built_in.String(c.args)
 		case "int":
-			return built_in.Int(c.args)
+			retv = built_in.Int(c.args)
 		case "float":
-			return built_in.Float(c.args)
+			retv = built_in.Float(c.args)
 		case "append":
-			return built_in.Append(c.errTk, c.args)
+			retv = built_in.Append(c.errTk, c.args)
 		case "del":
 			built_in.Del(c.errTk, c.args)
 		case "exit":
 			built_in.Exit(c.errTk, c.args)
 		}
-		return retv
+		return &retv
 	}
 	// Process block.
 	dlen := len(defers)
@@ -96,7 +96,7 @@ func (c funcCall) call() oop.Val {
 		defers[i].call()
 	}
 	defers = defers[:dlen]
-	return retv
+	return &retv
 }
 
 // isParamSet Argument type is param set?
@@ -128,9 +128,8 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
 				retv.D = data
 				return retv
 			}
-			v := p.procValTks(*vtks)
+			data = append(data, *p.procValTks(*vtks))
 			vtks = nil
-			data = append(data, v)
 			*lstComma = *i + 1
 		}
 	}
@@ -140,8 +139,8 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
 			*i -= 4
 			return retv
 		}
-		v := p.procValTks(vtks)
-		data = append(data, v)
+		data = append(data, *p.procValTks(vtks))
+		vtks = nil
 	}
 	retv.D = data
 	return retv
@@ -192,7 +191,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 					*i.lstComma += 2
 					retv.V = p.paramsArgVals(i.tks, i.index, i.lstComma)
 				} else {
-					retv.V = p.procValTks(vtks[2:])
+					retv.V = *p.procValTks(vtks[2:])
 				}
 				return retv
 			}
@@ -208,7 +207,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 	if param.Params {
 		v.V = p.paramsArgVals(i.tks, i.index, i.lstComma)
 	} else {
-		v.V = p.procValTks(vtks)
+		v.V = *p.procValTks(vtks)
 	}
 	vtks = nil
 	return v
@@ -352,7 +351,7 @@ func (p *Parser) setFuncParams(f *oop.Func, tks *obj.Tokens) {
 				if i-start < 1 {
 					fract.IPanic((*tks)[start-1], obj.SyntaxPanic, "Value is not given!")
 				}
-				lstp.Defval = p.procValTks((*tks)[start:i])
+				lstp.Defval = *p.procValTks((*tks)[start:i])
 				if lstp.Params && lstp.Defval.T != oop.Array {
 					fract.IPanic(pr, obj.ValuePanic, "Params parameter is can only take array values!")
 				}

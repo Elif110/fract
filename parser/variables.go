@@ -42,7 +42,7 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 	if tksLen < 3 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
 	}
-	v := p.procValTks(*tks.Sub(2, tksLen-2))
+	v := *p.procValTks(tks[2:])
 	if v.D == nil {
 		fract.IPanic(tks[2], obj.ValuePanic, "Invalid value!")
 	}
@@ -50,13 +50,12 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 		p.funcTempVars++
 	}
 	v.Mut = md.mut
-	p.defs.Vars = append(p.defs.Vars,
-		oop.Var{
-			Name:  name.V,
-			V:     v,
-			Ln:    name.Ln,
-			Const: md.constant,
-		})
+	p.defs.Vars = append(p.defs.Vars, oop.Var{
+		Name:  name.V,
+		V:     v,
+		Ln:    name.Ln,
+		Const: md.constant,
+	})
 }
 
 // Process variable declaration.
@@ -133,9 +132,9 @@ func (p *Parser) varset(tks obj.Tokens) {
 	if j == -1 {
 		fract.IPanic(name, obj.NamePanic, "Variable is not defined in this name: "+name.V)
 	}
-	v := p.defs.Vars[j]
+	v := &p.defs.Vars[j].V
 	// Check const state.
-	if v.Const {
+	if p.defs.Vars[j].Const {
 		fract.IPanic(tks[1], obj.SyntaxPanic, "Values is cannot changed of constant defines!")
 	}
 	var (
@@ -163,16 +162,17 @@ func (p *Parser) varset(tks obj.Tokens) {
 		if tk.T == fract.Operator && tk.V[len(tk.V)-1] == '=' {
 			setter = tk
 			if lbc == -1 {
+				v = p.procValPart(valPartInfo{mut: true, tks: tks[:i]})
 				vtks = tks[i+1:]
 				break
 			}
-			v.V = p.procValPart(valPartInfo{mut: true, tks: tks[:lbc]})
+			v = p.procValPart(valPartInfo{mut: true, tks: tks[:lbc]})
 			vtks = tks[lbc+1 : i-1]
 			// Index value is empty?
 			if len(vtks) == 0 {
 				fract.IPanic(setter, obj.SyntaxPanic, "Index is not given!")
 			}
-			s = selections(v.V, p.procValTks(vtks), setter)
+			s = selections(*v, *p.procValTks(vtks), setter)
 			vtks = tks[i+1:]
 			break
 		}
@@ -180,7 +180,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 	if vtks == nil || len(vtks) == 0 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
 	}
-	val := p.procValTks(vtks)
+	val := *p.procValTks(vtks)
 	if val.D == nil {
 		fract.IPanic(setter, obj.ValuePanic, "Invalid value!")
 	}
@@ -188,21 +188,21 @@ func (p *Parser) varset(tks obj.Tokens) {
 	if s == nil {
 		switch setter.V {
 		case "=": // =
-			v.V = val
+			*v = val
 		default: // Other assignments.
-			v.V = solveProc(process{
+			*v = solveProc(process{
 				opr: opr,
 				f:   tks,
-				fv:  v.V,
+				fv:  *v,
 				s:   obj.Tokens{setter},
 				sv:  val,
 			})
 		}
 		return
 	}
-	switch v.V.T {
+	switch v.T {
 	case oop.Map:
-		m := v.V.D.(oop.MapModel)
+		m := v.D.(oop.MapModel)
 		switch setter.V {
 		case "=":
 			switch t := s.(type) {
@@ -249,12 +249,12 @@ func (p *Parser) varset(tks obj.Tokens) {
 		for _, pos := range s.([]int) {
 			switch setter.V {
 			case "=":
-				v.V.D.(oop.ArrayModel)[pos] = val
+				v.D.(oop.ArrayModel)[pos] = val
 			default: // Other assignments.
-				v.V.D.(oop.ArrayModel)[pos] = solveProc(process{
+				v.D.(oop.ArrayModel)[pos] = solveProc(process{
 					opr: opr,
 					f:   tks,
-					fv:  v.V.D.(oop.ArrayModel)[pos],
+					fv:  v.D.(oop.ArrayModel)[pos],
 					s:   obj.Tokens{setter},
 					sv:  val,
 				})
@@ -269,18 +269,18 @@ func (p *Parser) varset(tks obj.Tokens) {
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")
 				}
-				bytes := []byte(v.V.String())
+				bytes := []byte(v.String())
 				if val.D == "" {
 					bytes[pos] = 0
 				} else {
 					bytes[pos] = val.String()[0]
 				}
-				v.V.D = string(bytes)
+				v.D = string(bytes)
 			default: // Other assignments.
 				val = solveProc(process{
 					opr: opr,
 					f:   tks,
-					fv:  oop.Val{D: v.V.D.(string)[pos], T: oop.Int},
+					fv:  oop.Val{D: v.D.(string)[pos], T: oop.Int},
 					s:   obj.Tokens{setter},
 					sv:  val,
 				})
@@ -289,13 +289,13 @@ func (p *Parser) varset(tks obj.Tokens) {
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")
 				}
-				bytes := []byte(v.V.String())
+				bytes := []byte(v.String())
 				if val.D == "" {
 					bytes[pos] = 0
 				} else {
 					bytes[pos] = val.String()[0]
 				}
-				v.V.D = string(bytes)
+				v.D = string(bytes)
 			}
 		}
 	}

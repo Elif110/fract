@@ -868,7 +868,7 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 		}
 		if len(tks) > 1 {
 			value := p.procValTks(tks[1:])
-			p.retVal = &value
+			p.retVal = value
 		} else {
 			p.retVal = nil
 		}

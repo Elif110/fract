@@ -106,7 +106,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 				// Operator is not found?
 				if i == -1 {
 					opr.V = "=="
-					if comp(p.procValTks(and), T, opr) {
+					if comp(*p.procValTks(and), T, opr) {
 						return "true"
 					}
 					return "false"
@@ -117,7 +117,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 				} else if i == len(and)-1 {
 					fract.IPanic(and[len(and)-1], obj.SyntaxPanic, "Comparison values are missing!")
 				}
-				if !comp(p.procValTks(and[:i]), p.procValTks(*and.Sub(i+1, len(and)-i-1)), opr) {
+				if !comp(*p.procValTks(and[:i]), *p.procValTks(*and.Sub(i+1, len(and)-i-1)), opr) {
 					return "false"
 				}
 			}
@@ -127,7 +127,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 		// Operator is not found?
 		if i == -1 {
 			opr.V = "=="
-			if comp(p.procValTks(or), T, opr) {
+			if comp(*p.procValTks(or), T, opr) {
 				return "true"
 			}
 			continue
@@ -138,7 +138,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 		} else if i == len(or)-1 {
 			fract.IPanic(or[len(or)-1], obj.SyntaxPanic, "Comparison values are missing!")
 		}
-		if comp(p.procValTks(or[:i]), p.procValTks(*or.Sub(i+1, len(or)-i-1)), opr) {
+		if comp(*p.procValTks(or[:i]), *p.procValTks(*or.Sub(i+1, len(or)-i-1)), opr) {
 			return "true"
 		}
 	}
@@ -420,9 +420,9 @@ func solveProc(p process) oop.Val {
 }
 
 // applyMinus operator.
-func applyMinus(minus obj.Token, v oop.Val) oop.Val {
+func applyMinus(minus obj.Token, v *oop.Val) {
 	if minus.V[0] != '-' {
-		return v
+		return
 	}
 	for i, d := range v.D.(oop.ArrayModel) {
 		switch d.T {
@@ -432,11 +432,10 @@ func applyMinus(minus obj.Token, v oop.Val) oop.Val {
 			fract.IPanic(minus, obj.ArithmeticPanic, "Bad operand type for unary!")
 		}
 	}
-	return v
 }
 
 // Select enumerable object elements.
-func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) oop.Val {
+func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) *oop.Val {
 	var r oop.Val
 	switch v.T {
 	case oop.Array:
@@ -447,7 +446,7 @@ func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) oo
 				v = v.Immut()
 			}
 			v.Mut = v.Mut || mut
-			return v
+			return &v
 		}
 		r = oop.Val{D: oop.ArrayModel{}, T: oop.Array}
 		for _, pos := range i {
@@ -471,7 +470,7 @@ func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) oo
 			if !ok {
 				fract.IPanic(tk, obj.ValuePanic, "Key is not exists!")
 			}
-			return d
+			return &d
 		}
 	case oop.Str:
 		r = oop.Val{D: "", T: oop.Str}
@@ -479,7 +478,7 @@ func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) oo
 			r.D = r.String() + string(v.String()[pos])
 		}
 	}
-	return r
+	return &r
 }
 
 type valPartInfo struct {
@@ -487,34 +486,32 @@ type valPartInfo struct {
 	mut bool // Force to mutability.
 }
 
-func (p *Parser) procNameVal(mut bool, tk obj.Token) oop.Val {
-	var rv oop.Val
+func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
+	var rv *oop.Val
 	vi, t := p.defByName(tk)
 	if vi == -1 {
 		fract.IPanic(tk, obj.NamePanic, "Name is not defined: "+tk.V)
 	}
 	switch t {
 	case 'f': // Function.
-		rv = oop.Val{D: p.defs.Funcs[vi], T: oop.Function}
+		rv = &oop.Val{D: p.defs.Funcs[vi], T: oop.Function}
 	case 'p': // Package.
-		rv = oop.Val{D: p.packages[vi], T: oop.Package}
+		rv = &oop.Val{D: p.packages[vi], T: oop.Package}
 	case 'v': // Value.
 		v := p.defs.Vars[vi]
-		var val oop.Val
+		rv = &v.V
 		if !v.V.Mut && !mut { //! Immutability.
-			val = v.V.Immut()
-		} else {
-			val = v.V
+			*rv = v.V.Immut()
 		}
-		val.Mut = v.V.Mut || mut
-		rv = applyMinus(tk, val)
+		rv.Mut = v.V.Mut || mut
+		applyMinus(tk, rv)
 	}
 	return rv
 }
 
 // Process value part.
-func (p *Parser) procValPart(i valPartInfo) oop.Val {
-	var rv oop.Val
+func (p *Parser) procValPart(i valPartInfo) *oop.Val {
+	var rv *oop.Val
 	if i.tks[0].T == fract.Var && i.tks[0].V == "mut" {
 		if len(i.tks) == 1 {
 			fract.IPanic(i.tks[0], obj.SyntaxPanic, "Value is not given!")
@@ -527,10 +524,10 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 	// Single oop.
 	if tk := i.tks[0]; len(i.tks) == 1 {
 		if tk.V[0] == '\'' || tk.V[0] == '"' {
-			rv = oop.Val{D: tk.V[1 : len(tk.V)-1], T: oop.Str}
+			rv = &oop.Val{D: tk.V[1 : len(tk.V)-1], T: oop.Str}
 			goto end
 		} else if tk.V == "true" || tk.V == "false" {
-			rv = oop.Val{D: tk.V, T: oop.Bool}
+			rv = &oop.Val{D: tk.V, T: oop.Bool}
 			goto end
 		} else if tk.T == fract.Value {
 			if strings.Contains(tk.V, ".") || strings.ContainsAny(tk.V, "eE") {
@@ -543,7 +540,7 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 				val, _ := prs.Float64()
 				tk.V = fmt.Sprint(val)
 			}
-			rv = oop.Val{D: tk.V, T: tk.T}
+			rv = &oop.Val{D: tk.V, T: tk.T}
 			goto end
 		} else {
 			if tk.T != fract.Name {
@@ -575,7 +572,7 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 				if i == -1 {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
 				}
-				rv = s.Fields.Vars[i].V
+				rv = &s.Fields.Vars[i].V
 				goto end
 			default:
 				fract.IPanic(d, obj.ValuePanic, "Object is not support sub fields!")
@@ -610,18 +607,22 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 				if len(i.tks) == 0 {
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
-				rv = applyMinus(tk, p.procVal(i.tks, i.mut))
+				rv = p.procVal(i.tks, i.mut)
+				applyMinus(tk, rv)
 				goto end
 			}
 			v := p.procValPart(valPartInfo{tks: vtks, mut: i.mut})
 			switch v.T {
 			case oop.Function: // Function call.
-				rv = applyMinus(tk, p.funcCallModel(v.D.(oop.Func), i.tks[len(vtks):]).call())
+				rv = p.funcCallModel(v.D.(oop.Func), i.tks[len(vtks):]).call()
+				applyMinus(tk, rv)
 			case oop.Structure:
 				s := v.D.(oop.Struct)
-				rv.D = s.CallConstructor(p.funcCallModel(s.Constructor, i.tks[len(vtks):]).args)
-				rv.T = oop.StructureInstance
-				rv = applyMinus(tk, rv)
+				rv = &oop.Val{
+					D: s.CallConstructor(p.funcCallModel(s.Constructor, i.tks[len(vtks):]).args),
+					T: oop.StructureInstance,
+				}
+				applyMinus(tk, rv)
 			default:
 				fract.IPanic(i.tks[len(vtks)], obj.ValuePanic, "Invalid syntax!")
 			}
@@ -646,14 +647,16 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 				break
 			}
 			if len(vtks) == 0 && bc == 0 {
-				rv = applyMinus(tk, p.procEnumerableVal(i.tks))
+				rv = p.procEnumerableVal(i.tks)
+				applyMinus(tk, rv)
 				goto end
 			}
 			v := p.procValPart(valPartInfo{mut: i.mut, tks: vtks})
 			if v.T != oop.Array && v.T != oop.Map && v.T != oop.Str {
 				fract.IPanic(vtks[0], obj.ValuePanic, "Index accessor is cannot used with not enumerable values!")
 			}
-			rv = applyMinus(tk, p.selectEnum(i.mut, v, tk, selections(v, p.procValTks(i.tks[len(vtks)+1:len(i.tks)-1]), tk)))
+			rv = p.selectEnum(i.mut, *v, tk, selections(*v, *p.procValTks(i.tks[len(vtks)+1 : len(i.tks)-1]), tk))
+			applyMinus(tk, rv)
 			goto end
 		case "}":
 			var vtks obj.Tokens
@@ -676,7 +679,8 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 			}
 			l := len(vtks)
 			if l == 0 && bc == 0 {
-				rv = applyMinus(tk, p.procEnumerableVal(i.tks))
+				rv = p.procEnumerableVal(i.tks)
+				applyMinus(tk, rv)
 				goto end
 			} else if l > 1 && (vtks[1].T != fract.Brace || vtks[1].V != "(") {
 				fract.IPanic(vtks[1], obj.SyntaxPanic, "Invalid syntax!")
@@ -698,9 +702,10 @@ func (p *Parser) procValPart(i valPartInfo) oop.Val {
 					vtks, _ = decomposeBrace(&vtks, "(", ")")
 					p.setFuncParams(&f, &vtks)
 				}
-				rv = oop.Val{D: f, T: oop.Function}
+				rv = &oop.Val{D: f, T: oop.Function}
 			case fract.Struct:
-				rv = applyMinus(tk, p.buildStruct("anonymous", i.tks[1:]))
+				rv = p.buildStruct("anonymous", i.tks[1:])
+				applyMinus(tk, rv)
 			default:
 				fract.IPanic(vtks[1], obj.SyntaxPanic, "Invalid syntax!")
 			}
@@ -714,7 +719,7 @@ end:
 }
 
 // Process array oop.
-func (p *Parser) procArrayVal(tks obj.Tokens) oop.Val {
+func (p *Parser) procArrayVal(tks obj.Tokens) *oop.Val {
 	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}
 	fst := tks[0]
 	comma := 1
@@ -736,9 +741,8 @@ func (p *Parser) procArrayVal(tks obj.Tokens) oop.Val {
 			if lst == nil {
 				fract.IPanic(fst, obj.SyntaxPanic, "Value is not given!")
 			}
-			val := p.procValTks(*lst)
+			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(*lst))
 			lst = nil
-			v.D = append(v.D.(oop.ArrayModel), val)
 			comma = j + 1
 		}
 	}
@@ -747,15 +751,14 @@ func (p *Parser) procArrayVal(tks obj.Tokens) oop.Val {
 		if lst == nil {
 			fract.IPanic(fst, obj.SyntaxPanic, "Value is not given!")
 		}
-		val := p.procValTks(*lst)
+		v.D = append(v.D.(oop.ArrayModel), *p.procValTks(*lst))
 		lst = nil
-		v.D = append(v.D.(oop.ArrayModel), val)
 	}
-	return v
+	return &v
 }
 
 // Process map oop.
-func (p *Parser) procMapVal(tks obj.Tokens) oop.Val {
+func (p *Parser) procMapVal(tks obj.Tokens) *oop.Val {
 	fst := tks[0]
 	comma := 1
 	bc := 0
@@ -798,20 +801,12 @@ func (p *Parser) procMapVal(tks obj.Tokens) oop.Val {
 					if i+1 >= l {
 						fract.IPanic(tk, obj.SyntaxPanic, "Value is not given!")
 					}
-					key := p.procValTks((*lst)[:i])
-					if key.T == oop.Array {
-						_, ok := m[key]
-						if ok {
-							fract.IPanic(tk, obj.ValuePanic, "Key is already defined!")
-						}
-						m[key] = p.procValTks((*lst)[i+1:])
-					} else {
-						_, ok := m[key]
-						if ok {
-							fract.IPanic(tk, obj.ValuePanic, "Key is already defined!")
-						}
-						m[key] = p.procValTks((*lst)[i+1:])
+					key := *p.procValTks((*lst)[:i])
+					_, ok := m[key]
+					if ok {
+						fract.IPanic(tk, obj.ValuePanic, "Key is already defined!")
 					}
+					m[key] = *p.procValTks((*lst)[i+1:])
 					comma = j + 1
 					lst = nil
 				}
@@ -847,28 +842,19 @@ func (p *Parser) procMapVal(tks obj.Tokens) oop.Val {
 		if i+1 >= l {
 			fract.IPanic(lst[i], obj.SyntaxPanic, "Value is not given!")
 		}
-		key := p.procValTks(lst[:i])
-		if key.T == oop.Array {
-			_, ok := m[key]
-			if ok {
-				fract.IPanic(lst[i], obj.ValuePanic, "Key is already defined!")
-			}
-			m[key] = p.procValTks(lst[i+1:])
-		} else {
-			_, ok := m[key]
-			if ok {
-				fract.IPanic(lst[i], obj.ValuePanic, "Key is already defined!")
-			}
-			m[key] = p.procValTks(lst[i+1:])
+		key := *p.procValTks(lst[:i])
+		_, ok := m[key]
+		if ok {
+			fract.IPanic(lst[i], obj.ValuePanic, "Key is already defined!")
 		}
+		m[key] = *p.procValTks(lst[i+1:])
 		lst = nil
 	}
-	v := oop.Val{D: m, T: oop.Map}
-	return v
+	return &oop.Val{D: m, T: oop.Map}
 }
 
 // Process list comprehension.
-func (p *Parser) procListComprehension(tks obj.Tokens) oop.Val {
+func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
 	var (
 		stks obj.Tokens // Select tokens.
 		ltks obj.Tokens // Loop tokens.
@@ -920,7 +906,7 @@ func (p *Parser) procListComprehension(tks obj.Tokens) oop.Val {
 	} else {
 		fract.IPanic(inTk, obj.SyntaxPanic, "Value is not given!")
 	}
-	varr := p.procValTks(ltks)
+	varr := *p.procValTks(ltks)
 	// Type is not array?
 	if !varr.IsEnum() {
 		fract.IPanic(ltks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
@@ -937,16 +923,15 @@ func (p *Parser) procListComprehension(tks obj.Tokens) oop.Val {
 	l.run(func() {
 		element.V = l.b
 		if ftks == nil || p.procCondition(ftks) == "true" {
-			val := p.procValTks(stks)
-			v.D = append(v.D.(oop.ArrayModel), val)
+			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(stks))
 		}
 	})
 	p.defs.Vars = p.defs.Vars[:vlen-1] // Remove variables.
-	return v
+	return &v
 }
 
 // Process enumerable oop.
-func (p *Parser) procEnumerableVal(tks obj.Tokens) oop.Val {
+func (p *Parser) procEnumerableVal(tks obj.Tokens) *oop.Val {
 	var (
 		lc bool
 		bc int
@@ -982,10 +967,10 @@ func (p *Parser) procEnumerableVal(tks obj.Tokens) oop.Val {
 }
 
 // Process oop.
-func (p *Parser) procVal(tks obj.Tokens, mut bool) oop.Val {
+func (p *Parser) procVal(tks obj.Tokens, mut bool) *oop.Val {
 	// Is conditional expression?
 	if j, _ := findConditionOpr(tks); j != -1 {
-		return oop.Val{D: p.procCondition(tks), T: oop.Bool}
+		return &oop.Val{D: p.procCondition(tks), T: oop.Bool}
 	}
 	procs := arithmeticProcesses(tks)
 	i := valPartInfo{mut: mut}
@@ -999,14 +984,14 @@ func (p *Parser) procVal(tks obj.Tokens, mut bool) oop.Val {
 	for j != -1 {
 		opr.f = procs[j-1]
 		i.tks = opr.f
-		opr.fv = p.procValPart(i)
+		opr.fv = *p.procValPart(i)
 		if opr.fv.T == fract.None {
 			fract.IPanic(opr.f[0], obj.ValuePanic, "Value is not given!")
 		}
 		opr.opr = procs[j][0]
 		opr.s = procs[j+1]
 		i.tks = opr.s
-		opr.sv = p.procValPart(i)
+		opr.sv = *p.procValPart(i)
 		if opr.sv.T == fract.None {
 			fract.IPanic(opr.s[0], obj.ValuePanic, "Value is not given!")
 		}
@@ -1034,7 +1019,7 @@ func (p *Parser) procVal(tks obj.Tokens, mut bool) oop.Val {
 				opr.s = procs[j-1]
 			}
 			i.tks = opr.s
-			opr.fv = p.procValPart(i)
+			opr.fv = *p.procValPart(i)
 			v = solveProc(opr)
 			break
 		}
@@ -1042,8 +1027,8 @@ func (p *Parser) procVal(tks obj.Tokens, mut bool) oop.Val {
 	procs = nil
 	opr.f = nil
 	opr.s = nil
-	return v
+	return &v
 }
 
 // Process value from tokens.
-func (p *Parser) procValTks(tks obj.Tokens) oop.Val { return p.procVal(tks, false) }
+func (p *Parser) procValTks(tks obj.Tokens) *oop.Val { return p.procVal(tks, false) }

@@ -1,6 +1,8 @@
 package oop
 
-import "github.com/fract-lang/fract/lex"
+import (
+	"github.com/fract-lang/fract/lex"
+)
 
 // Struct define.
 type Struct struct {
