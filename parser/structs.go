@@ -8,10 +8,10 @@ import (
 	"github.com/fract-lang/fract/pkg/obj"
 )
 
+// buildStruct from tokens.
 func (p *Parser) buildStruct(name string, tks obj.Tokens) *oop.Val {
-	var s oop.Struct
-	s.Constructor = oop.Func{Name: s.Name + ".constructor", Src: p}
-	s.L = p.L
+	s := oop.Struct{L: p.L}
+	s.Constructor = &oop.Func{Name: s.Name + ".constructor", Src: p}
 	blk := p.getBlock(tks)
 	for _, tks := range blk {
 		var comma bool
@@ -23,6 +23,9 @@ func (p *Parser) buildStruct(name string, tks obj.Tokens) *oop.Val {
 				}
 				comma = false
 			case fract.Name:
+				if !validName(tk.V) {
+					fract.IPanic(tk, obj.NamePanic, "Invalid name!")
+				}
 				if comma {
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
@@ -38,7 +41,7 @@ func (p *Parser) buildStruct(name string, tks obj.Tokens) *oop.Val {
 			}
 		}
 	}
-	return &oop.Val{D: s, T: oop.Structure}
+	return &oop.Val{D: s, T: oop.StructDef}
 }
 
 // Process struct declaration.
@@ -56,7 +59,10 @@ func (p *Parser) structdec(tks obj.Tokens) {
 	}
 	v := *p.buildStruct(name.V, tks[2:])
 	v.Const = true
-	p.defs.Vars = append(p.defs.Vars, oop.Var{
+	if p.funcTempVars != -1 {
+		p.funcTempVars++
+	}
+	p.defs.Vars = append(p.defs.Vars, &oop.Var{
 		Name: name.V,
 		Ln:   tks[0].Ln,
 		V:    v,

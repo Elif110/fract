@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
@@ -17,17 +16,22 @@ type varinfo struct {
 }
 
 // Append variable to source.
-func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
+func (p *Parser) varadd(dm *oop.DefMap, md varinfo, tks obj.Tokens) {
 	name := tks[0]
-	if strings.Contains(name.V, ".") {
-		fract.IPanic(name, obj.SyntaxPanic, "Names is cannot include dot!")
-	} else if name.V == "_" {
-		fract.IPanic(name, obj.SyntaxPanic, "Ignore operator is cannot be variable name!")
+	if !validName(name.V) {
+		fract.IPanic(name, obj.SyntaxPanic, "Invalid name!")
 	}
 	// Name is already defined?
-	if ln := p.definedName(name.V); ln != -1 {
+	var ln int
+	if &p.defs == dm { // Variable added to defmap of parser.
+		ln = p.definedName(name.V)
+	} else { // Variable added to another defmap.
+		ln = dm.DefinedName(name.V)
+	}
+	if ln != -1 {
 		fract.IPanic(name, obj.NamePanic, "\""+name.V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
+
 	tksLen := len(tks)
 	// Setter is not defined?
 	if tksLen < 2 {
@@ -51,15 +55,15 @@ func (p *Parser) varadd(md varinfo, tks obj.Tokens) {
 	}
 	v.Mut = md.mut
 	v.Const = md.constant
-	p.defs.Vars = append(p.defs.Vars, oop.Var{
+	dm.Vars = append(dm.Vars, &oop.Var{
 		Name: name.V,
 		V:    v,
 		Ln:   name.Ln,
 	})
 }
 
-// Process variable declaration.
-func (p *Parser) vardec(tks obj.Tokens) {
+// Process variable declaration to defmap.
+func (p *Parser) fvardec(dm *oop.DefMap, tks obj.Tokens) {
 	// Name is not defined?
 	if len(tks) < 2 {
 		first := tks[0]
@@ -71,7 +75,7 @@ func (p *Parser) vardec(tks obj.Tokens) {
 	}
 	pre := tks[1]
 	if pre.T == fract.Name {
-		p.varadd(md, tks[1:])
+		p.varadd(dm, md, tks[1:])
 	} else if pre.T == fract.Brace && pre.V == "(" {
 		tks = tks[2 : len(tks)-1]
 		lst := 0
@@ -91,18 +95,21 @@ func (p *Parser) vardec(tks obj.Tokens) {
 				continue
 			}
 			if ln < t.Ln {
-				p.varadd(md, tks[lst:j])
+				p.varadd(dm, md, tks[lst:j])
 				lst = j
 				ln = t.Ln
 			}
 		}
 		if len(tks) != lst {
-			p.varadd(md, tks[lst:])
+			p.varadd(dm, md, tks[lst:])
 		}
 	} else {
 		fract.IPanic(pre, obj.SyntaxPanic, "Invalid syntax!")
 	}
 }
+
+// Process variable declaration to parser.
+func (p *Parser) vardec(tks obj.Tokens) { p.fvardec(&p.defs, tks) }
 
 // Process short variable declaration.
 func (p *Parser) varsdec(tks obj.Tokens) {
@@ -116,7 +123,7 @@ func (p *Parser) varsdec(tks obj.Tokens) {
 	}
 	var md varinfo
 	md.sdec = true
-	p.varadd(md, tks)
+	p.varadd(&p.defs, md, tks)
 }
 
 // Process variable set statement.

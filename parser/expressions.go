@@ -151,11 +151,13 @@ func arith(tks obj.Token, d oop.Val) string {
 	switch d.T {
 	case oop.Function,
 		oop.Package,
-		oop.Structure:
+		oop.StructDef,
+		oop.ClassDef,
+		oop.ClassIns:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\""+ret+"\" is not compatible with arithmetic processes!")
 	case oop.Map:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\"object.map\" is not compatible with arithmetic processes!")
-	case oop.StructureInstance:
+	case oop.StructIns:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\"object.structins\" is not compatible with arithmetic processes!")
 	}
 	return ret
@@ -486,10 +488,14 @@ type valPartInfo struct {
 	mut bool // Force to mutability.
 }
 
+// procNameVal returns value of name.
 func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 	var rv *oop.Val
 	vi, t := p.defByName(tk.V)
 	if vi == -1 {
+		if tk.V == "this" {
+			fract.IPanic(tk, obj.NamePanic, `"this" keyword is cannot used this scope!`)
+		}
 		fract.IPanic(tk, obj.NamePanic, "Name is not defined: "+tk.V)
 	}
 	switch t {
@@ -498,12 +504,11 @@ func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 	case 'p': // Package.
 		rv = &oop.Val{D: p.packages[vi], T: oop.Package}
 	case 'v': // Value.
-		v := p.defs.Vars[vi]
-		rv = &v.V
-		if !v.V.Mut && !mut { //! Immutability.
-			*rv = v.V.Immut()
+		rv = &p.defs.Vars[vi].V
+		if !rv.Mut && !mut { //! Immutability.
+			*rv = rv.Immut()
 		}
-		rv.Mut = v.V.Mut || mut
+		rv.Mut = rv.Mut || mut
 		applyMinus(tk, rv)
 	}
 	return rv
@@ -565,7 +570,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				checkPublic(nil, n)
 				rv = ii.src.procNameVal(i.mut, n)
 				goto end
-			case oop.StructureInstance:
+			case oop.StructIns:
 				s := v.D.(oop.StructInstance)
 				checkPublic(s.L, tk)
 				i := s.Fields.VarIndexByName(n.V)
@@ -573,6 +578,25 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
 				}
 				rv = &s.Fields.Vars[i].V
+				goto end
+			case oop.ClassIns:
+				c := v.D.(oop.ClassInstance)
+				checkPublic(c.L, tk)
+				vi, t := c.Defs.DefByName(n.V)
+				if vi == -1 {
+					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
+				}
+				switch t {
+				case 'f': // Function.
+					rv = &oop.Val{D: c.Defs.Funcs[vi], T: oop.Function}
+				case 'v': // Value.
+					rv = &c.Defs.Vars[vi].V
+					if !rv.Mut && !i.mut { //! Immutability.
+						*rv = rv.Immut()
+					}
+					rv.Mut = rv.Mut || i.mut
+					applyMinus(tk, rv)
+				}
 				goto end
 			default:
 				fract.IPanic(d, obj.ValuePanic, "Object is not support sub fields!")
@@ -614,13 +638,20 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			v := p.procValPart(valPartInfo{tks: vtks, mut: i.mut})
 			switch v.T {
 			case oop.Function: // Function call.
-				rv = p.funcCallModel(v.D.(oop.Func), i.tks[len(vtks):]).call()
+				rv = p.funcCallModel(v.D.(*oop.Func), i.tks[len(vtks):]).Call()
 				applyMinus(tk, rv)
-			case oop.Structure:
+			case oop.StructDef:
 				s := v.D.(oop.Struct)
 				rv = &oop.Val{
 					D: s.CallConstructor(p.funcCallModel(s.Constructor, i.tks[len(vtks):]).args),
-					T: oop.StructureInstance,
+					T: oop.StructIns,
+				}
+				applyMinus(tk, rv)
+			case oop.ClassDef:
+				c := v.D.(oop.Class)
+				rv = &oop.Val{
+					D: c.CallConstructor(p.funcCallModel(c.Constructor, i.tks[len(vtks):])),
+					T: oop.ClassIns,
 				}
 				applyMinus(tk, rv)
 			default:
@@ -689,7 +720,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			}
 			switch vtks[0].T {
 			case fract.Func:
-				f := oop.Func{
+				f := &oop.Func{
 					Name: "anonymous",
 					Src:  p,
 					Tks:  p.getBlock(i.tks[len(vtks):]),
@@ -700,7 +731,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				if l > 1 {
 					vtks = vtks[1:]
 					vtks, _ = decomposeBrace(&vtks, "(", ")")
-					p.setFuncParams(&f, &vtks)
+					p.setFuncParams(f, &vtks)
 				}
 				rv = &oop.Val{D: f, T: oop.Function}
 			case fract.Struct:
@@ -911,9 +942,9 @@ func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
 	if !varr.IsEnum() {
 		fract.IPanic(ltks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	p.defs.Vars = append(p.defs.Vars, oop.Var{Name: nametk.V})
+	p.defs.Vars = append(p.defs.Vars, &oop.Var{Name: nametk.V})
 	vlen := len(p.defs.Vars)
-	element := &p.defs.Vars[vlen-1]
+	element := p.defs.Vars[vlen-1]
 	if element.Name == "_" {
 		element.Name = ""
 	}
@@ -926,7 +957,9 @@ func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
 			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(stks))
 		}
 	})
-	p.defs.Vars = p.defs.Vars[:vlen-1] // Remove variables.
+	// Remove variables.
+	element = nil
+	p.defs.Vars = p.defs.Vars[:vlen-1]
 	return &v
 }
 

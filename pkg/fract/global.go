@@ -34,6 +34,7 @@ const (
 	Package             uint8 = 34
 	Dot                 uint8 = 35
 	Struct              uint8 = 36
+	Class               uint8 = 37
 
 	LOOPBreak    uint8 = 1
 	LOOPContinue uint8 = 2

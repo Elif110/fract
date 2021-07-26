@@ -16,6 +16,7 @@ type Func struct {
 	Ln            int // Line of define.
 	Tks           []obj.Tokens
 	Params        []Param
+	Args          []*Var // Default vars.
 	DefParamCount int
 }
 

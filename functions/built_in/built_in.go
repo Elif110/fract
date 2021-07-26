@@ -14,7 +14,7 @@ import (
 )
 
 // Exit from application with code.
-func Exit(tk obj.Token, args []oop.Var) {
+func Exit(tk obj.Token, args []*oop.Var) {
 	c := args[0].V
 	if c.T != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Exit code is only be integer!")
@@ -24,7 +24,7 @@ func Exit(tk obj.Token, args []oop.Var) {
 }
 
 // Float convert object to float.
-func Float(parameters []oop.Var) oop.Val {
+func Float(parameters []*oop.Var) oop.Val {
 	return oop.Val{
 		D: fmt.Sprintf(fract.FloatFormat, str.Conv(parameters[0].V.String())),
 		T: oop.Float,
@@ -32,7 +32,7 @@ func Float(parameters []oop.Var) oop.Val {
 }
 
 // Input returns input from command-line.
-func Input(args []oop.Var) oop.Val {
+func Input(args []*oop.Var) oop.Val {
 	args[0].V.Print()
 	//! Don't use fmt.Scanln
 	s := bufio.NewScanner(os.Stdin)
@@ -41,7 +41,7 @@ func Input(args []oop.Var) oop.Val {
 }
 
 // Int convert object to integer.
-func Int(args []oop.Var) oop.Val {
+func Int(args []*oop.Var) oop.Val {
 	switch args[1].V.D { // Cast type.
 	case "strcode":
 		var v oop.ArrayModel
@@ -58,12 +58,12 @@ func Int(args []oop.Var) oop.Val {
 }
 
 // Len returns length of object.
-func Len(args []oop.Var) oop.Val {
+func Len(args []*oop.Var) oop.Val {
 	return oop.Val{D: fmt.Sprint(args[0].V.Len()), T: oop.Int}
 }
 
 // Calloc array by size.
-func Calloc(tk obj.Token, args []oop.Var) oop.Val {
+func Calloc(tk obj.Token, args []*oop.Var) oop.Val {
 	sz := args[0].V
 	if sz.T != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Size is only be integer!")
@@ -87,7 +87,7 @@ func Calloc(tk obj.Token, args []oop.Var) oop.Val {
 }
 
 // Realloc array by size.
-func Realloc(tk obj.Token, args []oop.Var) oop.Val {
+func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
 	if args[0].V.T != oop.Array {
 		fract.Panic(tk, obj.ValuePanic, "Value is must be array!")
 	}
@@ -116,7 +116,7 @@ func Realloc(tk obj.Token, args []oop.Var) oop.Val {
 }
 
 // Print values to cli.
-func Print(tk obj.Token, args []oop.Var) {
+func Print(tk obj.Token, args []*oop.Var) {
 	for _, d := range args[0].V.D.(oop.ArrayModel) {
 		if d.T == 0 {
 			fract.Panic(tk, obj.ValuePanic, "Value is not printable!")
@@ -126,13 +126,13 @@ func Print(tk obj.Token, args []oop.Var) {
 }
 
 // Print values to cli with new line.
-func Println(tk obj.Token, args []oop.Var) {
+func Println(tk obj.Token, args []*oop.Var) {
 	Print(tk, args)
 	println()
 }
 
 // Range returns array by parameters.
-func Range(tk obj.Token, args []oop.Var) oop.Val {
+func Range(tk obj.Token, args []*oop.Var) oop.Val {
 	start := args[0].V
 	to := args[1].V
 	step := args[2].V
@@ -171,7 +171,7 @@ func Range(tk obj.Token, args []oop.Var) oop.Val {
 }
 
 // String convert object to string.
-func String(args []oop.Var) oop.Val {
+func String(args []*oop.Var) oop.Val {
 	switch args[1].V.D {
 	case "parse":
 		str := ""
@@ -209,7 +209,7 @@ func String(args []oop.Var) oop.Val {
 }
 
 // Append source values to destination array.
-func Append(tk obj.Token, args []oop.Var) oop.Val {
+func Append(tk obj.Token, args []*oop.Var) oop.Val {
 	src := args[0].V
 	if src.T != oop.Array {
 		fract.Panic(tk, obj.ValuePanic, "\"src\" must be array!")
@@ -219,7 +219,7 @@ func Append(tk obj.Token, args []oop.Var) oop.Val {
 }
 
 // Delete key from map.
-func Del(tk obj.Token, args []oop.Var) {
+func Del(tk obj.Token, args []*oop.Var) {
 	if args[0].V.T != oop.Map {
 		fract.IPanic(tk, obj.ValuePanic, `"map" parameter is must be map!`)
 	}

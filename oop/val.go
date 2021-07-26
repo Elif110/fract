@@ -9,16 +9,18 @@ import (
 )
 
 const (
-	Int               uint8 = 1
-	Float             uint8 = 2
-	Str               uint8 = 3
-	Bool              uint8 = 4
-	Function          uint8 = 5
-	Array             uint8 = 6
-	Map               uint8 = 7
-	Package           uint8 = 8
-	Structure         uint8 = 9
-	StructureInstance uint8 = 10
+	Int       uint8 = 1
+	Float     uint8 = 2
+	Str       uint8 = 3
+	Bool      uint8 = 4
+	Function  uint8 = 5
+	Array     uint8 = 6
+	Map       uint8 = 7
+	Package   uint8 = 8
+	StructDef uint8 = 9
+	StructIns uint8 = 10
+	ClassDef  uint8 = 11
+	ClassIns  uint8 = 12
 )
 
 type ArrayModel []Val
@@ -58,14 +60,16 @@ func (d Val) String() string {
 		return "object.func"
 	case Package:
 		return "object.packageref"
-	case Structure:
+	case StructDef:
 		return "object.struct"
+	case ClassDef:
+		return "object.class"
 	case Array:
 		return fmt.Sprint(d.D)
 	case Map:
 		s := fmt.Sprint(d.D)
 		return "{" + s[4:len(s)-1] + "}"
-	case StructureInstance:
+	case StructIns:
 		var s strings.Builder
 		d := d.D.(StructInstance)
 		s.WriteString("struct{")
@@ -76,6 +80,8 @@ func (d Val) String() string {
 			s.WriteRune(' ')
 		}
 		return s.String()[:s.Len()-1] + "}"
+	case ClassIns:
+		return "object.classins"
 	default:
 		if d.D == nil {
 			return ""

@@ -497,6 +497,9 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "struct"):
 		tk.V = "struct"
 		tk.T = fract.Struct
+	case isKeyword(ln, "class"):
+		tk.V = "class"
+		tk.T = fract.Class
 	default: // Alternates
 		// Check variable name.
 		if chk := getName(ln); chk != "" { // Name.

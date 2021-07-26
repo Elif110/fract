@@ -8,13 +8,12 @@ import (
 type Struct struct {
 	L           *lex.Lex
 	Name        string
-	Constructor Func
+	Constructor *Func
 }
 
-func (s *Struct) CallConstructor(args []Var) StructInstance {
-	si := StructInstance{Name: s.Name}
-	si.Fields.Vars = append(si.Fields.Vars, args...)
-	si.L = s.L
+func (s *Struct) CallConstructor(args []*Var) StructInstance {
+	si := StructInstance{Name: s.Name, L: s.L}
+	si.Fields.Vars = args
 	return si
 }
 

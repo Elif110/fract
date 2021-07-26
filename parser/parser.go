@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	defers []funcCall
+	defers []*funcCall
 )
 
 // Parser of Fract.
@@ -142,7 +142,7 @@ func (p *Parser) Interpret() {
 	}
 end:
 	for i := len(defers) - 1; i >= 0; i-- {
-		defers[i].call()
+		defers[i].Call()
 	}
 }
 
@@ -160,6 +160,9 @@ func (p *Parser) procPragma(tks []obj.Token) {
 		fract.IPanic(tks[1], obj.SyntaxPanic, "Invalid pragma!")
 	}
 }
+
+// validName returns true if name is valid, returns false if not.
+func validName(n string) bool { return n != "_" && n != "this" }
 
 // Process enumerable selections for access to elements.
 func selections(enum, val oop.Val, tk obj.Token) interface{} {
@@ -296,13 +299,9 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 // 'p' -> Package.
 // Returns define by name.
 func (p *Parser) defByName(n string) (int, rune) {
-	pos := p.defs.FuncIndexByName(n)
+	pos, t := p.defs.DefByName(n)
 	if pos != -1 {
-		return pos, 'f'
-	}
-	pos = p.defs.VarIndexByName(n)
-	if pos != -1 {
-		return pos, 'v'
+		return pos, t
 	}
 	pos = p.packageIndexByName(n)
 	if pos != -1 {
@@ -564,7 +563,7 @@ func conditionalProcesses(tks obj.Tokens, opr string) []obj.Tokens {
 // ApplyBuildInFunctions to parser source.
 func (p *Parser) AddBuiltInFuncs() {
 	p.defs.Funcs = append(p.defs.Funcs,
-		oop.Func{ // print function.
+		&oop.Func{ // print function.
 			Name:          "print",
 			DefParamCount: 2,
 			Params: []oop.Param{{
@@ -572,7 +571,7 @@ func (p *Parser) AddBuiltInFuncs() {
 				Params: true,
 				Defval: oop.Val{D: "", T: oop.Str},
 			}},
-		}, oop.Func{ // println function.
+		}, &oop.Func{ // println function.
 			Name:          "println",
 			DefParamCount: 2,
 			Params: []oop.Param{{
@@ -580,25 +579,25 @@ func (p *Parser) AddBuiltInFuncs() {
 				Params: true,
 				Defval: oop.Val{D: oop.ArrayModel{{D: "", T: oop.Str}}, T: oop.Array},
 			}},
-		}, oop.Func{ // input function.
+		}, &oop.Func{ // input function.
 			Name:          "input",
 			DefParamCount: 1,
 			Params: []oop.Param{{
 				Name:   "message",
 				Defval: oop.Val{D: "", T: oop.Str},
 			}},
-		}, oop.Func{ // exit function.
+		}, &oop.Func{ // exit function.
 			Name:          "exit",
 			DefParamCount: 1,
 			Params: []oop.Param{{
 				Name:   "code",
 				Defval: oop.Val{D: "0", T: oop.Int},
 			}},
-		}, oop.Func{ // len function.
+		}, &oop.Func{ // len function.
 			Name:          "len",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
-		}, oop.Func{ // range function.
+		}, &oop.Func{ // range function.
 			Name:          "range",
 			DefParamCount: 1,
 			Params: []oop.Param{
@@ -609,19 +608,19 @@ func (p *Parser) AddBuiltInFuncs() {
 					Defval: oop.Val{D: "1", T: oop.Int},
 				},
 			},
-		}, oop.Func{ // calloc function.
+		}, &oop.Func{ // calloc function.
 			Name:          "calloc",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "size"}},
-		}, oop.Func{ // realloc function.
+		}, &oop.Func{ // realloc function.
 			Name:          "realloc",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "base"}, {Name: "size"}},
-		}, oop.Func{ // memset function.
+		}, &oop.Func{ // memset function.
 			Name:          "memset",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "mem"}, {Name: "val"}},
-		}, oop.Func{ // string function.
+		}, &oop.Func{ // string function.
 			Name:          "string",
 			DefParamCount: 1,
 			Params: []oop.Param{
@@ -631,7 +630,7 @@ func (p *Parser) AddBuiltInFuncs() {
 					Defval: oop.Val{D: "parse", T: oop.Str},
 				},
 			},
-		}, oop.Func{ // int function.
+		}, &oop.Func{ // int function.
 			Name:          "int",
 			DefParamCount: 1,
 			Params: []oop.Param{
@@ -641,11 +640,11 @@ func (p *Parser) AddBuiltInFuncs() {
 					Defval: oop.Val{D: "parse", T: oop.Str},
 				},
 			},
-		}, oop.Func{ // float function.
+		}, &oop.Func{ // float function.
 			Name:          "float",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
-		}, oop.Func{ // append function.
+		}, &oop.Func{ // append function.
 			Name:          "append",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "dest"}, {Name: "src", Params: true}},
@@ -767,13 +766,13 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 			p.defs.Funcs = p.defs.Funcs[:flen]
 			p.packages = p.packages[:ilen]
 			for index := len(defers) - 1; index >= dlen; index-- {
-				defers[index].call()
+				defers[index].Call()
 			}
 			defers = defers[:dlen]
 		},
 		Catch: func(cp obj.Panic) {
 			for index := len(defers) - 1; index >= dlen; index-- {
-				defers[index].call()
+				defers[index].Call()
 			}
 			p.loopCount = 0
 			fract.TryCount--
@@ -795,7 +794,7 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 			p.defs.Vars = p.defs.Vars[:vlen]
 			p.defs.Funcs = p.defs.Funcs[:flen]
 			for i := len(defers) - 1; i >= dlen; i-- {
-				defers[i].call()
+				defers[i].Call()
 			}
 			defers = defers[:dlen]
 		},
@@ -886,6 +885,8 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 		p.procPragma(tks)
 	case fract.Struct:
 		p.structdec(tks)
+	case fract.Class:
+		p.classdec(tks)
 	case fract.Defer, fract.Go:
 		if l := len(tks); l < 2 {
 			fract.IPanic(tks[0], obj.SyntaxPanic, "Function is not given!")
@@ -920,9 +921,9 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 			fract.IPanic(tks[len(vtks)], obj.ValuePanic, "Value is not function!")
 		}
 		if fst.T == fract.Defer {
-			defers = append(defers, p.funcCallModel(v.D.(oop.Func), tks[len(vtks):]))
+			defers = append(defers, p.funcCallModel(v.D.(*oop.Func), tks[len(vtks):]))
 		} else {
-			go p.funcCallModel(v.D.(oop.Func), tks[len(vtks):]).call()
+			go p.funcCallModel(v.D.(*oop.Func), tks[len(vtks):]).Call()
 		}
 	default:
 		fract.IPanic(fst, obj.SyntaxPanic, "Invalid syntax!")

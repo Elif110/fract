@@ -12,12 +12,14 @@ import (
 
 // Instance for function calls.
 type funcCall struct {
-	f     oop.Func
+	f     *oop.Func
 	errTk obj.Token
-	args  []oop.Var
+	args  []*oop.Var
 }
 
-func (c funcCall) call() *oop.Val {
+func (c *funcCall) Func() *oop.Func { return c.f }
+
+func (c *funcCall) Call() *oop.Val {
 	var retv oop.Val
 	// Is built-in function?
 	if c.f.Tks == nil {
@@ -55,7 +57,7 @@ func (c funcCall) call() *oop.Val {
 	dlen := len(defers)
 	src := c.f.Src.(*Parser)
 	p := Parser{
-		defs:         oop.DefMap{Funcs: src.defs.Funcs},
+		defs:         oop.DefMap{Vars: append(c.args, c.f.Args...), Funcs: src.defs.Funcs},
 		packages:     src.packages,
 		funcTempVars: src.funcTempVars,
 		loopCount:    0,
@@ -66,9 +68,9 @@ func (c funcCall) call() *oop.Val {
 		p.funcTempVars = 0
 	}
 	if p.funcTempVars == 0 {
-		p.defs.Vars = append(c.args, src.defs.Vars...)
+		p.defs.Vars = append(p.defs.Vars, src.defs.Vars...)
 	} else {
-		p.defs.Vars = append(c.args, src.defs.Vars[:len(src.defs.Vars)-p.funcTempVars]...)
+		p.defs.Vars = append(p.defs.Vars, src.defs.Vars[:len(src.defs.Vars)-p.funcTempVars]...)
 	}
 	p.funcTempVars = len(c.args)
 	// Interpret block.
@@ -93,7 +95,7 @@ func (c funcCall) call() *oop.Val {
 		panic(b.P.M)
 	}
 	for i := len(defers) - 1; i >= dlen; i-- {
-		defers[i].call()
+		defers[i].Call()
 	}
 	defers = defers[:dlen]
 	return &retv
@@ -147,7 +149,7 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
 }
 
 type funcArgInfo struct {
-	f        oop.Func
+	f        *oop.Func
 	names    *[]string
 	tks      obj.Tokens
 	tk       obj.Token
@@ -157,7 +159,7 @@ type funcArgInfo struct {
 }
 
 // Process function argument.
-func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
+func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 	var paramSet bool
 	l := *i.index - *i.lstComma
 	if l < 1 {
@@ -166,7 +168,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 		fract.IPanic(i.tk, obj.SyntaxPanic, "Argument overflow!")
 	}
 	param := i.f.Params[*i.count]
-	v := oop.Var{Name: param.Name}
+	v := &oop.Var{Name: param.Name}
 	vtks := *i.tks.Sub(*i.lstComma, l)
 	i.tk = vtks[0]
 	// Check param set.
@@ -185,7 +187,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 				*i.count++
 				paramSet = true
 				*i.names = append(*i.names, i.tk.V)
-				retv := oop.Var{Name: i.tk.V}
+				retv := &oop.Var{Name: i.tk.V}
 				//Parameter is params typed?
 				if pr.Params {
 					*i.lstComma += 2
@@ -214,10 +216,10 @@ func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 }
 
 // Process function call model and initialize model instance.
-func (p *Parser) funcCallModel(f oop.Func, tks obj.Tokens) funcCall {
+func (p *Parser) funcCallModel(f *oop.Func, tks obj.Tokens) *funcCall {
 	var (
 		names []string
-		args  []oop.Var
+		args  []*oop.Var
 		count = 0
 		tk    = tks[0]
 	)
@@ -285,10 +287,10 @@ func (p *Parser) funcCallModel(f oop.Func, tks obj.Tokens) funcCall {
 	for ; count < len(f.Params); count++ {
 		p := f.Params[count]
 		if p.Defval.D != nil {
-			args = append(args, oop.Var{Name: p.Name, V: p.Defval})
+			args = append(args, &oop.Var{Name: p.Name, V: p.Defval})
 		}
 	}
-	return funcCall{
+	return &funcCall{
 		f:     f,
 		errTk: tk,
 		args:  args,
@@ -318,6 +320,9 @@ func (p *Parser) setFuncParams(f *oop.Func, tks *obj.Tokens) {
 			case fract.Params:
 				continue
 			case fract.Name:
+				if !validName(pr.V) {
+					fract.IPanic(pr, obj.NamePanic, "Invalid name!")
+				}
 			default:
 				if i == 3 && (*tks)[i].V == ")" {
 					continue
@@ -372,24 +377,29 @@ func (p *Parser) setFuncParams(f *oop.Func, tks *obj.Tokens) {
 	}
 }
 
-// Process function declaration.
-func (p *Parser) funcdec(tks obj.Tokens) {
+// Process function declaration to defmap.
+func (p *Parser) ffuncdec(dm *oop.DefMap, tks obj.Tokens) {
 	tkslen := len(tks)
 	name := tks[1]
 	// Name is not name?
-	if name.T != fract.Name {
+	if name.T != fract.Name || !validName(name.V) {
 		fract.IPanic(name, obj.SyntaxPanic, "Invalid name!")
-	} else if strings.Contains(name.V, ".") {
-		fract.IPanic(name, obj.SyntaxPanic, "Names is cannot include dot!")
 	}
 	// Name is already defined?
-	if line := p.definedName(name.V); line != -1 {
-		fract.IPanic(name, obj.NamePanic, "\""+name.V+"\" is already defined at line: "+fmt.Sprint(line))
+	var ln int
+	if &p.defs == dm { // Variable added to defmap of parser.
+		ln = p.definedName(name.V)
+	} else { // Variable added to another defmap.
+		ln = dm.DefinedName(name.V)
 	}
+	if ln != -1 {
+		fract.IPanic(name, obj.NamePanic, "\""+name.V+"\" is already defined at line: "+fmt.Sprint(ln))
+	}
+
 	if tkslen < 3 {
 		fract.IPanicC(name.F, name.Ln, name.Col+len(name.V), obj.SyntaxPanic, "Invalid syntax!")
 	}
-	f := oop.Func{
+	f := &oop.Func{
 		Name: name.V,
 		Ln:   p.i,
 		Src:  p,
@@ -398,7 +408,7 @@ func (p *Parser) funcdec(tks obj.Tokens) {
 	if tks[2].V == "(" {
 		tks = tks[2:]
 		r, _ := decomposeBrace(&tks, "(", ")")
-		p.setFuncParams(&f, &r)
+		p.setFuncParams(f, &r)
 	} else {
 		tks = tks[2:]
 	}
@@ -407,5 +417,8 @@ func (p *Parser) funcdec(tks obj.Tokens) {
 		f.Tks = []obj.Tokens{}
 	}
 	f.Ln = name.Ln
-	p.defs.Funcs = append(p.defs.Funcs, f)
+	dm.Funcs = append(dm.Funcs, f)
 }
+
+// Process function declaration to defmap of parser.
+func (p *Parser) funcdec(tks obj.Tokens) { p.ffuncdec(&p.defs, tks) }
