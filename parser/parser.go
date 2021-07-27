@@ -272,13 +272,13 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 				ln = t.Ln
 			}
 		}
+		if bc > 0 {
+			continue
+		}
 		if t.T == fract.StatementTerminator {
 			btks = append(btks, tks[lst:j])
 			lst = j + 1
 			ln = t.Ln
-			continue
-		}
-		if bc > 0 {
 			continue
 		}
 		if ln < t.Ln {
