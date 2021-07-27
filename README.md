@@ -5,7 +5,7 @@
 <h1>The Fract Programming Language</h1>
 
 [Website](https://fract-lang.github.io/website/) |
-[Docs](https://github.com/fract-lang/fract/tree/master/docs) |
+[Docs](https://fract-lang.github.io/website/pages/docs/docs.html) |
 [A Tour of Fract](https://fract-lang.github.io/website/pages/tour.html) |
 [Samples](https://fract-lang.github.io/website/pages/samples.html) |
 [Contributing](#contributing)
