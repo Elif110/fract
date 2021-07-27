@@ -803,7 +803,6 @@ func (p *Parser) procTryCatch(tks []obj.Token) uint8 {
 
 // TODO: Add match-case.
 //! A change added here(especially added a code block) must also be compatible with "imports.go" and
-//! add to "isBlock" function of parser.
 
 // process tokens and returns true if block end, returns false if not and returns keyword state.
 func (p *Parser) process(tks []obj.Token) uint8 {
