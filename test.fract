@@ -109,7 +109,7 @@ println(e.string())
 
 // Notation ... test.
 func Print(...x) {
-    l := len(x) - 1
+    l := len(x)-1
     for i, y := x {
         print(y)
         if i < l {

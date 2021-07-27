@@ -240,7 +240,7 @@ func (l *Lex) Token() obj.Token {
 	switch chk := getNumeric(ln); {
 	case (chk != "" &&
 		(l.lastTk.V == "" || l.lastTk.T == fract.Operator ||
-			(l.lastTk.T == fract.Brace && l.lastTk.V != "]") ||
+			(l.lastTk.T == fract.Brace && l.lastTk.V != "}" && l.lastTk.V != "]" && l.lastTk.V != ")") ||
 			l.lastTk.T == fract.StatementTerminator || l.lastTk.T == fract.Loop ||
 			l.lastTk.T == fract.Comma || l.lastTk.T == fract.In || l.lastTk.T == fract.If ||
 			l.lastTk.T == fract.Else || l.lastTk.T == fract.Ret || l.lastTk.T == fract.Colon)) ||
