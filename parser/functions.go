@@ -102,12 +102,12 @@ func (c *funcCall) Call() *oop.Val {
 }
 
 // isParamSet Argument type is param set?
-func isParamSet(tks obj.Tokens) bool {
+func isParamSet(tks []obj.Token) bool {
 	return len(tks) >= 2 && tks[0].T == fract.Name && tks[1].V == "="
 }
 
 // paramsArgVals decompose and returns params values.
-func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
+func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 	var data oop.ArrayModel
 	retv := oop.Val{T: oop.Array}
 	bc := 0
@@ -124,13 +124,13 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
 			if bc != 0 {
 				break
 			}
-			vtks := tks.Sub(*lstComma, *i-*lstComma)
-			if isParamSet(*vtks) {
+			vtks := tks[*lstComma:*i]
+			if isParamSet(vtks) {
 				*i -= 4
 				retv.D = data
 				return retv
 			}
-			data = append(data, *p.procValTks(*vtks))
+			data = append(data, *p.procValTks(vtks))
 			vtks = nil
 			*lstComma = *i + 1
 		}
@@ -151,7 +151,7 @@ func (p *Parser) paramsArgVals(tks obj.Tokens, i, lstComma *int) oop.Val {
 type funcArgInfo struct {
 	f        *oop.Func
 	names    *[]string
-	tks      obj.Tokens
+	tks      []obj.Token
 	tk       obj.Token
 	index    *int
 	count    *int
@@ -169,7 +169,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 	}
 	param := i.f.Params[*i.count]
 	v := &oop.Var{Name: param.Name}
-	vtks := *i.tks.Sub(*i.lstComma, l)
+	vtks := i.tks[*i.lstComma:*i.index]
 	i.tk = vtks[0]
 	// Check param set.
 	if l >= 2 && isParamSet(vtks) {
@@ -216,7 +216,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 }
 
 // Process function call model and initialize model instance.
-func (p *Parser) funcCallModel(f *oop.Func, tks obj.Tokens) *funcCall {
+func (p *Parser) funcCallModel(f *oop.Func, tks []obj.Token) *funcCall {
 	var (
 		names []string
 		args  []*oop.Var
@@ -224,7 +224,7 @@ func (p *Parser) funcCallModel(f *oop.Func, tks obj.Tokens) *funcCall {
 		tk    = tks[0]
 	)
 	// Decompose arguments.
-	tks, _ = decomposeBrace(&tks, "(", ")")
+	tks = decomposeBrace(&tks, "(", ")")
 	var (
 		inf = funcArgInfo{
 			f:        f,
@@ -260,6 +260,7 @@ func (p *Parser) funcCallModel(f *oop.Func, tks obj.Tokens) *funcCall {
 		inf.index = &tkslen
 		args = append(args, p.procFuncArg(inf))
 	}
+	tks = nil
 	inf.count = nil
 	inf.index = nil
 	inf.lstComma = nil
@@ -298,7 +299,7 @@ func (p *Parser) funcCallModel(f *oop.Func, tks obj.Tokens) *funcCall {
 }
 
 // Decompose function parameters.
-func (p *Parser) setFuncParams(f *oop.Func, tks *obj.Tokens) {
+func (p *Parser) setFuncParams(f *oop.Func, tks *[]obj.Token) {
 	pname, defaultDef := true, false
 	bc := 1
 	var lstp oop.Param
@@ -378,7 +379,7 @@ func (p *Parser) setFuncParams(f *oop.Func, tks *obj.Tokens) {
 }
 
 // Process function declaration to defmap.
-func (p *Parser) ffuncdec(dm *oop.DefMap, tks obj.Tokens) {
+func (p *Parser) ffuncdec(dm *oop.DefMap, tks []obj.Token) {
 	tkslen := len(tks)
 	name := tks[1]
 	// Name is not name?
@@ -407,18 +408,19 @@ func (p *Parser) ffuncdec(dm *oop.DefMap, tks obj.Tokens) {
 	// Decompose function parameters.
 	if tks[2].V == "(" {
 		tks = tks[2:]
-		r, _ := decomposeBrace(&tks, "(", ")")
+		r := decomposeBrace(&tks, "(", ")")
 		p.setFuncParams(f, &r)
+		r = nil
 	} else {
 		tks = tks[2:]
 	}
 	f.Tks = p.getBlock(tks)
 	if f.Tks == nil {
-		f.Tks = []obj.Tokens{}
+		f.Tks = [][]obj.Token{}
 	}
 	f.Ln = name.Ln
 	dm.Funcs = append(dm.Funcs, f)
 }
 
 // Process function declaration to defmap of parser.
-func (p *Parser) funcdec(tks obj.Tokens) { p.ffuncdec(&p.defs, tks) }
+func (p *Parser) funcdec(tks []obj.Token) { p.ffuncdec(&p.defs, tks) }

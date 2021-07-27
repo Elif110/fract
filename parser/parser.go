@@ -31,7 +31,7 @@ type Parser struct {
 	pkg          string   // Package name.
 
 	L   *lex.Lex
-	Tks []obj.Tokens // All Tokens of code file.
+	Tks [][]obj.Token // All Tokens of code file.
 }
 
 // New returns instance of parser related to file.
@@ -211,7 +211,7 @@ func selections(enum, val oop.Val, tk obj.Token) interface{} {
 }
 
 // Find start index of block.
-func findBlock(tks obj.Tokens) int {
+func findBlock(tks []obj.Token) int {
 	bc := 0
 	for i, t := range tks {
 		switch t.V {
@@ -230,7 +230,7 @@ func findBlock(tks obj.Tokens) int {
 }
 
 // Get a block.
-func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
+func (p *Parser) getBlock(tks []obj.Token) [][]obj.Token {
 	if len(tks) == 0 {
 		p.i++
 		tks = p.Tks[p.i]
@@ -250,13 +250,13 @@ func (p *Parser) getBlock(tks obj.Tokens) []obj.Tokens {
 		}
 		if bc == 0 {
 			if i < len(tks)-1 {
-				p.Tks = append(p.Tks[:p.i+1], append([]obj.Tokens{tks[i+1:]}, p.Tks[p.i+1:]...)...)
+				p.Tks = append(p.Tks[:p.i+1], append([][]obj.Token{tks[i+1:]}, p.Tks[p.i+1:]...)...)
 			}
 			tks = tks[1 : i+1]
 			break
 		}
 	}
-	var btks []obj.Tokens
+	var btks [][]obj.Token
 	if len(tks) == 1 {
 		return btks
 	}
@@ -344,10 +344,10 @@ func (p *Parser) packageIndexByName(name string) int {
 }
 
 // Check arithmetic processes validity.
-func arithmeticProcesses(tks obj.Tokens) []obj.Tokens {
+func arithmeticProcesses(tks []obj.Token) [][]obj.Token {
 	var (
-		procs []obj.Tokens
-		part  obj.Tokens
+		procs [][]obj.Token
+		part  []obj.Token
 		opr   bool
 		b     int
 	)
@@ -362,8 +362,8 @@ func arithmeticProcesses(tks obj.Tokens) []obj.Tokens {
 				part = append(part, t)
 			} else {
 				procs = append(procs, part)
-				procs = append(procs, obj.Tokens{t})
-				part = obj.Tokens{}
+				procs = append(procs, []obj.Token{t})
+				part = []obj.Token{}
 			}
 		default:
 			if t.T == fract.Brace {
@@ -394,7 +394,7 @@ func arithmeticProcesses(tks obj.Tokens) []obj.Tokens {
 
 // decomposeBrace returns range tokens and index of first parentheses.
 // Remove range tokens from original tokens.
-func decomposeBrace(tks *obj.Tokens, ob, cb string) (obj.Tokens, int) {
+func decomposeBrace(tks *[]obj.Token, ob, cb string) []obj.Token {
 	fst := -1
 	for i, t := range *tks {
 		if t.T == fract.Brace && t.V == ob {
@@ -405,7 +405,7 @@ func decomposeBrace(tks *obj.Tokens, ob, cb string) (obj.Tokens, int) {
 	// Skip find close parentheses and result ready steps
 	// if open parentheses is not found.
 	if fst == -1 {
-		return nil, -1
+		return nil
 	}
 	// Find close parentheses.
 	c, l := 1, 0
@@ -424,13 +424,10 @@ func decomposeBrace(tks *obj.Tokens, ob, cb string) (obj.Tokens, int) {
 		}
 		l++
 	}
-	rg := tks.Sub(fst+1, l)
+	rg := append([]obj.Token{}, (*tks)[fst+1:fst+1+l]...)
 	// Remove range from original tokens.
-	tks.Rem(fst, (fst+l+1)-fst+1)
-	if rg == nil {
-		return nil, fst
-	}
-	return *rg, fst
+	*tks = append((*tks)[:fst], (*tks)[fst+2+l:]...)
+	return rg
 }
 
 // procIndex process array index by length.
@@ -450,7 +447,7 @@ func procIndex(len, i int) int {
 
 // nextopr find index of priority operator and returns index of operator
 // if found, returns -1 if not.
-func nextopr(tks []obj.Tokens) int {
+func nextopr(tks [][]obj.Token) int {
 	high, mid, low := -1, -1, -1
 	for i, tslc := range tks {
 		switch tslc[0].V {
@@ -485,7 +482,7 @@ func nextopr(tks []obj.Tokens) int {
 }
 
 // findConditionOpr return next condition operator.
-func findConditionOpr(tks obj.Tokens) (int, obj.Token) {
+func findConditionOpr(tks []obj.Token) (int, obj.Token) {
 	bc := 0
 	for i, t := range tks {
 		if t.T == fract.Brace {
@@ -514,7 +511,7 @@ func findConditionOpr(tks obj.Tokens) (int, obj.Token) {
 }
 
 // Find next or condition operator index and return if find, return -1 if not.
-func nextConditionOpr(tks obj.Tokens, pos int, opr string) int {
+func nextConditionOpr(tks []obj.Token, pos int, opr string) int {
 	bc := 0
 	for ; pos < len(tks); pos++ {
 		t := tks[pos]
@@ -537,15 +534,15 @@ func nextConditionOpr(tks obj.Tokens, pos int, opr string) int {
 }
 
 // conditionalProcesses returns conditional expressions by operators.
-func conditionalProcesses(tks obj.Tokens, opr string) []obj.Tokens {
-	var exps []obj.Tokens
+func conditionalProcesses(tks []obj.Token, opr string) [][]obj.Token {
+	var exps [][]obj.Token
 	last := 0
 	i := nextConditionOpr(tks, last, opr)
 	for i != -1 {
 		if i-last == 0 {
 			fract.IPanic(tks[last], obj.SyntaxPanic, "Condition expression is cannot given!")
 		}
-		exps = append(exps, *tks.Sub(last, i-last))
+		exps = append(exps, tks[last:i])
 		last = i + 1
 		i = nextConditionOpr(tks, last, opr) // Find next.
 		if i == len(tks)-1 {
@@ -553,7 +550,7 @@ func conditionalProcesses(tks obj.Tokens, opr string) []obj.Tokens {
 		}
 	}
 	if last != len(tks) {
-		exps = append(exps, *tks.Sub(last, len(tks)-last))
+		exps = append(exps, tks[last:])
 	}
 	return exps
 }
@@ -653,7 +650,7 @@ func (p *Parser) AddBuiltInFuncs() {
 }
 
 // procIf process if-else if-else returns keyword state.
-func (p *Parser) procIf(tks obj.Tokens) uint8 {
+func (p *Parser) procIf(tks []obj.Token) uint8 {
 	bi := findBlock(tks)
 	btks, ctks := p.getBlock(tks[bi:]), tks[1:bi]
 	// Condition is empty?
@@ -742,7 +739,7 @@ func checkPublic(l *lex.Lex, n obj.Token) {
 }
 
 // procTryCatch process try-catch blocks and returns keyword state.
-func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
+func (p *Parser) procTryCatch(tks []obj.Token) uint8 {
 	fract.TryCount++
 	var (
 		vlen = len(p.defs.Vars)
@@ -809,8 +806,8 @@ func (p *Parser) procTryCatch(tks obj.Tokens) uint8 {
 //! add to "isBlock" function of parser.
 
 // process tokens and returns true if block end, returns false if not and returns keyword state.
-func (p *Parser) process(tks obj.Tokens) uint8 {
-	//tks = append(obj.Tokens{}, tks...)
+func (p *Parser) process(tks []obj.Token) uint8 {
+	//tks = append([]obj.Token{}, tks...)
 	switch fst := tks[0]; fst.T {
 	case fract.Value, fract.Brace, fract.Name:
 		if fst.T == fract.Name {
@@ -893,7 +890,7 @@ func (p *Parser) process(tks obj.Tokens) uint8 {
 		} else if t := tks[l-1]; t.T != fract.Brace && t.V != ")" {
 			fract.IPanicC(tks[0].F, tks[0].Ln, tks[0].Col+len(tks[0].V), obj.SyntaxPanic, "Invalid syntax!")
 		}
-		var vtks obj.Tokens
+		var vtks []obj.Token
 		bc := 0
 		for i := len(tks) - 1; i >= 0; i-- {
 			t := tks[i]

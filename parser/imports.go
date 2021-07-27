@@ -44,7 +44,7 @@ type importInfo struct {
 	ln   int     // Defined line.
 }
 
-func (p *Parser) procImport(tks obj.Tokens) {
+func (p *Parser) procImport(tks []obj.Token) {
 	if len(tks) == 1 {
 		fract.IPanic(tks[0], obj.SyntaxPanic, "Import path is not given!")
 	}
@@ -73,7 +73,7 @@ func (p *Parser) procImport(tks obj.Tokens) {
 			imppath = strings.ReplaceAll(`std.`+tks[j].V, ".", string(os.PathSeparator))
 		}
 	} else {
-		imppath = tks[0].F.P[:strings.LastIndex(tks[0].F.P, string(os.PathSeparator))+1] + p.procValTks(obj.Tokens{tks[j]}).String()
+		imppath = tks[0].F.P[:strings.LastIndex(tks[0].F.P, string(os.PathSeparator))+1] + p.procValTks([]obj.Token{tks[j]}).String()
 	}
 	imppath = path.Join(fract.ExecPath, imppath)
 	info, err := os.Stat(imppath)

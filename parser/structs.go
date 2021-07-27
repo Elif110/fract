@@ -9,7 +9,7 @@ import (
 )
 
 // buildStruct from tokens.
-func (p *Parser) buildStruct(name string, tks obj.Tokens) *oop.Val {
+func (p *Parser) buildStruct(name string, tks []obj.Token) *oop.Val {
 	s := oop.Struct{L: p.L}
 	s.Constructor = &oop.Func{Name: s.Name + ".constructor", Src: p}
 	blk := p.getBlock(tks)
@@ -45,7 +45,7 @@ func (p *Parser) buildStruct(name string, tks obj.Tokens) *oop.Val {
 }
 
 // Process struct declaration.
-func (p *Parser) structdec(tks obj.Tokens) {
+func (p *Parser) structdec(tks []obj.Token) {
 	l := len(tks)
 	if l < 2 {
 		fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")

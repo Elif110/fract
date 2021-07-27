@@ -92,7 +92,7 @@ func comp(v0, v1 oop.Val, opr obj.Token) bool {
 }
 
 // procCondition returns condition result.
-func (p *Parser) procCondition(tks obj.Tokens) string {
+func (p *Parser) procCondition(tks []obj.Token) string {
 	T := oop.Val{D: "true", T: oop.Bool}
 	// Process condition.
 	ors := conditionalProcesses(tks, "||")
@@ -117,7 +117,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 				} else if i == len(and)-1 {
 					fract.IPanic(and[len(and)-1], obj.SyntaxPanic, "Comparison values are missing!")
 				}
-				if !comp(*p.procValTks(and[:i]), *p.procValTks(*and.Sub(i+1, len(and)-i-1)), opr) {
+				if !comp(*p.procValTks(and[:i]), *p.procValTks(and[i+1:]), opr) {
 					return "false"
 				}
 			}
@@ -138,7 +138,7 @@ func (p *Parser) procCondition(tks obj.Tokens) string {
 		} else if i == len(or)-1 {
 			fract.IPanic(or[len(or)-1], obj.SyntaxPanic, "Comparison values are missing!")
 		}
-		if comp(*p.procValTks(or[:i]), *p.procValTks(*or.Sub(i+1, len(or)-i-1)), opr) {
+		if comp(*p.procValTks(or[:i]), *p.procValTks(or[i+1:]), opr) {
 			return "true"
 		}
 	}
@@ -165,11 +165,11 @@ func arith(tks obj.Token, d oop.Val) string {
 
 // process instance for solver.
 type process struct {
-	f   obj.Tokens // Tokens of first oop.
-	fv  oop.Val    // Value instance of first oop.
-	s   obj.Tokens // Tokens of second oop.
-	sv  oop.Val    // Value instance of second oop.
-	opr obj.Token  // Operator of process.
+	f   []obj.Token // Tokens of first oop.
+	fv  oop.Val     // Value instance of first oop.
+	s   []obj.Token // Tokens of second oop.
+	sv  oop.Val     // Value instance of second oop.
+	opr obj.Token   // Operator of process.
 }
 
 // solve process.
@@ -484,7 +484,7 @@ func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) *o
 }
 
 type valPartInfo struct {
-	tks obj.Tokens
+	tks []obj.Token
 	mut bool // Force to mutability.
 }
 
@@ -608,7 +608,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 		bc := 0
 		switch tk.V {
 		case ")":
-			var vtks obj.Tokens
+			var vtks []obj.Token
 			for ; j >= 0; j-- {
 				t := i.tks[j]
 				if t.T != fract.Brace {
@@ -659,7 +659,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			}
 			goto end
 		case "]":
-			var vtks obj.Tokens
+			var vtks []obj.Token
 			for ; j >= 0; j-- {
 				t := i.tks[j]
 				if t.T != fract.Brace {
@@ -690,7 +690,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			applyMinus(tk, rv)
 			goto end
 		case "}":
-			var vtks obj.Tokens
+			var vtks []obj.Token
 			for ; j >= 0; j-- {
 				t := i.tks[j]
 				if t.T != fract.Brace {
@@ -726,11 +726,11 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 					Tks:  p.getBlock(i.tks[len(vtks):]),
 				}
 				if f.Tks == nil {
-					f.Tks = []obj.Tokens{}
+					f.Tks = [][]obj.Token{}
 				}
 				if l > 1 {
 					vtks = vtks[1:]
-					vtks, _ = decomposeBrace(&vtks, "(", ")")
+					vtks = decomposeBrace(&vtks, "(", ")")
 					p.setFuncParams(f, &vtks)
 				}
 				rv = &oop.Val{D: f, T: oop.Function}
@@ -740,6 +740,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			default:
 				fract.IPanic(vtks[1], obj.SyntaxPanic, "Invalid syntax!")
 			}
+			vtks = nil
 			goto end
 		}
 	}
@@ -750,9 +751,8 @@ end:
 }
 
 // Process array oop.
-func (p *Parser) procArrayVal(tks obj.Tokens) *oop.Val {
+func (p *Parser) procArrayVal(tks []obj.Token) *oop.Val {
 	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}
-	fst := tks[0]
 	comma := 1
 	bc := 0
 	for j := 1; j < len(tks)-1; j++ {
@@ -768,29 +768,21 @@ func (p *Parser) procArrayVal(tks obj.Tokens) *oop.Val {
 			if bc != 0 {
 				break
 			}
-			lst := tks.Sub(comma, j-comma)
-			if lst == nil {
-				fract.IPanic(fst, obj.SyntaxPanic, "Value is not given!")
+			if comma-j == 0 {
+				fract.IPanic(t, obj.SyntaxPanic, "Value is not given!")
 			}
-			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(*lst))
-			lst = nil
+			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(tks[comma:j]))
 			comma = j + 1
 		}
 	}
-	if comma < len(tks)-1 {
-		lst := tks.Sub(comma, len(tks)-comma-1)
-		if lst == nil {
-			fract.IPanic(fst, obj.SyntaxPanic, "Value is not given!")
-		}
-		v.D = append(v.D.(oop.ArrayModel), *p.procValTks(*lst))
-		lst = nil
+	if l := len(tks); comma < l-1 {
+		v.D = append(v.D.(oop.ArrayModel), *p.procValTks(tks[comma : l-1]))
 	}
 	return &v
 }
 
 // Process map oop.
-func (p *Parser) procMapVal(tks obj.Tokens) *oop.Val {
-	fst := tks[0]
+func (p *Parser) procMapVal(tks []obj.Token) *oop.Val {
 	comma := 1
 	bc := 0
 	m := oop.MapModel{}
@@ -807,16 +799,16 @@ func (p *Parser) procMapVal(tks obj.Tokens) *oop.Val {
 			if bc != 0 {
 				break
 			}
-			lst := tks.Sub(comma, j-comma)
-			if lst == nil {
-				fract.IPanic(fst, obj.SyntaxPanic, "Value is not given!")
+			if comma-j == 0 {
+				fract.IPanic(t, obj.SyntaxPanic, "Value is not given!")
 			}
+			lst := tks[comma:j]
 			var (
 				i  int
-				l  int = len(*lst)
+				l  int = len(lst)
 				tk obj.Token
 			)
-			for i, tk = range *lst {
+			for i, tk = range lst {
 				switch tk.T {
 				case fract.Brace:
 					switch tk.V {
@@ -832,23 +824,23 @@ func (p *Parser) procMapVal(tks obj.Tokens) *oop.Val {
 					if i+1 >= l {
 						fract.IPanic(tk, obj.SyntaxPanic, "Value is not given!")
 					}
-					key := *p.procValTks((*lst)[:i])
+					key := *p.procValTks(lst[:i])
 					_, ok := m[key]
 					if ok {
 						fract.IPanic(tk, obj.ValuePanic, "Key is already defined!")
 					}
-					m[key] = *p.procValTks((*lst)[i+1:])
+					m[key] = *p.procValTks(lst[i+1:])
 					comma = j + 1
 					lst = nil
 				}
 			}
 			if lst != nil {
-				fract.IPanic((*lst)[l-1], obj.SyntaxPanic, "Value identifier is not found!")
+				fract.IPanic(lst[l-1], obj.SyntaxPanic, "Value identifier is not found!")
 			}
 		}
 	}
 	if comma < len(tks)-1 {
-		lst := *tks.Sub(comma, len(tks)-comma-1)
+		lst := tks[comma : len(tks)-1]
 		i := -1
 		l := len(lst)
 		for j, tk := range lst {
@@ -885,11 +877,11 @@ func (p *Parser) procMapVal(tks obj.Tokens) *oop.Val {
 }
 
 // Process list comprehension.
-func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
+func (p *Parser) procListComprehension(tks []obj.Token) *oop.Val {
 	var (
-		stks obj.Tokens // Select tokens.
-		ltks obj.Tokens // Loop tokens.
-		ftks obj.Tokens // Filter tokens.
+		stks []obj.Token // Select tokens.
+		ltks []obj.Token // Loop tokens.
+		ftks []obj.Token // Filter tokens.
 		bc   int
 	)
 	for i, t := range tks {
@@ -929,25 +921,23 @@ func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
 	if ln := p.definedName(nametk.V); ln != -1 {
 		fract.IPanic(nametk, obj.NamePanic, "\""+nametk.V+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
-	if len(ltks) < 3 {
-		fract.IPanicC(ltks[0].F, ltks[0].Ln, ltks[1].Col+len(ltks[1].V), obj.SyntaxPanic, "Value is not given!")
+	if l := len(ltks); l < 3 {
+		tk := tks[0]
+		fract.IPanicC(tk.F, tk.Ln, ltks[1].Col+len(ltks[1].V), obj.SyntaxPanic, "Value is not given!")
+	} else if l < 4 {
+		fract.IPanic(ltks[2], obj.SyntaxPanic, "Value is not given!")
 	}
-	if vtks, inTk := ltks.Sub(3, len(ltks)-3), ltks[2]; vtks != nil {
-		ltks = *vtks
-	} else {
-		fract.IPanic(inTk, obj.SyntaxPanic, "Value is not given!")
-	}
+	ltks = ltks[3:]
 	varr := *p.procValTks(ltks)
 	// Type is not array?
 	if !varr.IsEnum() {
 		fract.IPanic(ltks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	p.defs.Vars = append(p.defs.Vars, &oop.Var{Name: nametk.V})
-	vlen := len(p.defs.Vars)
-	element := p.defs.Vars[vlen-1]
+	element := &oop.Var{Name: nametk.V}
 	if element.Name == "_" {
 		element.Name = ""
 	}
+	p.defs.Vars = append(p.defs.Vars, element)
 	// Interpret block.
 	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}
 	l := loop{enum: varr}
@@ -959,12 +949,12 @@ func (p *Parser) procListComprehension(tks obj.Tokens) *oop.Val {
 	})
 	// Remove variables.
 	element = nil
-	p.defs.Vars = p.defs.Vars[:vlen-1]
+	p.defs.Vars = p.defs.Vars[:len(p.defs.Vars)-1]
 	return &v
 }
 
 // Process enumerable oop.
-func (p *Parser) procEnumerableVal(tks obj.Tokens) *oop.Val {
+func (p *Parser) procEnumerableVal(tks []obj.Token) *oop.Val {
 	var (
 		lc bool
 		bc int
@@ -1000,7 +990,7 @@ func (p *Parser) procEnumerableVal(tks obj.Tokens) *oop.Val {
 }
 
 // Process oop.
-func (p *Parser) procVal(tks obj.Tokens, mut bool) *oop.Val {
+func (p *Parser) procVal(tks []obj.Token, mut bool) *oop.Val {
 	// Is conditional expression?
 	if j, _ := findConditionOpr(tks); j != -1 {
 		return &oop.Val{D: p.procCondition(tks), T: oop.Bool}
@@ -1064,4 +1054,4 @@ func (p *Parser) procVal(tks obj.Tokens, mut bool) *oop.Val {
 }
 
 // Process value from tokens.
-func (p *Parser) procValTks(tks obj.Tokens) *oop.Val { return p.procVal(tks, false) }
+func (p *Parser) procValTks(tks []obj.Token) *oop.Val { return p.procVal(tks, false) }

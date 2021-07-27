@@ -153,7 +153,7 @@ func Range(tk obj.Token, args []*oop.Var) oop.Val {
 	if stepV <= 0 {
 		return oop.Val{T: oop.Array}
 	}
-	var t uint8
+	t := oop.Int
 	if start.T == oop.Float || to.T == oop.Float || step.T == oop.Float {
 		t = oop.Float
 	}

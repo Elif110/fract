@@ -60,7 +60,7 @@ func prockws(kws uint8) uint8 {
 }
 
 // Process loops and returns keyword state.
-func (p *Parser) procLoop(tks obj.Tokens) uint8 {
+func (p *Parser) procLoop(tks []obj.Token) uint8 {
 	bi := findBlock(tks)
 	btks, tks := p.getBlock(tks[bi:]), tks[1:bi]
 	flen := len(p.defs.Funcs)
@@ -160,11 +160,10 @@ func (p *Parser) procLoop(tks obj.Tokens) uint8 {
 		}
 		tks = tks[2:]
 	}
-	if vtks, inTk := tks.Sub(2, len(tks)-2), tks[1]; vtks != nil {
-		tks = *vtks
-	} else {
-		fract.IPanic(inTk, obj.SyntaxPanic, "Value is not given!")
+	if len(tks) < 3 {
+		fract.IPanic(tks[1], obj.SyntaxPanic, "Value is not given!")
 	}
+	tks = tks[2:]
 	v := *p.procValTks(tks)
 	// Type is not array?
 	if !v.IsEnum() {

@@ -51,8 +51,8 @@ func (l *Lex) checkExpected(msg string) bool {
 }
 
 // Next lex next line.
-func (l *Lex) Next() obj.Tokens {
-	var tks obj.Tokens
+func (l *Lex) Next() []obj.Token {
+	var tks []obj.Token
 	if l.Fin {
 		return tks
 	}

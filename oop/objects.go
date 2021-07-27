@@ -14,7 +14,7 @@ type Func struct {
 	Name          string
 	Src           interface{}
 	Ln            int // Line of define.
-	Tks           []obj.Tokens
+	Tks           [][]obj.Token
 	Params        []Param
 	Args          []*Var // Default vars.
 	DefParamCount int

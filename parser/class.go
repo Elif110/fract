@@ -9,7 +9,7 @@ import (
 )
 
 // buildClass from tokens.
-func (p *Parser) buildClass(name string, tks obj.Tokens) *oop.Val {
+func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
 	c := oop.Class{Name: name, L: p.L}
 	blk := p.getBlock(tks)
 	for _, tks := range blk {
@@ -36,7 +36,7 @@ func (p *Parser) buildClass(name string, tks obj.Tokens) *oop.Val {
 }
 
 // Process class declaration.
-func (p *Parser) classdec(tks obj.Tokens) {
+func (p *Parser) classdec(tks []obj.Token) {
 	l := len(tks)
 	if l < 2 {
 		fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")

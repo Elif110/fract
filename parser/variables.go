@@ -16,7 +16,7 @@ type varinfo struct {
 }
 
 // Append variable to source.
-func (p *Parser) varadd(dm *oop.DefMap, md varinfo, tks obj.Tokens) {
+func (p *Parser) varadd(dm *oop.DefMap, md varinfo, tks []obj.Token) {
 	name := tks[0]
 	if !validName(name.V) {
 		fract.IPanic(name, obj.SyntaxPanic, "Invalid name!")
@@ -63,7 +63,7 @@ func (p *Parser) varadd(dm *oop.DefMap, md varinfo, tks obj.Tokens) {
 }
 
 // Process variable declaration to defmap.
-func (p *Parser) fvardec(dm *oop.DefMap, tks obj.Tokens) {
+func (p *Parser) fvardec(dm *oop.DefMap, tks []obj.Token) {
 	// Name is not defined?
 	if len(tks) < 2 {
 		first := tks[0]
@@ -109,10 +109,10 @@ func (p *Parser) fvardec(dm *oop.DefMap, tks obj.Tokens) {
 }
 
 // Process variable declaration to parser.
-func (p *Parser) vardec(tks obj.Tokens) { p.fvardec(&p.defs, tks) }
+func (p *Parser) vardec(tks []obj.Token) { p.fvardec(&p.defs, tks) }
 
 // Process short variable declaration.
-func (p *Parser) varsdec(tks obj.Tokens) {
+func (p *Parser) varsdec(tks []obj.Token) {
 	// Name is not defined?
 	if len(tks) < 2 {
 		first := tks[0]
@@ -127,11 +127,11 @@ func (p *Parser) varsdec(tks obj.Tokens) {
 }
 
 // Process variable set statement.
-func (p *Parser) varset(tks obj.Tokens) {
+func (p *Parser) varset(tks []obj.Token) {
 	var (
 		v      *oop.Val
 		s      interface{}
-		vtks   obj.Tokens
+		vtks   []obj.Token
 		setter obj.Token
 	)
 	bc := 0
@@ -190,7 +190,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 				opr: opr,
 				f:   tks,
 				fv:  *v,
-				s:   obj.Tokens{setter},
+				s:   []obj.Token{setter},
 				sv:  val,
 			})
 		}
@@ -222,7 +222,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 						opr: opr,
 						f:   tks,
 						fv:  d,
-						s:   obj.Tokens{setter},
+						s:   []obj.Token{setter},
 						sv:  val,
 					})
 				}
@@ -236,7 +236,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 					opr: opr,
 					f:   tks,
 					fv:  d,
-					s:   obj.Tokens{setter},
+					s:   []obj.Token{setter},
 					sv:  val,
 				})
 			}
@@ -251,7 +251,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 					opr: opr,
 					f:   tks,
 					fv:  v.D.(oop.ArrayModel)[pos],
-					s:   obj.Tokens{setter},
+					s:   []obj.Token{setter},
 					sv:  val,
 				})
 			}
@@ -277,7 +277,7 @@ func (p *Parser) varset(tks obj.Tokens) {
 					opr: opr,
 					f:   tks,
 					fv:  oop.Val{D: v.D.(string)[pos], T: oop.Int},
-					s:   obj.Tokens{setter},
+					s:   []obj.Token{setter},
 					sv:  val,
 				})
 				if val.T != oop.Str {
