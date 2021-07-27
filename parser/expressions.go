@@ -1005,6 +1005,23 @@ func (p *Parser) procVal(tks []obj.Token, mut bool) *oop.Val {
 	var opr process
 	j := nextopr(procs)
 	for j != -1 {
+		if j == 0 {
+			if len(procs) == 1 {
+				break
+			}
+			opr.fv = v
+			opr.opr = procs[j][0]
+			opr.s = procs[j+1]
+			i.tks = opr.s
+			opr.sv = *p.procValPart(i)
+			if opr.sv.T == fract.None {
+				fract.IPanic(opr.f[0], obj.ValuePanic, "Value is not given!")
+			}
+			v = solveProc(opr)
+			procs = procs[2:]
+			j = nextopr(procs)
+			continue
+		}
 		opr.f = procs[j-1]
 		i.tks = opr.f
 		opr.fv = *p.procValPart(i)
@@ -1032,20 +1049,6 @@ func (p *Parser) procVal(tks []obj.Token, mut bool) *oop.Val {
 		procs = append(procs[:j-1], procs[j+2:]...)
 		// Find next operator.
 		j = nextopr(procs)
-		// If last value to compute.
-		if j != -1 && (j == 0 || j == len(procs)-1) {
-			opr.fv = v
-			opr.opr = procs[j][0]
-			if j == 0 {
-				opr.s = procs[j+1]
-			} else {
-				opr.s = procs[j-1]
-			}
-			i.tks = opr.s
-			opr.sv = *p.procValPart(i)
-			v = solveProc(opr)
-			break
-		}
 	}
 	procs = nil
 	opr.f = nil

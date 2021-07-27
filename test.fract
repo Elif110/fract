@@ -95,11 +95,12 @@ class employee {
 
     func getName       { ret this.name }
     func setName(name) { this.name = name }
+    func string        { ret this.name + ' ' + this.surname + ' ' + string(this.salary) }
 }
 
-e := employee('Daniel', 'McVollo', 9000)
-println(e.name, ' ', e.surname, ' ', e.salary)
+e := employee('Daniel', 'McVollo', '9000')
+println(e.string())
 println(e.getName())
 e.setName('Dan')
 println(e.getName())
-println(e.name, ' ', e.surname, ' ', e.salary)
+println(e.string())
