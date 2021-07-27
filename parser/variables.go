@@ -169,7 +169,7 @@ func (p *Parser) varset(tks []obj.Token) {
 			break
 		}
 	}
-	if vtks == nil || len(vtks) == 0 {
+	if len(vtks) == 0 {
 		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
 	}
 	// Check const state.

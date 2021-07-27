@@ -1042,7 +1042,7 @@ func (p *Parser) procVal(tks []obj.Token, mut bool) *oop.Val {
 				opr.s = procs[j-1]
 			}
 			i.tks = opr.s
-			opr.fv = *p.procValPart(i)
+			opr.sv = *p.procValPart(i)
 			v = solveProc(opr)
 			break
 		}
