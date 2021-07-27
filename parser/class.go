@@ -10,8 +10,8 @@ import (
 
 // buildClass from tokens.
 func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
-	c := oop.Class{Name: name, L: p.L}
 	blk := p.getBlock(tks)
+	c := oop.Class{Name: name, L: p.L}
 	for _, tks := range blk {
 		switch tks[0].T {
 		case fract.Var:
@@ -29,7 +29,7 @@ func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
 			fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")
 		}
 	}
-	if c.Constructor.Ln == 0 { // Constructor is not given.
+	if c.Constructor == nil { // Constructor is not given.
 		c.Constructor = &oop.Func{Name: c.Name + ".constructor", Src: p}
 	}
 	return &oop.Val{D: c, T: oop.ClassDef}

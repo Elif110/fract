@@ -738,7 +738,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				rv = p.buildStruct("anonymous", i.tks[1:])
 				applyMinus(tk, rv)
 			default:
-				fract.IPanic(vtks[1], obj.SyntaxPanic, "Invalid syntax!")
+				fract.IPanic(vtks[0], obj.SyntaxPanic, "Invalid syntax!")
 			}
 			vtks = nil
 			goto end
