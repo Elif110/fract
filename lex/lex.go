@@ -285,9 +285,6 @@ func (l *Lex) Token() obj.Token {
 		l.lexstr(&tk, '\'', fln)
 	case ln[0] == '"':
 		l.lexstr(&tk, '"', fln)
-	case ln[0] == '.':
-		tk.V = "."
-		tk.T = fract.Dot
 	case ln[0] == ';':
 		tk.V = ";"
 		tk.T = fract.StatementTerminator
@@ -437,6 +434,9 @@ func (l *Lex) Token() obj.Token {
 	case strings.HasPrefix(ln, "..."):
 		tk.V = "..."
 		tk.T = fract.Params
+	case ln[0] == '.':
+		tk.V = "."
+		tk.T = fract.Dot
 	case isKeyword(ln, "var"):
 		tk.V = "var"
 		tk.T = fract.Var
