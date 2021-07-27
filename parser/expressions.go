@@ -421,21 +421,6 @@ func solveProc(p process) oop.Val {
 	return v
 }
 
-// applyMinus operator.
-func applyMinus(minus obj.Token, v *oop.Val) {
-	if minus.V[0] != '-' {
-		return
-	}
-	for i, d := range v.D.(oop.ArrayModel) {
-		switch d.T {
-		case oop.Bool, oop.Float, oop.Int:
-			v.D.(oop.ArrayModel)[i].D = fmt.Sprintf(fract.FloatFormat, -str.Conv(d.String()))
-		default:
-			fract.IPanic(minus, obj.ArithmeticPanic, "Bad operand type for unary!")
-		}
-	}
-}
-
 // Select enumerable object elements.
 func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) *oop.Val {
 	var r oop.Val
@@ -509,7 +494,6 @@ func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 			*rv = rv.Immut()
 		}
 		rv.Mut = rv.Mut || mut
-		applyMinus(tk, rv)
 	}
 	return rv
 }
@@ -595,7 +579,6 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 						*rv = rv.Immut()
 					}
 					rv.Mut = rv.Mut || i.mut
-					applyMinus(tk, rv)
 				}
 				goto end
 			default:
@@ -632,28 +615,24 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
 				rv = p.procVal(i.tks, i.mut)
-				applyMinus(tk, rv)
 				goto end
 			}
 			v := p.procValPart(valPartInfo{tks: vtks, mut: i.mut})
 			switch v.T {
 			case oop.Function: // Function call.
 				rv = p.funcCallModel(v.D.(*oop.Func), i.tks[len(vtks):]).Call()
-				applyMinus(tk, rv)
 			case oop.StructDef:
 				s := v.D.(oop.Struct)
 				rv = &oop.Val{
 					D: s.CallConstructor(p.funcCallModel(s.Constructor, i.tks[len(vtks):]).args),
 					T: oop.StructIns,
 				}
-				applyMinus(tk, rv)
 			case oop.ClassDef:
 				c := v.D.(oop.Class)
 				rv = &oop.Val{
 					D: c.CallConstructor(p.funcCallModel(c.Constructor, i.tks[len(vtks):])),
 					T: oop.ClassIns,
 				}
-				applyMinus(tk, rv)
 			default:
 				fract.IPanic(i.tks[len(vtks)], obj.ValuePanic, "Invalid syntax!")
 			}
@@ -679,7 +658,6 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			}
 			if len(vtks) == 0 && bc == 0 {
 				rv = p.procEnumerableVal(i.tks)
-				applyMinus(tk, rv)
 				goto end
 			}
 			v := p.procValPart(valPartInfo{mut: i.mut, tks: vtks})
@@ -687,7 +665,6 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				fract.IPanic(vtks[0], obj.ValuePanic, "Index accessor is cannot used with not enumerable values!")
 			}
 			rv = p.selectEnum(i.mut, *v, tk, selections(*v, *p.procValTks(i.tks[len(vtks)+1 : len(i.tks)-1]), tk))
-			applyMinus(tk, rv)
 			goto end
 		case "}":
 			var vtks []obj.Token
@@ -711,7 +688,6 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			l := len(vtks)
 			if l == 0 && bc == 0 {
 				rv = p.procEnumerableVal(i.tks)
-				applyMinus(tk, rv)
 				goto end
 			} else if l > 1 && (vtks[1].T != fract.Brace || vtks[1].V != "(") {
 				fract.IPanic(vtks[1], obj.SyntaxPanic, "Invalid syntax!")
@@ -736,7 +712,6 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				rv = &oop.Val{D: f, T: oop.Function}
 			case fract.Struct:
 				rv = p.buildStruct("anonymous", i.tks[1:])
-				applyMinus(tk, rv)
 			default:
 				fract.IPanic(vtks[0], obj.SyntaxPanic, "Invalid syntax!")
 			}

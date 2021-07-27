@@ -106,7 +106,7 @@ tokenize:
 
 var (
 	numRgx  = *regexp.MustCompile(`^(-|)((\d+((\.\d+)|(\.\d+)?(e|E)(\-|\+)\d+)?)|(0x[[:xdigit:]]+))(\s|[[:punct:]]|$)`)
-	nameRgx = *regexp.MustCompile(`^(-|)([\p{L}|_])([\p{L}0-9_]+)?([[:punct:]]|\s|$)`)
+	nameRgx = *regexp.MustCompile(`^[\p{L}|_]([\p{L}0-9_]+)?([[:punct:]]|\s|$)`)
 )
 
 // isKeyword returns true if part is keyword, false if not.
@@ -329,13 +329,6 @@ func (l *Lex) Token() obj.Token {
 		tk.V = "+"
 		tk.T = fract.Operator
 	case ln[0] == '-':
-		// Check variable name.
-		if check := getName(ln); check != "" { // Name.
-			if !l.lexname(&tk, check) {
-				return tk
-			}
-			break
-		}
 		tk.V = "-"
 		tk.T = fract.Operator
 	case ln[0] == ':':
