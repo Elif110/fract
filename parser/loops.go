@@ -172,6 +172,8 @@ func (p *Parser) procLoop(tks []obj.Token) uint8 {
 	}
 	if len(tks) < 3 {
 		fract.IPanic(tks[1], obj.SyntaxPanic, "Value is not given!")
+	} else if t := tks[1]; t.T != fract.In && (t.T != fract.Operator || t.V != ":=") {
+		fract.IPanic(tks[1], obj.SyntaxPanic, "Invalid syntax!")
 	}
 	tks = tks[2:]
 	v := *p.procValTks(tks)

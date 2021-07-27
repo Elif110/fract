@@ -899,6 +899,8 @@ func (p *Parser) procListComprehension(tks []obj.Token) *oop.Val {
 	if l := len(ltks); l < 3 {
 		tk := tks[0]
 		fract.IPanicC(tk.F, tk.Ln, ltks[1].Col+len(ltks[1].V), obj.SyntaxPanic, "Value is not given!")
+	} else if t := ltks[2]; t.T != fract.In && (t.T != fract.Operator || t.V != ":=") {
+		fract.IPanic(ltks[2], obj.SyntaxPanic, "Invalid syntax!")
 	} else if l < 4 {
 		fract.IPanic(ltks[2], obj.SyntaxPanic, "Value is not given!")
 	}
