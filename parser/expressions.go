@@ -908,10 +908,12 @@ func (p *Parser) procListComprehension(tks []obj.Token) *oop.Val {
 	if !varr.IsEnum() {
 		fract.IPanic(ltks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	element := &oop.Var{Name: nametk.V}
-	if element.Name == "_" {
-		element.Name = ""
+	if nametk.V == "_" {
+		nametk.V = ""
+	} else if !validName(nametk.V) {
+		fract.IPanic(nametk, obj.NamePanic, "Invalid name!")
 	}
+	element := &oop.Var{Name: nametk.V}
 	p.defs.Vars = append(p.defs.Vars, element)
 	// Interpret block.
 	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}

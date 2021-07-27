@@ -82,7 +82,7 @@ func (p *Parser) ready() {
 		fract.IPanic(tks[0], obj.SyntaxPanic, "Package name is not given!")
 	}
 	n := tks[1]
-	if n.T != fract.Name {
+	if n.T != fract.Name || !validName(n.V) {
 		fract.IPanic(n, obj.SyntaxPanic, "Invalid package name!")
 	}
 	p.pkg = n.V
