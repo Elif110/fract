@@ -730,7 +730,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				}
 				if l > 1 {
 					vtks = vtks[1:]
-					vtks = decomposeBrace(&vtks, "(", ")")
+					vtks = decomposeBrace(&vtks)
 					p.setFuncParams(f, &vtks)
 				}
 				rv = &oop.Val{D: f, T: oop.Function}

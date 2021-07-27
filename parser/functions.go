@@ -224,7 +224,7 @@ func (p *Parser) funcCallModel(f *oop.Func, tks []obj.Token) *funcCall {
 		tk    = tks[0]
 	)
 	// Decompose arguments.
-	tks = decomposeBrace(&tks, "(", ")")
+	tks = decomposeBrace(&tks)
 	var (
 		inf = funcArgInfo{
 			f:        f,
@@ -405,7 +405,7 @@ func (p *Parser) ffuncdec(dm *oop.DefMap, tks []obj.Token) {
 	// Decompose function parameters.
 	if tks[2].V == "(" {
 		tks = tks[2:]
-		r := decomposeBrace(&tks, "(", ")")
+		r := decomposeBrace(&tks)
 		p.setFuncParams(f, &r)
 		r = nil
 	} else {

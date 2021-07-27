@@ -392,12 +392,12 @@ func arithmeticProcesses(tks []obj.Token) [][]obj.Token {
 	return procs
 }
 
-// decomposeBrace returns range tokens and index of first parentheses.
-// Remove range tokens from original tokens.
-func decomposeBrace(tks *[]obj.Token, ob, cb string) []obj.Token {
+// decomposeBrace returns range tokens and index of first parentheses
+// and remove range tokens from original tokens.
+func decomposeBrace(tks *[]obj.Token) []obj.Token {
 	fst := -1
 	for i, t := range *tks {
-		if t.T == fract.Brace && t.V == ob {
+		if t.T == fract.Brace && t.V == "(" {
 			fst = i
 			break
 		}
@@ -413,9 +413,9 @@ func decomposeBrace(tks *[]obj.Token, ob, cb string) []obj.Token {
 		tk := (*tks)[i]
 		if tk.T == fract.Brace {
 			switch tk.V {
-			case ob:
+			case "(":
 				c++
-			case cb:
+			case ")":
 				c--
 			}
 			if c == 0 {
