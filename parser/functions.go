@@ -329,7 +329,7 @@ func (p *Parser) funcCallModel(f *oop.Func, tks []obj.Token) *funcCall {
 
 // Decompose function parameters.
 func (p *Parser) setFuncParams(f *oop.Func, tks *[]obj.Token) {
-	pname, defaultDef := true, false
+	pname, params, defaultDef := true, false, false
 	bc := 0
 	var lstp oop.Param
 	for i := 0; i < len(*tks); i++ {
@@ -348,6 +348,10 @@ func (p *Parser) setFuncParams(f *oop.Func, tks *[]obj.Token) {
 		if pname {
 			switch pr.T {
 			case fract.Params:
+				if params {
+					fract.IPanic(pr, obj.SyntaxPanic, "Invalid syntax!")
+				}
+				params = true
 				continue
 			case fract.Name:
 				if !validName(pr.V) {
@@ -356,7 +360,7 @@ func (p *Parser) setFuncParams(f *oop.Func, tks *[]obj.Token) {
 			default:
 				fract.IPanic(pr, obj.SyntaxPanic, "Parameter name is not found!")
 			}
-			lstp = oop.Param{Name: pr.V, Params: i > 0 && (*tks)[i-1].T == fract.Params}
+			lstp = oop.Param{Name: pr.V, Params: params}
 			f.Params = append(f.Params, lstp)
 			pname = false
 			continue
