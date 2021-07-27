@@ -81,6 +81,7 @@ p.name = 'Dan'
 println(p.name)
 */
 
+/*
 // Classes.
 class employee {
     var name = ''
@@ -104,3 +105,22 @@ println(e.getName())
 e.setName('Dan')
 println(e.getName())
 println(e.string())
+*/
+
+// Notation ... test.
+func Print(...x) {
+    l := len(x) - 1
+    for i, y := x {
+        print(y)
+        if i < l {
+            print(' ')
+        }
+    }
+}
+
+func Println(...x) {
+    Print(x...)
+    println()
+}
+
+Println('Mertcan', 'Davulcu')

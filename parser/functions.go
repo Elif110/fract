@@ -130,7 +130,21 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 				retv.D = data
 				return retv
 			}
-			data = append(data, *p.procValTks(vtks))
+			var params bool
+			if l := len(vtks); vtks[l-1].T == fract.Params {
+				tk = vtks[l-1]
+				params = true
+				vtks = vtks[:l-1]
+			}
+			v := *p.procValTks(vtks)
+			if params {
+				if v.T != oop.Array {
+					fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only arrays!")
+				}
+				data = append(data, v.D.(oop.ArrayModel)...)
+			} else {
+				data = append(data, v)
+			}
 			vtks = nil
 			*lstComma = *i + 1
 		}
@@ -141,7 +155,22 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 			*i -= 4
 			return retv
 		}
-		data = append(data, *p.procValTks(vtks))
+		var params bool
+		var tk obj.Token
+		if l := len(vtks); vtks[l-1].T == fract.Params {
+			tk = vtks[l-1]
+			params = true
+			vtks = vtks[:l-1]
+		}
+		v := *p.procValTks(vtks)
+		if params {
+			if v.T != oop.Array {
+				fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only arrays!")
+			}
+			data = append(data, v.D.(oop.ArrayModel)...)
+		} else {
+			data = append(data, v)
+		}
 		vtks = nil
 	}
 	retv.D = data
