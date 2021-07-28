@@ -79,6 +79,9 @@ func (d Val) String() string {
 			s.WriteString(f.V.String())
 			s.WriteRune(' ')
 		}
+		if len(d.Fields.Vars) == 0 {
+			return s.String() + "}"
+		}
 		return s.String()[:s.Len()-1] + "}"
 	case ClassIns:
 		return "object.classins"
