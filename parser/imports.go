@@ -21,6 +21,8 @@ func (p *Parser) Import() {
 			p.funcdec(tks)
 		case fract.Struct:
 			p.structdec(tks)
+		case fract.Class:
+			p.classdec(tks)
 		case fract.Import: // Import.
 			src := new(Parser)
 			src.AddBuiltInFuncs()
