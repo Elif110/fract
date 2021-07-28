@@ -50,6 +50,8 @@ func (c *funcCall) Call() *oop.Val {
 			built_in.Del(c.errTk, c.args)
 		case "exit":
 			built_in.Exit(c.errTk, c.args)
+		case "panic":
+			built_in.Panic(c.args)
 		}
 		return &retv
 	}

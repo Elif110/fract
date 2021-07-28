@@ -225,3 +225,12 @@ func Del(tk obj.Token, args []*oop.Var) {
 	}
 	delete(args[0].V.D.(oop.MapModel), args[1].V)
 }
+
+func Panic(args []*oop.Var) {
+	p := obj.Panic{M: args[0].V.String()}
+	if fract.TryCount > 0 {
+		panic(p)
+	}
+	fmt.Println("panic: " + p.M)
+	panic("")
+}

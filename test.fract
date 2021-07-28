@@ -107,6 +107,7 @@ println(e.getName())
 println(e.string())
 */
 
+/*
 // Notation ... test.
 func Print(...x) {
     l := len(x)-1
@@ -124,3 +125,14 @@ func Println(...x) {
 }
 
 Println('Mertcan', 'Davulcu')
+*/
+
+// Panic test.
+try {
+    panic('test panic')
+} catch p {
+    println('panicked: ', p)
+    println('catch')
+}
+
+println('Finish')
