@@ -9,8 +9,8 @@ type Var struct {
 	V    Val
 }
 
-// Func instance.
-type Func struct {
+// Fn instance.
+type Fn struct {
 	Name          string
 	Src           interface{}
 	Ln            int // Line of define.

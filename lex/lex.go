@@ -460,9 +460,9 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "continue"):
 		tk.V = "continue"
 		tk.T = fract.Continue
-	case isKeyword(ln, "func"):
-		tk.V = "func"
-		tk.T = fract.Func
+	case isKeyword(ln, "fn"):
+		tk.V = "fn"
+		tk.T = fract.Fn
 	case isKeyword(ln, "ret"):
 		tk.V = "ret"
 		tk.T = fract.Ret

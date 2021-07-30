@@ -6,14 +6,14 @@ import (
 
 type FuncCallModel interface {
 	Call() *Val
-	Func() *Func
+	Func() *Fn
 }
 
 // Class define.
 type Class struct {
 	F           *obj.File
 	Name        string
-	Constructor *Func
+	Constructor *Fn
 	Defs        DefMap
 }
 

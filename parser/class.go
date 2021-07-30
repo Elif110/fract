@@ -16,7 +16,7 @@ func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
 		switch tks[0].T {
 		case fract.Var:
 			p.fvardec(&c.Defs, tks)
-		case fract.Func:
+		case fract.Fn:
 			p.ffuncdec(&c.Defs, tks)
 			if f := c.Defs.Funcs[len(c.Defs.Funcs)-1]; f.Name == c.Name {
 				if c.Constructor != nil {
@@ -30,7 +30,7 @@ func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
 		}
 	}
 	if c.Constructor == nil { // Constructor is not given.
-		c.Constructor = &oop.Func{Name: c.Name + ".constructor", Src: p}
+		c.Constructor = &oop.Fn{Name: c.Name + ".constructor", Src: p}
 	}
 	return &oop.Val{D: c, T: oop.ClassDef}
 }

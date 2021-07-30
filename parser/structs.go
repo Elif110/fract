@@ -12,7 +12,7 @@ import (
 func (p *Parser) buildStruct(name string, tks []obj.Token) *oop.Val {
 	blk := p.getBlock(tks)
 	s := oop.Struct{L: p.L}
-	s.Constructor = &oop.Func{Name: s.Name + ".constructor", Src: p}
+	s.Constructor = &oop.Fn{Name: s.Name + ".constructor", Src: p}
 	for _, tks := range blk {
 		var comma bool
 		for _, tk := range tks {

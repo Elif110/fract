@@ -13,7 +13,7 @@
 package array
 
 // Returns true if element is contained in array, returns false if not.
-func Contains(array, element, start=0) {
+fn Contains(array, element, start=0) {
   if start < 0 || start >= len(array) {
     ret false
   }
@@ -26,7 +26,7 @@ func Contains(array, element, start=0) {
 }
 
 // Returns index if element is found in array, returns -1 if not.
-func Index(array, element, start=0) {
+fn Index(array, element, start=0) {
   if start < 0 || start >= len(array) {
     ret -1
   }
@@ -39,7 +39,7 @@ func Index(array, element, start=0) {
 }
 
 // Returns maximum of array.
-func Max(array) {
+fn Max(array) {
   if len(array) == 0 {
     ret 0
   }
@@ -53,7 +53,7 @@ func Max(array) {
 }
 
 // Returns mean of array.
-func Mean(array) {
+fn Mean(array) {
   total := 0
   for _, element in array {
     total += element
@@ -62,7 +62,7 @@ func Mean(array) {
 }
 
 // Returns minimum of array.
-func Min(array) {
+fn Min(array) {
   if len(array) == 0 {
     ret 0
   }
@@ -76,7 +76,7 @@ func Min(array) {
 }
 
 // Returns reversed array.
-func Reverse(array) {
+fn Reverse(array) {
   const arlen = len(array)
   for index in range(0, arlen / 2) {
     const cache = array[index]
@@ -87,7 +87,7 @@ func Reverse(array) {
 }
 
 // Returns sorted array.
-func Sort(array) {
+fn Sort(array) {
   // BUBBLE SORT
   const length  = len(array) - 2
   for _, i in range(0, length) {
@@ -108,7 +108,7 @@ func Sort(array) {
 }
 
 // Returns subbed array.
-func Sub(array, start, length) {
+fn Sub(array, start, length) {
   if start < 0 || length < 0 {
     ret []
   }
@@ -126,7 +126,7 @@ func Sub(array, start, length) {
 }
 
 // Returns sum of all array elements.
-func Sum(array) {
+fn Sum(array) {
   total := 0
   for _, element in array {
     total += element

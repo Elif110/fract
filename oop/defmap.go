@@ -2,7 +2,7 @@ package oop
 
 type DefMap struct {
 	Vars  []*Var
-	Funcs []*Func
+	Funcs []*Fn
 }
 
 // FuncIndexByName returns index of function by name.

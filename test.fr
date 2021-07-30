@@ -1,7 +1,7 @@
 package test
 
 /*
-try {} ; ; func a() {
+try {} ; ; fn a() {
   println('TEST'); if false { ret 0 } else { ret 1 }
 }
 
@@ -16,7 +16,7 @@ println(a)
 
 /*
 // Anonymous functions.
-b := func(x) { println('Hello ', x, '!') }
+b := fn(x) { println('Hello ', x, '!') }
 b('Fract')
 */
 
@@ -88,15 +88,15 @@ class employee {
   var surname = ''
   var salary = ''
 
-  func employee(name, surname, salary) {
+  fn employee(name, surname, salary) {
       this.name = name
       this.surname = surname
       this.salary = salary
   }
 
-  func getName       { ret this.name }
-  func setName(name) { this.name = name }
-  func string        { ret this.name + ' ' + this.surname + ' ' + string(this.salary) }
+  fn getName       { ret this.name }
+  fn setName(name) { this.name = name }
+  fn string        { ret this.name + ' ' + this.surname + ' ' + string(this.salary) }
 }
 
 e := employee('Daniel', 'McVollo', '9000')
@@ -109,7 +109,7 @@ println(e.string())
 
 /*
 // Notation ... test.
-func Print(...x) {
+fn Print(...x) {
   l := len(x)-1
   for i, y := x {
     print(y)
@@ -119,7 +119,7 @@ func Print(...x) {
   }
 }
 
-func Println(...x) {
+fn Println(...x) {
   Print(x...)
   println()
 }

@@ -149,7 +149,7 @@ func (p *Parser) procCondition(tks []obj.Token) string {
 func arith(tks obj.Token, d oop.Val) string {
 	ret := d.String()
 	switch d.T {
-	case oop.Function,
+	case oop.Func,
 		oop.Package,
 		oop.StructDef,
 		oop.ClassDef,
@@ -486,7 +486,7 @@ func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 	}
 	switch t {
 	case 'f': // Function.
-		rv = &oop.Val{D: p.defs.Funcs[vi], T: oop.Function}
+		rv = &oop.Val{D: p.defs.Funcs[vi], T: oop.Func}
 	case 'p': // Package.
 		rv = &oop.Val{D: p.packages[vi], T: oop.Package}
 	case 'v': // Value.
@@ -573,7 +573,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				if i == -1 {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
 				}
-				rv = &oop.Val{D: m.Defs.Funcs[i], T: oop.Function}
+				rv = &oop.Val{D: m.Defs.Funcs[i], T: oop.Func}
 				goto end
 			case oop.ClassIns:
 				c := v.D.(oop.ClassInstance)
@@ -584,7 +584,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				}
 				switch t {
 				case 'f': // Function.
-					rv = &oop.Val{D: c.Defs.Funcs[vi], T: oop.Function}
+					rv = &oop.Val{D: c.Defs.Funcs[vi], T: oop.Func}
 				case 'v': // Value.
 					rv = &c.Defs.Vars[vi].V
 					if !rv.Mut && !i.mut { //! Immutability.
@@ -631,8 +631,8 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			}
 			v := p.procValPart(valPartInfo{tks: vtks, mut: i.mut})
 			switch v.T {
-			case oop.Function: // Function call.
-				rv = p.funcCallModel(v.D.(*oop.Func), i.tks[len(vtks):]).Call()
+			case oop.Func: // Function call.
+				rv = p.funcCallModel(v.D.(*oop.Fn), i.tks[len(vtks):]).Call()
 			case oop.StructDef:
 				s := v.D.(oop.Struct)
 				rv = &oop.Val{
@@ -707,8 +707,8 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				fract.IPanic(vtks[l-1], obj.SyntaxPanic, "Invalid syntax!")
 			}
 			switch vtks[0].T {
-			case fract.Func:
-				f := &oop.Func{
+			case fract.Fn:
+				f := &oop.Fn{
 					Name: "anonymous",
 					Src:  p,
 					Tks:  p.getBlock(i.tks[len(vtks):]),
@@ -721,7 +721,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 					vtks = decomposeBrace(&vtks)
 					p.setFuncParams(f, &vtks)
 				}
-				rv = &oop.Val{D: f, T: oop.Function}
+				rv = &oop.Val{D: f, T: oop.Func}
 			case fract.Struct:
 				rv = p.buildStruct("anonymous", i.tks[1:])
 			default:

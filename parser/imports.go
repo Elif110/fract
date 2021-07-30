@@ -17,7 +17,7 @@ func (p *Parser) Import() {
 		switch tks := p.Tks[p.i]; tks[0].T {
 		case fract.Var:
 			p.vardec(tks)
-		case fract.Func:
+		case fract.Fn:
 			p.funcdec(tks)
 		case fract.Struct:
 			p.structdec(tks)

@@ -16,7 +16,7 @@ type MapModel struct {
 func NewMapModel() MapModel {
 	var m MapModel
 	m.M = MapType{}
-	m.Defs.Funcs = []*Func{
+	m.Defs.Funcs = []*Fn{
 		{Name: "keys", Src: m.keys},
 		{Name: "vals", Src: m.vals},
 		{Name: "rmkey", Src: m.rmkey, Params: []Param{{Name: "key"}}},

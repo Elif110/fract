@@ -9,7 +9,7 @@ import (
 type Struct struct {
 	L           *lex.Lex
 	Name        string
-	Constructor *Func
+	Constructor *Fn
 }
 
 func (s *Struct) CallConstructor(args []*Var) StructInstance {

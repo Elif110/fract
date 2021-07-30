@@ -11,12 +11,12 @@ import (
 
 // Instance for function calls.
 type funcCall struct {
-	f     *oop.Func
+	f     *oop.Fn
 	errTk obj.Token
 	args  []*oop.Var
 }
 
-func (c *funcCall) Func() *oop.Func { return c.f }
+func (c *funcCall) Func() *oop.Fn { return c.f }
 
 func (c *funcCall) Call() *oop.Val {
 	var retv oop.Val
@@ -150,7 +150,7 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 }
 
 type funcArgInfo struct {
-	f        *oop.Func
+	f        *oop.Fn
 	names    *[]string
 	tks      []obj.Token
 	tk       obj.Token
@@ -217,7 +217,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 }
 
 // Process function call model and initialize model instance.
-func (p *Parser) funcCallModel(f *oop.Func, tks []obj.Token) *funcCall {
+func (p *Parser) funcCallModel(f *oop.Fn, tks []obj.Token) *funcCall {
 	var (
 		names []string
 		args  []*oop.Var
@@ -300,7 +300,7 @@ func (p *Parser) funcCallModel(f *oop.Func, tks []obj.Token) *funcCall {
 }
 
 // Decompose function parameters.
-func (p *Parser) setFuncParams(f *oop.Func, tks *[]obj.Token) {
+func (p *Parser) setFuncParams(f *oop.Fn, tks *[]obj.Token) {
 	pname, params, defaultDef := true, false, false
 	bc := 0
 	var lstp oop.Param
@@ -402,7 +402,7 @@ func (p *Parser) ffuncdec(dm *oop.DefMap, tks []obj.Token) {
 	if tkslen < 3 {
 		fract.IPanicC(name.F, name.Ln, name.Col+len(name.V), obj.SyntaxPanic, "Invalid syntax!")
 	}
-	f := &oop.Func{
+	f := &oop.Fn{
 		Name: name.V,
 		Ln:   p.i,
 		Src:  p,

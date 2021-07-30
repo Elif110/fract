@@ -14,7 +14,7 @@ const (
 	Float     uint8 = 2
 	Str       uint8 = 3
 	Bool      uint8 = 4
-	Function  uint8 = 5
+	Func      uint8 = 5
 	Array     uint8 = 6
 	Map       uint8 = 7
 	Package   uint8 = 8
@@ -56,7 +56,7 @@ func (d Val) Immut() Val {
 
 func (d Val) String() string {
 	switch d.T {
-	case Function:
+	case Func:
 		return "object.func"
 	case Package:
 		return "object.packageref"
