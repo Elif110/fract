@@ -64,7 +64,7 @@ func comp(v0, v1 oop.Val, opr obj.Token) bool {
 			}
 			return false
 		case oop.Map:
-			_, ok := v1.D.(oop.MapModel)[v0]
+			_, ok := v1.D.(oop.MapModel).M[v0]
 			return ok
 		}
 		// String.
@@ -440,16 +440,16 @@ func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) *o
 			r.D = append(r.D.(oop.ArrayModel), v.D.(oop.ArrayModel)[pos])
 		}
 	case oop.Map:
-		m := v.D.(oop.MapModel)
+		m := v.D.(oop.MapModel).M
 		switch t := s.(type) {
 		case oop.ArrayModel:
-			rm := oop.MapModel{}
+			rm := oop.NewMapModel()
 			for _, k := range t {
 				d, ok := m[k]
 				if !ok {
 					fract.IPanic(tk, obj.ValuePanic, "Key is not exists!")
 				}
-				rm[k] = d
+				rm.M[k] = d
 			}
 			r = oop.Val{D: rm, T: oop.Map}
 		case oop.Val:
@@ -562,6 +562,14 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
 				}
 				rv = &s.Fields.Vars[i].V
+				goto end
+			case oop.Map:
+				m := v.D.(oop.MapModel)
+				i := m.Defs.FuncIndexByName(n.V)
+				if i == -1 {
+					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
+				}
+				rv = &oop.Val{D: m.Defs.Funcs[i], T: oop.Function}
 				goto end
 			case oop.ClassIns:
 				c := v.D.(oop.ClassInstance)
@@ -727,9 +735,9 @@ end:
 
 // Process array oop.
 func (p *Parser) procArrayVal(tks []obj.Token) *oop.Val {
+	var bc int
 	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}
 	comma := 1
-	bc := 0
 	for j := 1; j < len(tks)-1; j++ {
 		switch t := tks[j]; t.T {
 		case fract.Brace:
@@ -758,9 +766,9 @@ func (p *Parser) procArrayVal(tks []obj.Token) *oop.Val {
 
 // Process map oop.
 func (p *Parser) procMapVal(tks []obj.Token) *oop.Val {
+	var bc int
+	m := oop.NewMapModel()
 	comma := 1
-	bc := 0
-	m := oop.MapModel{}
 	for j := 1; j < len(tks)-1; j++ {
 		switch t := tks[j]; t.T {
 		case fract.Brace:
@@ -800,11 +808,11 @@ func (p *Parser) procMapVal(tks []obj.Token) *oop.Val {
 						fract.IPanic(tk, obj.SyntaxPanic, "Value is not given!")
 					}
 					key := *p.procValTks(lst[:i])
-					_, ok := m[key]
+					_, ok := m.M[key]
 					if ok {
 						fract.IPanic(tk, obj.ValuePanic, "Key is already defined!")
 					}
-					m[key] = *p.procValTks(lst[i+1:])
+					m.M[key] = *p.procValTks(lst[i+1:])
 					comma = j + 1
 					lst = nil
 				}
@@ -841,11 +849,11 @@ func (p *Parser) procMapVal(tks []obj.Token) *oop.Val {
 			fract.IPanic(lst[i], obj.SyntaxPanic, "Value is not given!")
 		}
 		key := *p.procValTks(lst[:i])
-		_, ok := m[key]
+		_, ok := m.M[key]
 		if ok {
 			fract.IPanic(lst[i], obj.ValuePanic, "Key is already defined!")
 		}
-		m[key] = *p.procValTks(lst[i+1:])
+		m.M[key] = *p.procValTks(lst[i+1:])
 		lst = nil
 	}
 	return &oop.Val{D: m, T: oop.Map}

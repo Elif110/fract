@@ -218,14 +218,6 @@ func Append(tk obj.Token, args []*oop.Var) oop.Val {
 	return src
 }
 
-// Delete key from map.
-func Del(tk obj.Token, args []*oop.Var) {
-	if args[0].V.T != oop.Map {
-		fract.IPanic(tk, obj.ValuePanic, `"map" parameter is must be map!`)
-	}
-	delete(args[0].V.D.(oop.MapModel), args[1].V)
-}
-
 func Panic(args []*oop.Var) {
 	p := obj.Panic{M: args[0].V.String()}
 	if fract.TryCount > 0 {

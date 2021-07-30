@@ -139,7 +139,18 @@ try {
 println('Finish')
 */
 
+/*
 // Type function test.
-
 t := type(struct{})
 println(t)
+*/
+
+// OOP Map.
+m := {'key1': 1, 'key2': 2, 'key3': 3}
+println(m)
+println(m.keys())
+println(m.vals())
+println(m.rmkey('key'))
+println(m)
+println(m.rmkey('key1'))
+println(m)

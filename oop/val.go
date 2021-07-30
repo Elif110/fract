@@ -24,7 +24,6 @@ const (
 )
 
 type ArrayModel []Val
-type MapModel map[Val]Val
 
 // Val instance.
 type Val struct {
@@ -39,9 +38,9 @@ func (d Val) Immut() Val {
 	v := Val{T: d.T}
 	switch d.T {
 	case Map:
-		c := MapModel{}
-		for k, v := range d.D.(MapModel) {
-			c[k] = v
+		c := NewMapModel()
+		for k, v := range d.D.(MapModel).M {
+			c.M[k] = v
 		}
 		v.D = c
 	case Array:
@@ -67,7 +66,7 @@ func (d Val) String() string {
 	case Array:
 		return fmt.Sprint(d.D)
 	case Map:
-		s := fmt.Sprint(d.D)
+		s := fmt.Sprint(d.D.(MapModel).M)
 		return "{" + s[4:len(s)-1] + "}"
 	case StructIns:
 		var s strings.Builder
@@ -119,7 +118,7 @@ func (v Val) Len() int {
 	case Array:
 		return len(v.D.(ArrayModel))
 	case Map:
-		return len(v.D.(MapModel))
+		return len(v.D.(MapModel).M)
 	}
 	return -1
 }

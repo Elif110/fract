@@ -204,21 +204,21 @@ func (p *Parser) varset(tks []obj.Token) {
 			switch t := s.(type) {
 			case oop.ArrayModel:
 				for _, k := range t {
-					m[k] = val
+					m.M[k] = val
 				}
 			case oop.Val:
-				m[t] = val
+				m.M[t] = val
 			}
 		default: // Other assignments.
 			switch t := s.(type) {
 			case oop.ArrayModel:
 				for _, s := range t {
-					d, ok := m[s]
+					d, ok := m.M[s]
 					if !ok {
-						m[s] = val
+						m.M[s] = val
 						continue
 					}
-					m[s] = solveProc(process{
+					m.M[s] = solveProc(process{
 						opr: opr,
 						f:   tks,
 						fv:  d,
@@ -227,12 +227,12 @@ func (p *Parser) varset(tks []obj.Token) {
 					})
 				}
 			case oop.Val:
-				d, ok := m[t]
+				d, ok := m.M[t]
 				if !ok {
-					m[t] = val
+					m.M[t] = val
 					break
 				}
-				m[t] = solveProc(process{
+				m.M[t] = solveProc(process{
 					opr: opr,
 					f:   tks,
 					fv:  d,

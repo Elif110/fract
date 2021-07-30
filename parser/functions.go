@@ -46,14 +46,15 @@ func (c *funcCall) Call() *oop.Val {
 			retv = built_in.Float(c.args)
 		case "append":
 			retv = built_in.Append(c.errTk, c.args)
-		case "del":
-			built_in.Del(c.errTk, c.args)
 		case "exit":
 			built_in.Exit(c.errTk, c.args)
 		case "panic":
 			built_in.Panic(c.args)
 		case "type":
 			retv = built_in.Type(c.errTk, c.args)
+		}
+		if c.f.Src != nil {
+			retv = c.f.Src.(func(tk obj.Token, args []*oop.Var) oop.Val)(c.errTk, c.args)
 		}
 		return &retv
 	}

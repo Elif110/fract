@@ -40,7 +40,7 @@ func (l *loop) run(b func()) {
 			}
 		}
 	case oop.Map:
-		for k, v := range l.enum.D.(oop.MapModel) {
+		for k, v := range l.enum.D.(oop.MapModel).M {
 			l.a = k
 			l.b = v
 			b()
