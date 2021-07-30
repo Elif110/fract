@@ -1,8 +1,9 @@
 package fract
 
 const (
-	Ver         = "0.0.1"  // Version of Fract.
-	Ext         = ".fract" // File extension of Fract.
+	Version     = "0.0.1"  // Version of Fract.
+	Extension   = ".fr"    // File extension of Fract.
+	StdLib      = "stdlib" // Standard library path.
 	FloatFormat = "%g"     // Float format.
 
 	None                uint8 = 0

@@ -72,7 +72,7 @@ func (p *Parser) procImport(tks []obj.Token) {
 	if tks[j].T == fract.Name {
 		switch tks[j].V {
 		default:
-			imppath = strings.ReplaceAll(`std.`+tks[j].V, ".", string(os.PathSeparator))
+			imppath = strings.ReplaceAll(fract.StdLib+"/."+tks[j].V, ".", string(os.PathSeparator))
 		}
 	} else {
 		imppath = tks[0].F.P[:strings.LastIndex(tks[0].F.P, string(os.PathSeparator))+1] + p.procValTks([]obj.Token{tks[j]}).String()
@@ -89,7 +89,7 @@ func (p *Parser) procImport(tks []obj.Token) {
 	}
 	for _, i := range infos {
 		// Skip directories.
-		if i.IsDir() || !strings.HasSuffix(i.Name(), fract.Ext) {
+		if i.IsDir() || !strings.HasSuffix(i.Name(), fract.Extension) {
 			continue
 		}
 		isrc := New(imppath + string(os.PathSeparator) + i.Name())

@@ -104,7 +104,7 @@ func (p *Parser) importPackage() {
 	_, mainName := filepath.Split(p.L.F.P)
 	for _, info := range infos {
 		// Skip directories.
-		if info.IsDir() || !strings.HasSuffix(info.Name(), fract.Ext) || info.Name() == mainName {
+		if info.IsDir() || !strings.HasSuffix(info.Name(), fract.Extension) || info.Name() == mainName {
 			continue
 		}
 		src := New(path.Join(dir, info.Name()))

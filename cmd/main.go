@@ -132,15 +132,15 @@ func version(cmd string) {
 		fmt.Println("This module can only be used!")
 		return
 	}
-	fmt.Println("Fract Version [" + fract.Ver + "]")
+	fmt.Println("Fract Version [" + fract.Version + "]")
 }
 
 func make(cmd string) {
 	if cmd == "" {
 		fmt.Println("This module cannot only be used!")
 		return
-	} else if !strings.HasSuffix(cmd, fract.Ext) {
-		cmd += fract.Ext
+	} else if !strings.HasSuffix(cmd, fract.Extension) {
+		cmd += fract.Extension
 	}
 	if info, err := os.Stat(cmd); err != nil || info.IsDir() {
 		fmt.Println("The Fract file is not exists: " + cmd)
@@ -157,10 +157,10 @@ func make(cmd string) {
 }
 
 func makechk(p string) bool {
-	if strings.HasSuffix(p, fract.Ext) {
+	if strings.HasSuffix(p, fract.Extension) {
 		return true
 	}
-	info, err := os.Stat(p + fract.Ext)
+	info, err := os.Stat(p + fract.Extension)
 	return err == nil && !info.IsDir()
 }
 
@@ -182,7 +182,7 @@ func proccmd(ns, cmd string) {
 func init() {
 	fract.ExecPath = filepath.Dir(os.Args[0])
 	// Check standard library.
-	if info, err := os.Stat(path.Join(fract.ExecPath, "std")); err != nil || !info.IsDir() {
+	if info, err := os.Stat(path.Join(fract.ExecPath, fract.StdLib)); err != nil || !info.IsDir() {
 		fmt.Println("Standard library not found!")
 		input("\nPress enter for exit...")
 		os.Exit(1)
@@ -202,7 +202,7 @@ func init() {
 }
 
 func main() {
-	fmt.Println("Fract " + fract.Ver + " (c) MIT License.\n" + "Fract Developer Team.\n")
+	fmt.Println("Fract " + fract.Version + " (c) MIT License.\n" + "Fract Developer Team.\n")
 	fract.InteractiveSh = true
 	p = parser.NewStdin()
 	p.AddBuiltInFuncs()
