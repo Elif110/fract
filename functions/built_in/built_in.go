@@ -14,25 +14,26 @@ import (
 )
 
 // Exit from application with code.
-func Exit(tk obj.Token, args []*oop.Var) {
+func Exit(tk obj.Token, args []*oop.Var) oop.Val {
 	c := args[0].V
 	if c.T != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Exit code is only be integer!")
 	}
 	ec, _ := strconv.ParseInt(c.String(), 10, 64)
 	os.Exit(int(ec))
+	return oop.Val{}
 }
 
 // Float convert object to float.
-func Float(parameters []*oop.Var) oop.Val {
+func Float(tk obj.Token, args []*oop.Var) oop.Val {
 	return oop.Val{
-		D: fmt.Sprintf(fract.FloatFormat, str.Conv(parameters[0].V.String())),
+		D: fmt.Sprintf(fract.FloatFormat, str.Conv(args[0].V.String())),
 		T: oop.Float,
 	}
 }
 
 // Input returns input from command-line.
-func Input(args []*oop.Var) oop.Val {
+func Input(tk obj.Token, args []*oop.Var) oop.Val {
 	args[0].V.Print()
 	//! Don't use fmt.Scanln
 	s := bufio.NewScanner(os.Stdin)
@@ -41,7 +42,7 @@ func Input(args []*oop.Var) oop.Val {
 }
 
 // Int convert object to integer.
-func Int(args []*oop.Var) oop.Val {
+func Int(tk obj.Token, args []*oop.Var) oop.Val {
 	switch args[1].V.D { // Cast type.
 	case "strcode":
 		var v oop.ArrayModel
@@ -58,7 +59,7 @@ func Int(args []*oop.Var) oop.Val {
 }
 
 // Len returns length of object.
-func Len(args []*oop.Var) oop.Val {
+func Len(tk obj.Token, args []*oop.Var) oop.Val {
 	return oop.Val{D: fmt.Sprint(args[0].V.Len()), T: oop.Int}
 }
 
@@ -116,19 +117,21 @@ func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
 }
 
 // Print values to cli.
-func Print(tk obj.Token, args []*oop.Var) {
+func Print(tk obj.Token, args []*oop.Var) oop.Val {
 	for _, d := range args[0].V.D.(oop.ArrayModel) {
 		if d.T == 0 {
 			fract.Panic(tk, obj.ValuePanic, "Value is not printable!")
 		}
 		fmt.Print(d)
 	}
+	return oop.Val{}
 }
 
 // Print values to cli with new line.
-func Println(tk obj.Token, args []*oop.Var) {
+func Println(tk obj.Token, args []*oop.Var) oop.Val {
 	Print(tk, args)
 	println()
+	return oop.Val{}
 }
 
 // Range returns array by parameters.
@@ -171,7 +174,7 @@ func Range(tk obj.Token, args []*oop.Var) oop.Val {
 }
 
 // String convert object to string.
-func String(args []*oop.Var) oop.Val {
+func String(tk obj.Token, args []*oop.Var) oop.Val {
 	switch args[1].V.D {
 	case "parse":
 		str := ""
@@ -218,7 +221,7 @@ func Append(tk obj.Token, args []*oop.Var) oop.Val {
 	return src
 }
 
-func Panic(args []*oop.Var) {
+func Panic(tk obj.Token, args []*oop.Var) oop.Val {
 	p := obj.Panic{M: args[0].V.String()}
 	if fract.TryCount > 0 {
 		panic(p)

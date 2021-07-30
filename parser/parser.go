@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/fract-lang/fract/functions/built_in"
 	"github.com/fract-lang/fract/lex"
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
@@ -564,6 +565,7 @@ func (p *Parser) AddBuiltInFuncs() {
 		&oop.Func{
 			Name:          "print",
 			DefParamCount: 2,
+			Src:           built_in.Print,
 			Params: []oop.Param{{
 				Name:   "value",
 				Params: true,
@@ -571,6 +573,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, &oop.Func{
 			Name:          "println",
+			Src:           built_in.Println,
 			DefParamCount: 2,
 			Params: []oop.Param{{
 				Name:   "value",
@@ -579,6 +582,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, &oop.Func{
 			Name:          "input",
+			Src:           built_in.Input,
 			DefParamCount: 1,
 			Params: []oop.Param{{
 				Name:   "message",
@@ -587,17 +591,20 @@ func (p *Parser) AddBuiltInFuncs() {
 		}, &oop.Func{
 			Name:          "exit",
 			DefParamCount: 1,
+			Src:           built_in.Exit,
 			Params: []oop.Param{{
 				Name:   "code",
 				Defval: oop.Val{D: "0", T: oop.Int},
 			}},
 		}, &oop.Func{
 			Name:          "len",
+			Src:           built_in.Len,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
 		}, &oop.Func{
 			Name:          "range",
 			DefParamCount: 1,
+			Src:           built_in.Range,
 			Params: []oop.Param{
 				{Name: "start"},
 				{Name: "to"},
@@ -608,18 +615,17 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, &oop.Func{
 			Name:          "calloc",
+			Src:           built_in.Calloc,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "size"}},
 		}, &oop.Func{
 			Name:          "realloc",
 			DefParamCount: 0,
+			Src:           built_in.Realloc,
 			Params:        []oop.Param{{Name: "base"}, {Name: "size"}},
 		}, &oop.Func{
-			Name:          "memset",
-			DefParamCount: 0,
-			Params:        []oop.Param{{Name: "mem"}, {Name: "val"}},
-		}, &oop.Func{
 			Name:          "string",
+			Src:           built_in.String,
 			DefParamCount: 1,
 			Params: []oop.Param{
 				{Name: "object"},
@@ -630,6 +636,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, &oop.Func{
 			Name:          "int",
+			Src:           built_in.Int,
 			DefParamCount: 1,
 			Params: []oop.Param{
 				{Name: "object"},
@@ -640,18 +647,22 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, &oop.Func{
 			Name:          "float",
+			Src:           built_in.Float,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
 		}, &oop.Func{
 			Name:          "append",
+			Src:           built_in.Append,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "dest"}, {Name: "src", Params: true}},
 		}, &oop.Func{
 			Name:          "panic",
+			Src:           built_in.Panic,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "msg"}},
 		}, &oop.Func{
 			Name:          "type",
+			Src:           built_in.Type,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "obj"}},
 		},

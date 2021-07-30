@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fract-lang/fract/functions/built_in"
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
@@ -23,39 +22,7 @@ func (c *funcCall) Call() *oop.Val {
 	var retv oop.Val
 	// Is built-in function?
 	if c.f.Tks == nil {
-		switch c.f.Name {
-		case "print":
-			built_in.Print(c.errTk, c.args)
-		case "println":
-			built_in.Println(c.errTk, c.args)
-		case "input":
-			retv = built_in.Input(c.args)
-		case "len":
-			retv = built_in.Len(c.args)
-		case "range":
-			retv = built_in.Range(c.errTk, c.args)
-		case "calloc":
-			retv = built_in.Calloc(c.errTk, c.args)
-		case "realloc":
-			retv = built_in.Realloc(c.errTk, c.args)
-		case "string":
-			retv = built_in.String(c.args)
-		case "int":
-			retv = built_in.Int(c.args)
-		case "float":
-			retv = built_in.Float(c.args)
-		case "append":
-			retv = built_in.Append(c.errTk, c.args)
-		case "exit":
-			built_in.Exit(c.errTk, c.args)
-		case "panic":
-			built_in.Panic(c.args)
-		case "type":
-			retv = built_in.Type(c.errTk, c.args)
-		}
-		if c.f.Src != nil {
-			retv = c.f.Src.(func(tk obj.Token, args []*oop.Var) oop.Val)(c.errTk, c.args)
-		}
+		retv = c.f.Src.(func(tk obj.Token, args []*oop.Var) oop.Val)(c.errTk, c.args)
 		return &retv
 	}
 	// Process block.
