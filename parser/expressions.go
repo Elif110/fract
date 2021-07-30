@@ -153,7 +153,8 @@ func arith(tks obj.Token, d oop.Val) string {
 		oop.Package,
 		oop.StructDef,
 		oop.ClassDef,
-		oop.ClassIns:
+		oop.ClassIns,
+		oop.None:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\""+ret+"\" is not compatible with arithmetic processes!")
 	case oop.Map:
 		fract.IPanic(tks, obj.ArithmeticPanic, "\"object.map\" is not compatible with arithmetic processes!")
@@ -517,6 +518,9 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			goto end
 		} else if tk.V == "true" || tk.V == "false" {
 			rv = &oop.Val{D: tk.V, T: oop.Bool}
+			goto end
+		} else if tk.V == "none" {
+			rv = &oop.Val{D: tk.V, T: oop.None}
 			goto end
 		} else if tk.T == fract.Value {
 			if strings.Contains(tk.V, ".") || strings.ContainsAny(tk.V, "eE") {
@@ -1001,7 +1005,7 @@ func (p *Parser) procVal(tks []obj.Token, mut bool) *oop.Val {
 			opr.s = procs[j+1]
 			i.tks = opr.s
 			opr.sv = *p.procValPart(i)
-			if opr.sv.T == fract.None {
+			if opr.sv.T == fract.NA {
 				fract.IPanic(opr.f[0], obj.ValuePanic, "Value is not given!")
 			}
 			v = solveProc(opr)
@@ -1012,14 +1016,14 @@ func (p *Parser) procVal(tks []obj.Token, mut bool) *oop.Val {
 		opr.f = procs[j-1]
 		i.tks = opr.f
 		opr.fv = *p.procValPart(i)
-		if opr.fv.T == fract.None {
+		if opr.fv.T == fract.NA {
 			fract.IPanic(opr.f[0], obj.ValuePanic, "Value is not given!")
 		}
 		opr.opr = procs[j][0]
 		opr.s = procs[j+1]
 		i.tks = opr.s
 		opr.sv = *p.procValPart(i)
-		if opr.sv.T == fract.None {
+		if opr.sv.T == fract.NA {
 			fract.IPanic(opr.s[0], obj.ValuePanic, "Value is not given!")
 		}
 		rv := solveProc(opr)

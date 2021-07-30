@@ -6,7 +6,7 @@ const (
 	StdLib      = "stdlib" // Standard library path.
 	FloatFormat = "%g"     // Float format.
 
-	None                uint8 = 0
+	NA                  uint8 = 0
 	Ignore              uint8 = 1
 	Comment             uint8 = 10
 	Operator            uint8 = 11
@@ -36,6 +36,7 @@ const (
 	Dot                 uint8 = 35
 	Struct              uint8 = 36
 	Class               uint8 = 37
+	None                uint8 = 38
 
 	LOOPBreak    uint8 = 1
 	LOOPContinue uint8 = 2

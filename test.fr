@@ -145,6 +145,7 @@ t := type(struct{})
 println(t)
 */
 
+/*
 // OOP Map.
 m := {'key1': 1, 'key2': 2, 'key3': 3}
 println(m)
@@ -154,3 +155,8 @@ println(m.rmkey('key'))
 println(m)
 println(m.rmkey('key1'))
 println(m)
+*/
+
+// None test.
+println(none)
+println([print(x*100, ' ') for x in range(1, 100)])

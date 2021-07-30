@@ -60,14 +60,14 @@ tokenize:
 	if l.lastTk.T != fract.StatementTerminator {
 		// Restore to defaults.
 		l.Col = 1
-		l.lastTk.T = fract.None
+		l.lastTk.T = fract.NA
 		l.lastTk.Ln = 0
 		l.lastTk.Col = 0
 		l.lastTk.V = ""
 	}
 	// Tokenize line.
 	tk := l.Token()
-	for tk.T != fract.None {
+	for tk.T != fract.NA {
 		if tk.T == fract.StatementTerminator {
 			if l.Parentheses == 0 && l.Braces == 0 && l.Brackets == 0 {
 				break
@@ -193,7 +193,7 @@ func (l *Lex) lexname(tk *obj.Token, chk string) bool {
 
 // Generate next token.
 func (l *Lex) Token() obj.Token {
-	tk := obj.Token{T: fract.None, F: l.F}
+	tk := obj.Token{T: fract.NA, F: l.F}
 
 	fln := l.F.Lns[l.Ln-1] // Full line.
 	// Line is finished.
@@ -493,6 +493,9 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "class"):
 		tk.V = "class"
 		tk.T = fract.Class
+	case isKeyword(ln, "none"):
+		tk.V = "none"
+		tk.T = fract.None
 	default: // Alternates
 		// Check variable name.
 		if chk := getName(ln); chk != "" { // Name.

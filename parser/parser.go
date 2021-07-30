@@ -682,11 +682,11 @@ func (p *Parser) procIf(tks []obj.Token) uint8 {
 	vlen := len(p.defs.Vars)
 	flen := len(p.defs.Funcs)
 	ilen := len(p.packages)
-	kws := fract.None
+	kws := fract.NA
 	for _, tks := range btks {
 		// Condition is true?
-		if s == "true" && kws == fract.None {
-			if kws = p.process(tks); kws != fract.None {
+		if s == "true" && kws == fract.NA {
+			if kws = p.process(tks); kws != fract.NA {
 				break
 			}
 		} else {
@@ -718,8 +718,8 @@ rep:
 		s = p.procCondition(ctks)
 		for _, tks := range btks {
 			// Condition is true?
-			if s == "true" && kws == fract.None {
-				if kws = p.process(tks); kws != fract.None {
+			if s == "true" && kws == fract.NA {
+				if kws = p.process(tks); kws != fract.NA {
 					break
 				}
 			} else {
@@ -734,8 +734,8 @@ rep:
 	}
 	for _, tks := range btks {
 		// Condition is true?
-		if kws == fract.None {
-			if kws = p.process(tks); kws != fract.None {
+		if kws == fract.NA {
+			if kws = p.process(tks); kws != fract.NA {
 				break
 			}
 		}
@@ -766,12 +766,12 @@ func (p *Parser) procTryCatch(tks []obj.Token) uint8 {
 		flen = len(p.defs.Funcs)
 		ilen = len(p.packages)
 		dlen = len(defers)
-		kws  = fract.None
+		kws  = fract.NA
 	)
 	b := &obj.Block{
 		Try: func() {
 			for _, tks := range p.getBlock(tks[1:]) {
-				if kws = p.process(tks); kws != fract.None {
+				if kws = p.process(tks); kws != fract.NA {
 					break
 				}
 			}
@@ -828,7 +828,7 @@ func (p *Parser) procTryCatch(tks []obj.Token) uint8 {
 				blk = p.getBlock(tks[1:])
 			}
 			for _, tks := range blk {
-				if kws = p.process(tks); kws != fract.None {
+				if kws = p.process(tks); kws != fract.NA {
 					break
 				}
 			}
@@ -871,10 +871,10 @@ func (p *Parser) process(tks []obj.Token) uint8 {
 					switch t.V {
 					case "=", "+=", "-=", "*=", "/=", "%=", "^=", "<<=", ">>=", "|=", "&=":
 						p.varset(tks)
-						return fract.None
+						return fract.NA
 					case ":=":
 						p.varsdec(tks)
-						return fract.None
+						return fract.NA
 					}
 				}
 			}
@@ -968,5 +968,5 @@ func (p *Parser) process(tks []obj.Token) uint8 {
 	default:
 		fract.IPanic(fst, obj.SyntaxPanic, "Invalid syntax!")
 	}
-	return fract.None
+	return fract.NA
 }

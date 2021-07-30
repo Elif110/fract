@@ -119,9 +119,6 @@ func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
 // Print values to cli.
 func Print(tk obj.Token, args []*oop.Var) oop.Val {
 	for _, d := range args[0].V.D.(oop.ArrayModel) {
-		if d.T == 0 {
-			fract.Panic(tk, obj.ValuePanic, "Value is not printable!")
-		}
 		fmt.Print(d)
 	}
 	return oop.Val{}
@@ -231,9 +228,5 @@ func Panic(tk obj.Token, args []*oop.Var) oop.Val {
 }
 
 func Type(tk obj.Token, args []*oop.Var) oop.Val {
-	arg := args[0]
-	if arg.V.T == 0 {
-		fract.Panic(tk, obj.ValuePanic, "Invalid value!")
-	}
-	return oop.Val{D: fmt.Sprint(arg.V.T), T: oop.Int}
+	return oop.Val{D: fmt.Sprint(args[0].V.T), T: oop.Int}
 }

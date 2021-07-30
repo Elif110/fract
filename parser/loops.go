@@ -54,7 +54,7 @@ func (l *loop) run(b func()) {
 // Returns kwstate's return format.
 func prockws(kws uint8) uint8 {
 	if kws != fract.FUNCReturn {
-		return fract.None
+		return fract.NA
 	}
 	return kws
 }
@@ -66,7 +66,7 @@ func (p *Parser) procLoop(tks []obj.Token) uint8 {
 	flen := len(p.defs.Funcs)
 	ilen := len(p.packages)
 	brk := false
-	kws := fract.None
+	kws := fract.NA
 	ptks := p.Tks
 	pi := p.i
 	//*************

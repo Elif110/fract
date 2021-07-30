@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	None      uint8 = 0
 	Int       uint8 = 1
 	Float     uint8 = 2
 	Str       uint8 = 3
@@ -84,6 +85,8 @@ func (d Val) String() string {
 		return s.String()[:s.Len()-1] + "}"
 	case ClassIns:
 		return "object.classins"
+	case None:
+		return "none"
 	default:
 		if d.D == nil {
 			return ""
