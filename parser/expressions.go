@@ -493,7 +493,7 @@ func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 		if !rv.Mut && !mut { //! Immutability.
 			*rv = rv.Immut()
 		}
-		rv.Mut = rv.Mut || mut
+		rv.Mut = mut
 	}
 	return rv
 }
@@ -556,7 +556,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				goto end
 			case oop.StructIns:
 				s := v.D.(oop.StructInstance)
-				checkPublic(s.L, tk)
+				checkPublic(s.F, tk)
 				i := s.Fields.VarIndexByName(n.V)
 				if i == -1 {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
@@ -565,7 +565,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				goto end
 			case oop.ClassIns:
 				c := v.D.(oop.ClassInstance)
-				checkPublic(c.L, tk)
+				checkPublic(c.F, tk)
 				vi, t := c.Defs.DefByName(n.V)
 				if vi == -1 {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)

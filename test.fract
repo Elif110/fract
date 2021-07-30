@@ -2,7 +2,7 @@ package test
 
 /*
 try {} ; ; func a() {
-    println('TEST'); if false { ret 0 } else { ret 1 }
+  println('TEST'); if false { ret 0 } else { ret 1 }
 }
 
 println(a())
@@ -31,7 +31,7 @@ println(b)
 b[['ag', 'age']] -= 5
 println(b)
 for key in b {
-    print(b[key], ' ')
+  print(b[key], ' ')
 }
 println()
 del(mut(b), 'ag')
@@ -69,8 +69,8 @@ println(math.Abs(9))
 /*
 // Structs.
 struct person {
-    name
-    surname
+  name
+  surname
 }
 
 p := person('Daniel', 'McVollo')
@@ -84,19 +84,19 @@ println(p.name)
 /*
 // Classes.
 class employee {
-    var name = ''
-    var surname = ''
-    var salary = ''
+  var name = ''
+  var surname = ''
+  var salary = ''
 
-    func employee(name, surname, salary) {
-        this.name = name
-        this.surname = surname
-        this.salary = salary
-    }
+  func employee(name, surname, salary) {
+      this.name = name
+      this.surname = surname
+      this.salary = salary
+  }
 
-    func getName       { ret this.name }
-    func setName(name) { this.name = name }
-    func string        { ret this.name + ' ' + this.surname + ' ' + string(this.salary) }
+  func getName       { ret this.name }
+  func setName(name) { this.name = name }
+  func string        { ret this.name + ' ' + this.surname + ' ' + string(this.salary) }
 }
 
 e := employee('Daniel', 'McVollo', '9000')
@@ -110,29 +110,36 @@ println(e.string())
 /*
 // Notation ... test.
 func Print(...x) {
-    l := len(x)-1
-    for i, y := x {
-        print(y)
-        if i < l {
-            print(' ')
-        }
+  l := len(x)-1
+  for i, y := x {
+    print(y)
+    if i < l {
+      print(' ')
     }
+  }
 }
 
 func Println(...x) {
-    Print(x...)
-    println()
+  Print(x...)
+  println()
 }
 
 Println('Mertcan', 'Davulcu')
 */
 
+/*
 // Panic test.
 try {
-    panic('test panic')
+  panic('test panic')
 } catch p {
-    println('panicked: ', p)
-    println('catch')
+  println('panicked: ', p)
+  println('catch')
 }
 
 println('Finish')
+*/
+
+// Type function test.
+
+t := type(struct{})
+println(t)

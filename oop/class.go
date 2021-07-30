@@ -1,7 +1,7 @@
 package oop
 
 import (
-	"github.com/fract-lang/fract/lex"
+	"github.com/fract-lang/fract/pkg/obj"
 )
 
 type FuncCallModel interface {
@@ -11,14 +11,14 @@ type FuncCallModel interface {
 
 // Class define.
 type Class struct {
-	L           *lex.Lex
+	F           *obj.File
 	Name        string
 	Constructor *Func
 	Defs        DefMap
 }
 
 func (c *Class) CallConstructor(model FuncCallModel) ClassInstance {
-	ci := ClassInstance{Name: c.Name, L: c.L, Defs: c.Defs}
+	ci := ClassInstance{Name: c.Name, F: c.F, Defs: c.Defs}
 	this := &Var{Name: "this", V: Val{D: ci, T: ClassIns, Mut: true}}
 	model.Func().Args = []*Var{this}
 	for _, f := range ci.Defs.Funcs {
@@ -31,7 +31,7 @@ func (c *Class) CallConstructor(model FuncCallModel) ClassInstance {
 }
 
 type ClassInstance struct {
-	L    *lex.Lex
+	F    *obj.File
 	Name string // Name of based struct.
 	Defs DefMap
 }

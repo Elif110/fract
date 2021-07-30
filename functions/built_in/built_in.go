@@ -234,3 +234,11 @@ func Panic(args []*oop.Var) {
 	fmt.Println("panic: " + p.M)
 	panic("")
 }
+
+func Type(tk obj.Token, args []*oop.Var) oop.Val {
+	arg := args[0]
+	if arg.V.T == 0 {
+		fract.Panic(tk, obj.ValuePanic, "Invalid value!")
+	}
+	return oop.Val{D: fmt.Sprint(arg.V.T), T: oop.Int}
+}

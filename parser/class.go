@@ -11,7 +11,7 @@ import (
 // buildClass from tokens.
 func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
 	blk := p.getBlock(tks)
-	c := oop.Class{Name: name, L: p.L}
+	c := oop.Class{Name: name, F: p.L.F}
 	for _, tks := range blk {
 		switch tks[0].T {
 		case fract.Var:

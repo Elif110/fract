@@ -52,6 +52,8 @@ func (c *funcCall) Call() *oop.Val {
 			built_in.Exit(c.errTk, c.args)
 		case "panic":
 			built_in.Panic(c.args)
+		case "type":
+			retv = built_in.Type(c.errTk, c.args)
 		}
 		return &retv
 	}

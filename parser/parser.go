@@ -650,6 +650,10 @@ func (p *Parser) AddBuiltInFuncs() {
 			Name:          "panic",
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "msg"}},
+		}, &oop.Func{
+			Name:          "type",
+			DefParamCount: 0,
+			Params:        []oop.Param{{Name: "obj"}},
 		},
 	)
 }
@@ -732,9 +736,9 @@ end:
 	return kws
 }
 
-func checkPublic(l *lex.Lex, n obj.Token) {
-	if l != nil {
-		if l.F == n.F {
+func checkPublic(f *obj.File, n obj.Token) {
+	if f != nil {
+		if f == n.F {
 			return
 		}
 	}
