@@ -12,9 +12,9 @@ type Struct struct {
 	Constructor *Fn
 }
 
-func (s *Struct) CallConstructor(args []*Var) StructInstance {
+func (s *Struct) CallConstructor(args []Var) StructInstance {
 	si := StructInstance{Name: s.Name, F: s.L.F}
-	si.Fields.Vars = args
+	si.Fields.Vars = append(si.Fields.Vars, args...)
 	return si
 }
 

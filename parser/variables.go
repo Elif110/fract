@@ -55,7 +55,7 @@ func (p *Parser) varadd(dm *oop.DefMap, md varinfo, tks []obj.Token) {
 	}
 	v.Mut = md.mut
 	v.Const = md.constant
-	dm.Vars = append(dm.Vars, &oop.Var{
+	dm.Vars = append(dm.Vars, oop.Var{
 		Name: name.V,
 		V:    v,
 		Ln:   name.Ln,

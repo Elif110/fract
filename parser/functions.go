@@ -13,7 +13,7 @@ import (
 type funcCall struct {
 	f     *oop.Fn
 	errTk obj.Token
-	args  []*oop.Var
+	args  []oop.Var
 }
 
 func (c *funcCall) Func() *oop.Fn { return c.f }
@@ -22,7 +22,7 @@ func (c *funcCall) Call() *oop.Val {
 	var retv oop.Val
 	// Is built-in function?
 	if c.f.Tks == nil {
-		retv = c.f.Src.(func(obj.Token, []*oop.Var) oop.Val)(c.errTk, c.args)
+		retv = c.f.Src.(func(obj.Token, []oop.Var) oop.Val)(c.errTk, c.args)
 		c.args = nil
 		c.f = nil
 		return &retv
@@ -164,7 +164,7 @@ type funcArgInfo struct {
 }
 
 // Process function argument.
-func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
+func (p *Parser) procFuncArg(i funcArgInfo) oop.Var {
 	var paramSet bool
 	l := *i.index - *i.lstComma
 	if l < 1 {
@@ -173,7 +173,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 		fract.IPanic(i.tk, obj.SyntaxPanic, "Argument overflow!")
 	}
 	param := i.f.Params[*i.count]
-	v := &oop.Var{Name: param.Name}
+	v := oop.Var{Name: param.Name}
 	vtks := i.tks[*i.lstComma:*i.index]
 	i.tk = vtks[0]
 	// Check param set.
@@ -192,7 +192,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 				*i.count++
 				paramSet = true
 				*i.names = append(*i.names, i.tk.V)
-				retv := &oop.Var{Name: i.tk.V}
+				retv := oop.Var{Name: i.tk.V}
 				//Parameter is params typed?
 				if pr.Params {
 					*i.lstComma += 2
@@ -224,7 +224,7 @@ func (p *Parser) procFuncArg(i funcArgInfo) *oop.Var {
 func (p *Parser) funcCallModel(f *oop.Fn, tks []obj.Token) *funcCall {
 	var (
 		names []string
-		args  []*oop.Var
+		args  []oop.Var
 		count = 0
 		tk    = tks[0]
 	)
@@ -293,7 +293,7 @@ func (p *Parser) funcCallModel(f *oop.Fn, tks []obj.Token) *funcCall {
 	for ; count < len(f.Params); count++ {
 		p := f.Params[count]
 		if p.Defval.D != nil {
-			args = append(args, &oop.Var{Name: p.Name, V: p.Defval})
+			args = append(args, oop.Var{Name: p.Name, V: p.Defval})
 		}
 	}
 	return &funcCall{

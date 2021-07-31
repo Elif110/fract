@@ -168,9 +168,6 @@ func validName(n string) bool { return n != "_" && n != "this" }
 
 // Process enumerable selections for access to elements.
 func selections(enum, val oop.Val, tk obj.Token) interface{} {
-	if val.T != oop.List && val.IsEnum() {
-		fract.IPanic(tk, obj.ValuePanic, "Element selector is can only be list or single value!")
-	}
 	if enum.T == oop.Map {
 		if val.T == oop.List {
 			return val.D.(*oop.ListModel)
@@ -178,6 +175,9 @@ func selections(enum, val oop.Val, tk obj.Token) interface{} {
 		return val
 	}
 
+	if val.T != oop.List && val.IsEnum() {
+		fract.IPanic(tk, obj.ValuePanic, "Element selector is can only be list or single value!")
+	}
 	// List, String.
 	l := enum.Len()
 	if val.T == oop.List {
@@ -807,7 +807,7 @@ func (p *Parser) procTryCatch(tks []obj.Token) uint8 {
 				if ln := p.definedName(n.V); ln != -1 {
 					fract.IPanic(n, obj.NamePanic, "\""+n.V+"\" is already defined at line: "+fmt.Sprint(ln))
 				}
-				p.defs.Vars = append(p.defs.Vars, &oop.Var{
+				p.defs.Vars = append(p.defs.Vars, oop.Var{
 					Name: n.V,
 					Ln:   n.Ln,
 					V:    oop.Val{D: cp.M, T: oop.Str},

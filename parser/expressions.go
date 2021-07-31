@@ -490,11 +490,12 @@ func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 	case 'p': // Package.
 		rv = &oop.Val{D: p.packages[vi], T: oop.Package}
 	case 'v': // Value.
-		rv = &p.defs.Vars[vi].V
-		if !rv.Mut && !mut { //! Immutability.
-			*rv = rv.Immut()
+		v := p.defs.Vars[vi]
+		rv = &v.V
+		if !v.V.Mut && !mut { //! Immutability.
+			*rv = v.V.Immut()
 		}
-		rv.Mut = rv.Mut || mut
+		rv.Mut = v.V.Mut || mut
 	}
 	return rv
 }
@@ -937,8 +938,8 @@ func (p *Parser) procListComprehension(tks []obj.Token) *oop.Val {
 	} else if !validName(nametk.V) {
 		fract.IPanic(nametk, obj.NamePanic, "Invalid name!")
 	}
-	element := &oop.Var{Name: nametk.V}
-	p.defs.Vars = append(p.defs.Vars, element)
+	p.defs.Vars = append(p.defs.Vars, oop.Var{Name: nametk.V})
+	element := &p.defs.Vars[len(p.defs.Vars)-1]
 	// Interpret block.
 	v := oop.NewListModel()
 	l := loop{enum: varr}

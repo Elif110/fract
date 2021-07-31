@@ -53,7 +53,7 @@ func (p *Parser) classdec(tks []obj.Token) {
 	if p.funcTempVars != -1 {
 		p.funcTempVars++
 	}
-	p.defs.Vars = append(p.defs.Vars, &oop.Var{
+	p.defs.Vars = append(p.defs.Vars, oop.Var{
 		Name: name.V,
 		Ln:   tks[0].Ln,
 		V:    v,

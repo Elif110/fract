@@ -182,12 +182,12 @@ func (p *Parser) procLoop(tks []obj.Token) uint8 {
 		fract.IPanic(tks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
 	p.defs.Vars = append(p.defs.Vars,
-		&oop.Var{Name: nametk.V, V: oop.Val{D: "0", T: oop.Int}},
-		&oop.Var{Name: ename},
+		oop.Var{Name: nametk.V, V: oop.Val{D: "0", T: oop.Int}},
+		oop.Var{Name: ename},
 	)
 	vlen := len(p.defs.Vars)
-	index := p.defs.Vars[vlen-2]
-	element := p.defs.Vars[vlen-1]
+	index := &p.defs.Vars[vlen-2]
+	element := &p.defs.Vars[vlen-1]
 	vars := p.defs.Vars
 	// Interpret block.
 	l := loop{enum: v}
