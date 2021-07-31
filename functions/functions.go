@@ -1,4 +1,6 @@
-package built_in
+package functions
+
+// Built-In functions.
 
 import (
 	"bufio"
@@ -142,10 +144,6 @@ func Range(tk obj.Token, args []*oop.Var) oop.Val {
 		fract.Panic(tk, obj.ValuePanic, `"to" argument should be numeric!`)
 	} else if step.T != oop.Int && step.T != oop.Float {
 		fract.Panic(tk, obj.ValuePanic, `"step" argument should be numeric!`)
-	}
-	if start.T != oop.Int && start.T != oop.Float || to.T != oop.Int &&
-		to.T != oop.Float || step.T != oop.Int && step.T != oop.Float {
-		fract.Panic(tk, obj.ValuePanic, "Values should be integer or float!")
 	}
 	startV, _ := strconv.ParseFloat(start.String(), 64)
 	toV, _ := strconv.ParseFloat(to.String(), 64)

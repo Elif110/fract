@@ -10,7 +10,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/fract-lang/fract/functions/built_in"
+	"github.com/fract-lang/fract/functions"
 	"github.com/fract-lang/fract/lex"
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
@@ -168,8 +168,7 @@ func validName(n string) bool { return n != "_" && n != "this" }
 
 // Process enumerable selections for access to elements.
 func selections(enum, val oop.Val, tk obj.Token) interface{} {
-	if val.T != oop.List && val.T != oop.Str && val.IsEnum() {
-		// TODO: Check here.
+	if val.T != oop.List && val.IsEnum() {
 		fract.IPanic(tk, obj.ValuePanic, "Element selector is can only be list or single value!")
 	}
 	if enum.T == oop.Map {
@@ -566,7 +565,7 @@ func (p *Parser) AddBuiltInFuncs() {
 		&oop.Fn{
 			Name:          "print",
 			DefParamCount: 2,
-			Src:           built_in.Print,
+			Src:           functions.Print,
 			Params: []oop.Param{{
 				Name:   "value",
 				Params: true,
@@ -574,7 +573,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, &oop.Fn{
 			Name:          "println",
-			Src:           built_in.Println,
+			Src:           functions.Println,
 			DefParamCount: 2,
 			Params: []oop.Param{{
 				Name:   "value",
@@ -583,7 +582,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			}},
 		}, &oop.Fn{
 			Name:          "input",
-			Src:           built_in.Input,
+			Src:           functions.Input,
 			DefParamCount: 1,
 			Params: []oop.Param{{
 				Name:   "message",
@@ -592,20 +591,20 @@ func (p *Parser) AddBuiltInFuncs() {
 		}, &oop.Fn{
 			Name:          "exit",
 			DefParamCount: 1,
-			Src:           built_in.Exit,
+			Src:           functions.Exit,
 			Params: []oop.Param{{
 				Name:   "code",
 				Defval: oop.Val{D: "0", T: oop.Int},
 			}},
 		}, &oop.Fn{
 			Name:          "len",
-			Src:           built_in.Len,
+			Src:           functions.Len,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
 		}, &oop.Fn{
 			Name:          "range",
 			DefParamCount: 1,
-			Src:           built_in.Range,
+			Src:           functions.Range,
 			Params: []oop.Param{
 				{Name: "start"},
 				{Name: "to"},
@@ -616,17 +615,17 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, &oop.Fn{
 			Name:          "calloc",
-			Src:           built_in.Calloc,
+			Src:           functions.Calloc,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "size"}},
 		}, &oop.Fn{
 			Name:          "realloc",
 			DefParamCount: 0,
-			Src:           built_in.Realloc,
+			Src:           functions.Realloc,
 			Params:        []oop.Param{{Name: "base"}, {Name: "size"}},
 		}, &oop.Fn{
 			Name:          "string",
-			Src:           built_in.String,
+			Src:           functions.String,
 			DefParamCount: 1,
 			Params: []oop.Param{
 				{Name: "object"},
@@ -637,7 +636,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, &oop.Fn{
 			Name:          "int",
-			Src:           built_in.Int,
+			Src:           functions.Int,
 			DefParamCount: 1,
 			Params: []oop.Param{
 				{Name: "object"},
@@ -648,17 +647,17 @@ func (p *Parser) AddBuiltInFuncs() {
 			},
 		}, &oop.Fn{
 			Name:          "float",
-			Src:           built_in.Float,
+			Src:           functions.Float,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
 		}, &oop.Fn{
 			Name:          "panic",
-			Src:           built_in.Panic,
+			Src:           functions.Panic,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "msg"}},
 		}, &oop.Fn{
 			Name:          "type",
-			Src:           built_in.Type,
+			Src:           functions.Type,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "obj"}},
 		},
