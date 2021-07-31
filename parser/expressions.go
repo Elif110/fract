@@ -602,7 +602,6 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				if i == -1 {
 					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
 				}
-				//fmt.Println(l.Defs.Funcs[i].Src.(func(obj.Token, []*oop.Var) oop.Val)(obj.Token{}, nil))
 				rv = &oop.Val{D: l.Defs.Funcs[i], T: oop.Func}
 				goto end
 			default:

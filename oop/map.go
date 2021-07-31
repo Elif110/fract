@@ -24,7 +24,7 @@ func NewMapModel() MapModel {
 	return m
 }
 
-func (m *MapModel) keysF(tk obj.Token, args []*Var) Val {
+func (m *MapModel) keysF(tk obj.Token, args []Var) Val {
 	keys := NewListModel()
 	for k := range m.M {
 		keys.PushBack(k)
@@ -32,7 +32,7 @@ func (m *MapModel) keysF(tk obj.Token, args []*Var) Val {
 	return Val{D: keys, T: List}
 }
 
-func (m *MapModel) valuesF(tk obj.Token, args []*Var) Val {
+func (m *MapModel) valuesF(tk obj.Token, args []Var) Val {
 	vals := NewListModel()
 	for _, v := range m.M {
 		vals.PushBack(v)
@@ -40,7 +40,7 @@ func (m *MapModel) valuesF(tk obj.Token, args []*Var) Val {
 	return Val{D: vals, T: List}
 }
 
-func (m *MapModel) removeKeyF(tk obj.Token, args []*Var) Val {
+func (m *MapModel) removeKeyF(tk obj.Token, args []Var) Val {
 	arg := args[0]
 	_, ok := m.M[arg.V]
 	delete(m.M, arg.V)
