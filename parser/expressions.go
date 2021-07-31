@@ -277,7 +277,7 @@ func solveProc(p process) oop.Val {
 				return v
 			}
 			if len(p.fv.String()) != sl && (len(p.fv.String()) != 1 && sl != 1) {
-				fract.IPanic(p.s[0], obj.ArithmeticPanic, "Array element count is not one or equals to first array!")
+				fract.IPanic(p.s[0], obj.ArithmeticPanic, "List element count is not one or equals to first list!")
 			}
 			if strings.Contains(p.sv.String(), ".") {
 				fract.IPanic(p.s[0], obj.ArithmeticPanic, "Only string and integer values can concatenate string values!")
@@ -328,7 +328,7 @@ func solveProc(p process) oop.Val {
 			return v
 		}
 		if fl != sl && fl != 1 && sl != 1 {
-			fract.IPanic(p.s[0], obj.ArithmeticPanic, "Array element count is not one or equals to first array!")
+			fract.IPanic(p.s[0], obj.ArithmeticPanic, "List element count is not one or equals to first list!")
 		}
 		if fl == 1 || sl == 1 {
 			f, s := p.fv, p.sv
@@ -748,8 +748,8 @@ end:
 	return rv
 }
 
-// Process array oop.
-func (p *Parser) procArrayVal(tks []obj.Token) *oop.Val {
+// Process list value.
+func (p *Parser) procListVal(tks []obj.Token) *oop.Val {
 	var bc int
 	comma := 1
 	l := oop.NewListModel()
@@ -929,7 +929,6 @@ func (p *Parser) procListComprehension(tks []obj.Token) *oop.Val {
 	}
 	ltks = ltks[3:]
 	varr := *p.procValTks(ltks)
-	// Type is not array?
 	if !varr.IsEnum() {
 		fract.IPanic(ltks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
@@ -988,7 +987,7 @@ func (p *Parser) procEnumerableVal(tks []obj.Token) *oop.Val {
 	} else if tks[0].V == "{" {
 		return p.procMapVal(tks)
 	}
-	return p.procArrayVal(tks)
+	return p.procListVal(tks)
 }
 
 // Process oop.

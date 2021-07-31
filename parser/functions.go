@@ -115,7 +115,7 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 			v := *p.procValTks(vtks)
 			if params {
 				if v.T != oop.List {
-					fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only arrays!")
+					fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only lists!")
 				}
 				data.PushBack(v.D.(*oop.ListModel).Elems...)
 			} else {
@@ -141,7 +141,7 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 		v := *p.procValTks(vtks)
 		if params {
 			if v.T != oop.List {
-				fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only arrays!")
+				fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only lists!")
 			}
 			data.PushBack(v.D.(*oop.ListModel).Elems...)
 		} else {

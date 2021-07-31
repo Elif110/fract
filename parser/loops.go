@@ -177,7 +177,7 @@ func (p *Parser) procLoop(tks []obj.Token) uint8 {
 	}
 	tks = tks[2:]
 	v := *p.procValTks(tks)
-	// Type is not array?
+	// Type is not list?
 	if !v.IsEnum() {
 		fract.IPanic(tks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}

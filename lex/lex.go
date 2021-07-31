@@ -128,7 +128,7 @@ func (l *Lex) strseq(sb *strings.Builder, fln string) bool {
 	}
 	l.Col++
 	if l.Col >= len(fln)+1 {
-		l.error("Charray literal is not defined full!")
+		l.error("String literal is not defined full!")
 	}
 	switch fln[l.Col-1] {
 	case '\\':

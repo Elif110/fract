@@ -178,7 +178,7 @@ func selections(enum, val oop.Val, tk obj.Token) interface{} {
 		return val
 	}
 
-	// Array, String.
+	// List, String.
 	l := enum.Len()
 	if val.T == oop.List {
 		var i []int
@@ -432,7 +432,7 @@ func decomposeBrace(tks *[]obj.Token) []obj.Token {
 	return rg
 }
 
-// procIndex process array index by length.
+// procIndex process list index by length.
 func procIndex(len, i int) int {
 	if i >= 0 {
 		if i >= len {

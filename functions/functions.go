@@ -65,7 +65,7 @@ func Len(tk obj.Token, args []*oop.Var) oop.Val {
 	return oop.Val{D: fmt.Sprint(args[0].V.Len()), T: oop.Int}
 }
 
-// Calloc array by size.
+// Calloc list by size.
 func Calloc(tk obj.Token, args []*oop.Var) oop.Val {
 	sz := args[0].V
 	if sz.T != oop.Int {
@@ -89,10 +89,10 @@ func Calloc(tk obj.Token, args []*oop.Var) oop.Val {
 	return v
 }
 
-// Realloc array by size.
+// Realloc list by size.
 func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
 	if args[0].V.T != oop.List {
-		fract.Panic(tk, obj.ValuePanic, "Value is must be array!")
+		fract.Panic(tk, obj.ValuePanic, "Value is must be list!")
 	}
 	szv, _ := strconv.Atoi(args[1].V.String())
 	if szv < 0 {
@@ -133,7 +133,7 @@ func Println(tk obj.Token, args []*oop.Var) oop.Val {
 	return oop.Val{}
 }
 
-// Range returns array by parameters.
+// Range returns list by parameters.
 func Range(tk obj.Token, args []*oop.Var) oop.Val {
 	start := args[0].V
 	to := args[1].V
