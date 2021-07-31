@@ -17,30 +17,30 @@ func NewMapModel() MapModel {
 	var m MapModel
 	m.M = MapType{}
 	m.Defs.Funcs = []*Fn{
-		{Name: "keys", Src: m.keys},
-		{Name: "vals", Src: m.vals},
-		{Name: "rmkey", Src: m.rmkey, Params: []Param{{Name: "key"}}},
+		{Name: "keys", Src: m.keysF},
+		{Name: "values", Src: m.valuesF},
+		{Name: "removeKey", Src: m.removeKeyF, Params: []Param{{Name: "key"}}},
 	}
 	return m
 }
 
-func (m *MapModel) keys(tk obj.Token, args []*Var) Val {
-	keys := ArrayModel{}
+func (m *MapModel) keysF(tk obj.Token, args []*Var) Val {
+	keys := NewListModel()
 	for k := range m.M {
-		keys = append(keys, k)
+		keys.PushBack(k)
 	}
-	return Val{D: keys, T: Array}
+	return Val{D: keys, T: List}
 }
 
-func (m *MapModel) vals(tk obj.Token, args []*Var) Val {
-	vals := ArrayModel{}
+func (m *MapModel) valuesF(tk obj.Token, args []*Var) Val {
+	vals := NewListModel()
 	for _, v := range m.M {
-		vals = append(vals, v)
+		vals.PushBack(v)
 	}
-	return Val{D: vals, T: Array}
+	return Val{D: vals, T: List}
 }
 
-func (m *MapModel) rmkey(tk obj.Token, args []*Var) Val {
+func (m *MapModel) removeKeyF(tk obj.Token, args []*Var) Val {
 	arg := args[0]
 	_, ok := m.M[arg.V]
 	delete(m.M, arg.V)

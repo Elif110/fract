@@ -51,13 +51,13 @@ func compVals(opr string, d0, d1 oop.Val) bool {
 func comp(v0, v1 oop.Val, opr obj.Token) bool {
 	// In.
 	if opr.V == "in" {
-		if v1.T != oop.Array && v1.T != oop.Str && v1.T != oop.Map {
-			fract.IPanic(opr, obj.ValuePanic, "Value is can should be string, array or map!")
+		if !v1.IsEnum() {
+			fract.IPanic(opr, obj.ValuePanic, "Value is should be enumerable!")
 		}
 		switch v1.T {
-		case oop.Array:
+		case oop.List:
 			dt := v0.String()
-			for _, d := range v1.D.(oop.ArrayModel) {
+			for _, d := range v1.D.(*oop.ListModel).Elems {
 				if strings.Contains(d.String(), dt) {
 					return true
 				}
@@ -68,9 +68,9 @@ func comp(v0, v1 oop.Val, opr obj.Token) bool {
 			return ok
 		}
 		// String.
-		if v0.T == oop.Array {
+		if v0.T == oop.List {
 			dt := v1.String()
-			for _, d := range v0.D.(oop.ArrayModel) {
+			for _, d := range v0.D.(*oop.ListModel).Elems {
 				if d.T != oop.Str {
 					fract.IPanic(opr, obj.ValuePanic, "All values is not string!")
 				}
@@ -271,7 +271,7 @@ func solveProc(p process) oop.Val {
 		if p.sv.T == oop.Str {
 			p.fv, p.sv = p.sv, p.fv
 		}
-		if p.sv.T == oop.Array {
+		if p.sv.T == oop.List {
 			if sl == 0 {
 				v.D = p.fv.D
 				return v
@@ -318,8 +318,8 @@ func solveProc(p process) oop.Val {
 		return v
 	}
 
-	if p.fv.T == oop.Array && p.sv.T == oop.Array {
-		v.T = oop.Array
+	if p.fv.T == oop.List && p.sv.T == oop.List {
+		v.T = oop.List
 		if fl == 0 {
 			v.D = p.sv.D
 			return v
@@ -335,10 +335,10 @@ func solveProc(p process) oop.Val {
 			if f.Len() != 1 {
 				f, s = s, f
 			}
-			ar := str.Conv(arith(p.opr, f.D.(oop.ArrayModel)[0]))
-			for i, d := range s.D.(oop.ArrayModel) {
-				if d.T == oop.Array {
-					s.D.(oop.ArrayModel)[i] = readyData(p, oop.Val{
+			ar := str.Conv(arith(p.opr, f.D.(*oop.ListModel).Elems[0]))
+			for i, d := range s.D.(*oop.ListModel).Elems {
+				if d.T == oop.List {
+					s.D.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
 						D: solveProc(process{
 							f:   p.f,
 							fv:  s,
@@ -346,10 +346,10 @@ func solveProc(p process) oop.Val {
 							sv:  d,
 							opr: p.opr,
 						}).D,
-						T: oop.Array,
+						T: oop.List,
 					})
 				} else {
-					s.D.(oop.ArrayModel)[i] = readyData(p, oop.Val{
+					s.D.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
 						D: fmt.Sprintf(fract.FloatFormat, solve(p.opr, ar, str.Conv(arith(p.opr, d)))),
 						T: oop.Int,
 					})
@@ -357,23 +357,23 @@ func solveProc(p process) oop.Val {
 			}
 			v.D = s.D
 		} else {
-			for i, f := range p.fv.D.(oop.ArrayModel) {
-				s := p.sv.D.(oop.ArrayModel)[i]
-				if f.T == oop.Array || s.T == oop.Array {
+			for i, f := range p.fv.D.(*oop.ListModel).Elems {
+				s := p.sv.D.(*oop.ListModel).Elems[i]
+				if f.T == oop.List || s.T == oop.List {
 					proc := process{f: p.f, s: p.s, opr: p.opr}
-					if f.T == oop.Array {
-						proc.fv = oop.Val{D: f.D, T: oop.Array}
+					if f.T == oop.List {
+						proc.fv = oop.Val{D: f.D, T: oop.List}
 					} else {
 						proc.fv = f
 					}
-					if s.T == oop.Array {
-						proc.sv = oop.Val{D: s.D, T: oop.Array}
+					if s.T == oop.List {
+						proc.sv = oop.Val{D: s.D, T: oop.List}
 					} else {
 						proc.sv = s
 					}
-					p.fv.D.(oop.ArrayModel)[i] = readyData(p, oop.Val{D: solveProc(proc).D, T: oop.Array})
+					p.fv.D.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{D: solveProc(proc).D, T: oop.List})
 				} else {
-					p.fv.D.(oop.ArrayModel)[i] = readyData(p, oop.Val{
+					p.fv.D.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
 						D: fmt.Sprintf(fract.FloatFormat, solve(p.opr, str.Conv(arith(p.opr, f)), str.Conv(s.String()))),
 						T: oop.Int,
 					})
@@ -381,23 +381,23 @@ func solveProc(p process) oop.Val {
 			}
 			v.D = p.fv.D
 		}
-	} else if p.fv.T == oop.Array || p.sv.T == oop.Array {
-		v.T = oop.Array
-		if p.fv.T == oop.Array && fl == 0 {
+	} else if p.fv.T == oop.List || p.sv.T == oop.List {
+		v.T = oop.List
+		if p.fv.T == oop.List && fl == 0 {
 			v.D = p.sv.D
 			return v
-		} else if p.sv.T == oop.Array && sl == 0 {
+		} else if p.sv.T == oop.List && sl == 0 {
 			v.D = p.fv.D
 			return v
 		}
 		f, s := p.fv, p.sv
-		if f.T != oop.Array {
+		if f.T != oop.List {
 			f, s = s, f
 		}
 		ar := str.Conv(arith(p.opr, s))
-		for i, d := range f.D.(oop.ArrayModel) {
-			if d.T == oop.Array {
-				f.D.(oop.ArrayModel)[i] = readyData(p, solveProc(process{
+		for i, d := range f.D.(*oop.ListModel).Elems {
+			if d.T == oop.List {
+				f.D.(*oop.ListModel).Elems[i] = readyData(p, solveProc(process{
 					f:   p.f,
 					fv:  s,
 					s:   p.s,
@@ -405,7 +405,7 @@ func solveProc(p process) oop.Val {
 					opr: p.opr,
 				}))
 			} else {
-				f.D.(oop.ArrayModel)[i] = readyData(p, oop.Val{
+				f.D.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
 					D: fmt.Sprintf(fract.FloatFormat, solve(p.opr, str.Conv(arith(p.opr, d)), ar)),
 					T: oop.Int,
 				})
@@ -413,11 +413,10 @@ func solveProc(p process) oop.Val {
 		}
 		v = f
 	} else {
-		v = readyData(p,
-			oop.Val{
-				D: fmt.Sprintf(fract.FloatFormat, solve(p.opr, str.Conv(arith(p.opr, p.fv)), str.Conv(arith(p.opr, p.sv)))),
-				T: oop.Int,
-			})
+		v = readyData(p, oop.Val{
+			D: fmt.Sprintf(fract.FloatFormat, solve(p.opr, str.Conv(arith(p.opr, p.fv)), str.Conv(arith(p.opr, p.sv)))),
+			T: oop.Int,
+		})
 	}
 	return v
 }
@@ -426,26 +425,27 @@ func solveProc(p process) oop.Val {
 func (p *Parser) selectEnum(mut bool, v oop.Val, tk obj.Token, s interface{}) *oop.Val {
 	var r oop.Val
 	switch v.T {
-	case oop.Array:
+	case oop.List:
 		i := s.([]int)
 		if len(i) == 1 {
-			v := v.D.(oop.ArrayModel)[i[0]]
+			v := v.D.(*oop.ListModel).Elems[i[0]]
 			if !v.Mut && !mut { //! Immutability.
 				v = v.Immut()
 			}
 			v.Mut = v.Mut || mut
 			return &v
 		}
-		r = oop.Val{D: oop.ArrayModel{}, T: oop.Array}
+		l := oop.NewListModel()
 		for _, pos := range i {
-			r.D = append(r.D.(oop.ArrayModel), v.D.(oop.ArrayModel)[pos])
+			l.PushBack(v.D.(*oop.ListModel).Elems[pos])
 		}
+		r = oop.Val{D: l, T: oop.List}
 	case oop.Map:
 		m := v.D.(oop.MapModel).M
 		switch t := s.(type) {
-		case oop.ArrayModel:
+		case oop.ListModel:
 			rm := oop.NewMapModel()
-			for _, k := range t {
+			for _, k := range t.Elems {
 				d, ok := m[k]
 				if !ok {
 					fract.IPanic(tk, obj.ValuePanic, "Key is not exists!")
@@ -494,7 +494,7 @@ func (p *Parser) procNameVal(mut bool, tk obj.Token) *oop.Val {
 		if !rv.Mut && !mut { //! Immutability.
 			*rv = rv.Immut()
 		}
-		rv.Mut = mut
+		rv.Mut = rv.Mut || mut
 	}
 	return rv
 }
@@ -551,7 +551,9 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 			n := i.tks[j+1]
 			d := i.tks[j]
 			i.tks = i.tks[:j]
+			i.mut = true
 			v := p.procValPart(i)
+			i.mut = false
 			switch v.T {
 			case oop.Package:
 				ii := v.D.(importInfo)
@@ -592,6 +594,15 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 					}
 					rv.Mut = rv.Mut || i.mut
 				}
+				goto end
+			case oop.List:
+				l := v.D.(*oop.ListModel)
+				i := l.Defs.FuncIndexByName(n.V)
+				if i == -1 {
+					fract.IPanic(n, obj.NamePanic, "Name is not defined: "+n.V)
+				}
+				//fmt.Println(l.Defs.Funcs[i].Src.(func(obj.Token, []*oop.Var) oop.Val)(obj.Token{}, nil))
+				rv = &oop.Val{D: l.Defs.Funcs[i], T: oop.Func}
 				goto end
 			default:
 				fract.IPanic(d, obj.ValuePanic, "Object is not support sub fields!")
@@ -673,7 +684,7 @@ func (p *Parser) procValPart(i valPartInfo) *oop.Val {
 				goto end
 			}
 			v := p.procValPart(valPartInfo{mut: i.mut, tks: vtks})
-			if v.T != oop.Array && v.T != oop.Map && v.T != oop.Str {
+			if !v.IsEnum() {
 				fract.IPanic(vtks[0], obj.ValuePanic, "Index accessor is cannot used with not enumerable values!")
 			}
 			rv = p.selectEnum(i.mut, *v, tk, selections(*v, *p.procValTks(i.tks[len(vtks)+1 : len(i.tks)-1]), tk))
@@ -740,8 +751,8 @@ end:
 // Process array oop.
 func (p *Parser) procArrayVal(tks []obj.Token) *oop.Val {
 	var bc int
-	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}
 	comma := 1
+	l := oop.NewListModel()
 	for j := 1; j < len(tks)-1; j++ {
 		switch t := tks[j]; t.T {
 		case fract.Brace:
@@ -758,14 +769,14 @@ func (p *Parser) procArrayVal(tks []obj.Token) *oop.Val {
 			if comma-j == 0 {
 				fract.IPanic(t, obj.SyntaxPanic, "Value is not given!")
 			}
-			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(tks[comma:j]))
+			l.PushBack(*p.procValTks(tks[comma:j]))
 			comma = j + 1
 		}
 	}
-	if l := len(tks); comma < l-1 {
-		v.D = append(v.D.(oop.ArrayModel), *p.procValTks(tks[comma : l-1]))
+	if len := len(tks); comma < len-1 {
+		l.PushBack(*p.procValTks(tks[comma : len-1]))
 	}
-	return &v
+	return &oop.Val{D: l, T: oop.List}
 }
 
 // Process map oop.
@@ -930,18 +941,18 @@ func (p *Parser) procListComprehension(tks []obj.Token) *oop.Val {
 	element := &oop.Var{Name: nametk.V}
 	p.defs.Vars = append(p.defs.Vars, element)
 	// Interpret block.
-	v := oop.Val{D: oop.ArrayModel{}, T: oop.Array}
+	v := oop.NewListModel()
 	l := loop{enum: varr}
 	l.run(func() {
 		element.V = l.b
 		if ftks == nil || p.procCondition(ftks) == "true" {
-			v.D = append(v.D.(oop.ArrayModel), *p.procValTks(stks))
+			v.PushBack(*p.procValTks(stks))
 		}
 	})
 	// Remove variables.
 	element = nil
 	p.defs.Vars = p.defs.Vars[:len(p.defs.Vars)-1]
-	return &v
+	return &oop.Val{D: v, T: oop.List}
 }
 
 // Process enumerable oop.

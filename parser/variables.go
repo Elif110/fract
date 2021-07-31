@@ -202,8 +202,8 @@ func (p *Parser) varset(tks []obj.Token) {
 		switch setter.V {
 		case "=":
 			switch t := s.(type) {
-			case oop.ArrayModel:
-				for _, k := range t {
+			case oop.ListModel:
+				for _, k := range t.Elems {
 					m.M[k] = val
 				}
 			case oop.Val:
@@ -211,8 +211,8 @@ func (p *Parser) varset(tks []obj.Token) {
 			}
 		default: // Other assignments.
 			switch t := s.(type) {
-			case oop.ArrayModel:
-				for _, s := range t {
+			case oop.ListModel:
+				for _, s := range t.Elems {
 					d, ok := m.M[s]
 					if !ok {
 						m.M[s] = val
@@ -241,16 +241,16 @@ func (p *Parser) varset(tks []obj.Token) {
 				})
 			}
 		}
-	case oop.Array:
+	case oop.List:
 		for _, pos := range s.([]int) {
 			switch setter.V {
 			case "=":
-				v.D.(oop.ArrayModel)[pos] = val
+				v.D.(*oop.ListModel).Elems[pos] = val
 			default: // Other assignments.
-				v.D.(oop.ArrayModel)[pos] = solveProc(process{
+				v.D.(*oop.ListModel).Elems[pos] = solveProc(process{
 					opr: opr,
 					f:   tks,
-					fv:  v.D.(oop.ArrayModel)[pos],
+					fv:  v.D.(*oop.ListModel).Elems[pos],
 					s:   []obj.Token{setter},
 					sv:  val,
 				})

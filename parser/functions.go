@@ -22,7 +22,9 @@ func (c *funcCall) Call() *oop.Val {
 	var retv oop.Val
 	// Is built-in function?
 	if c.f.Tks == nil {
-		retv = c.f.Src.(func(tk obj.Token, args []*oop.Var) oop.Val)(c.errTk, c.args)
+		retv = c.f.Src.(func(obj.Token, []*oop.Var) oop.Val)(c.errTk, c.args)
+		c.args = nil
+		c.f = nil
 		return &retv
 	}
 	// Process block.
@@ -70,6 +72,8 @@ func (c *funcCall) Call() *oop.Val {
 		defers[i].Call()
 	}
 	defers = defers[:dlen]
+	c.args = nil
+	c.f = nil
 	return &retv
 }
 
@@ -80,8 +84,8 @@ func isParamSet(tks []obj.Token) bool {
 
 // paramsArgVals decompose and returns params values.
 func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
-	var data oop.ArrayModel
-	retv := oop.Val{T: oop.Array}
+	data := oop.NewListModel()
+	retv := oop.Val{T: oop.List}
 	bc := 0
 	for ; *i < len(tks); *i++ {
 		switch tk := tks[*i]; tk.T {
@@ -110,12 +114,12 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 			}
 			v := *p.procValTks(vtks)
 			if params {
-				if v.T != oop.Array {
+				if v.T != oop.List {
 					fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only arrays!")
 				}
-				data = append(data, v.D.(oop.ArrayModel)...)
+				data.PushBack(v.D.(*oop.ListModel).Elems...)
 			} else {
-				data = append(data, v)
+				data.PushBack(v)
 			}
 			vtks = nil
 			*lstComma = *i + 1
@@ -136,12 +140,12 @@ func (p *Parser) paramsArgVals(tks []obj.Token, i, lstComma *int) oop.Val {
 		}
 		v := *p.procValTks(vtks)
 		if params {
-			if v.T != oop.Array {
+			if v.T != oop.List {
 				fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only arrays!")
 			}
-			data = append(data, v.D.(oop.ArrayModel)...)
+			data.PushBack(v.D.(*oop.ListModel).Elems...)
 		} else {
-			data = append(data, v)
+			data.PushBack(v)
 		}
 		vtks = nil
 	}
@@ -360,8 +364,8 @@ func (p *Parser) setFuncParams(f *oop.Fn, tks *[]obj.Token) {
 					fract.IPanic((*tks)[start-1], obj.SyntaxPanic, "Value is not given!")
 				}
 				lstp.Defval = *p.procValTks((*tks)[start:i])
-				if lstp.Params && lstp.Defval.T != oop.Array {
-					fract.IPanic(pr, obj.ValuePanic, "Params parameter is can only take array values!")
+				if lstp.Params && lstp.Defval.T != oop.List {
+					fract.IPanic(pr, obj.ValuePanic, "Params parameter is can only take list values!")
 				}
 				f.Params[len(f.Params)-1] = lstp
 				f.DefParamCount++

@@ -45,11 +45,11 @@ func Input(tk obj.Token, args []*oop.Var) oop.Val {
 func Int(tk obj.Token, args []*oop.Var) oop.Val {
 	switch args[1].V.D { // Cast type.
 	case "strcode":
-		var v oop.ArrayModel
+		v := oop.NewListModel()
 		for _, byt := range []byte(args[0].V.String()) {
-			v = append(v, oop.Val{D: fmt.Sprint(byt), T: oop.Int})
+			v.PushBack(oop.Val{D: fmt.Sprint(byt), T: oop.Int})
 		}
-		return oop.Val{D: v, T: oop.Array}
+		return oop.Val{D: v, T: oop.List}
 	default: // Object.
 		return oop.Val{
 			D: fmt.Sprint(int(str.Conv(args[0].V.String()))),
@@ -73,23 +73,23 @@ func Calloc(tk obj.Token, args []*oop.Var) oop.Val {
 	if szv < 0 {
 		fract.Panic(tk, obj.ValuePanic, "Size should be minimum zero!")
 	}
-	v := oop.Val{T: oop.Array}
+	v := oop.Val{T: oop.List}
 	if szv > 0 {
 		var index int
-		var data oop.ArrayModel
+		data := oop.NewListModel()
 		for ; index < szv; index++ {
-			data = append(data, oop.Val{D: "0", T: oop.Int})
+			data.PushBack(oop.Val{D: "0", T: oop.Int})
 		}
 		v.D = data
 	} else {
-		v.D = oop.ArrayModel{}
+		v.D = oop.NewListModel()
 	}
 	return v
 }
 
 // Realloc array by size.
 func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
-	if args[0].V.T != oop.Array {
+	if args[0].V.T != oop.List {
 		fract.Panic(tk, obj.ValuePanic, "Value is must be array!")
 	}
 	szv, _ := strconv.Atoi(args[1].V.String())
@@ -97,20 +97,20 @@ func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
 		fract.Panic(tk, obj.ValuePanic, "Size should be minimum zero!")
 	}
 	var (
-		data oop.ArrayModel
-		b    = args[0].V.D.(oop.ArrayModel)
-		v    = oop.Val{T: oop.Array}
+		data = oop.NewListModel()
+		b    = args[0].V.D.(*oop.ListModel)
+		v    = oop.Val{T: oop.List}
 		c    = 0
 	)
-	if len(b) <= szv {
+	if b.Length <= szv {
 		data = b
-		c = len(b)
+		c = b.Length
 	} else {
-		v.D = b[:szv]
+		v.D = b.Elems[:szv]
 		return v
 	}
 	for ; c <= szv; c++ {
-		data = append(data, oop.Val{D: "0", T: oop.Int})
+		data.PushBack(oop.Val{D: "0", T: oop.Int})
 	}
 	v.D = data
 	return v
@@ -118,7 +118,7 @@ func Realloc(tk obj.Token, args []*oop.Var) oop.Val {
 
 // Print values to cli.
 func Print(tk obj.Token, args []*oop.Var) oop.Val {
-	for _, d := range args[0].V.D.(oop.ArrayModel) {
+	for _, d := range args[0].V.D.(*oop.ListModel).Elems {
 		fmt.Print(d)
 	}
 	return oop.Val{}
@@ -151,23 +151,23 @@ func Range(tk obj.Token, args []*oop.Var) oop.Val {
 	toV, _ := strconv.ParseFloat(to.String(), 64)
 	stepV, _ := strconv.ParseFloat(step.String(), 64)
 	if stepV <= 0 {
-		return oop.Val{T: oop.Array}
+		return oop.Val{T: oop.List}
 	}
 	t := oop.Int
 	if start.T == oop.Float || to.T == oop.Float || step.T == oop.Float {
 		t = oop.Float
 	}
-	var data oop.ArrayModel
+	data := oop.NewListModel()
 	if startV <= toV {
 		for ; startV <= toV; startV += stepV {
-			data = append(data, oop.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
+			data.PushBack(oop.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
 		}
 	} else {
 		for ; startV >= toV; startV -= stepV {
-			data = append(data, oop.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
+			data.PushBack(oop.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
 		}
 	}
-	return oop.Val{D: data, T: oop.Array}
+	return oop.Val{D: data, T: oop.List}
 }
 
 // String convert object to string.
@@ -175,14 +175,14 @@ func String(tk obj.Token, args []*oop.Var) oop.Val {
 	switch args[1].V.D {
 	case "parse":
 		str := ""
-		if val := args[0].V; val.T == oop.Array {
-			data := val.D.(oop.ArrayModel)
-			if len(data) == 0 {
+		if val := args[0].V; val.T == oop.List {
+			data := val.D.(*oop.ListModel)
+			if data.Length == 0 {
 				str = "[]"
 			} else {
 				var sb strings.Builder
 				sb.WriteByte('[')
-				for _, data := range data {
+				for _, data := range data.Elems {
 					sb.WriteString(data.String() + " ")
 				}
 				str = sb.String()[:sb.Len()-1] + "]"
@@ -194,7 +194,7 @@ func String(tk obj.Token, args []*oop.Var) oop.Val {
 	case "bytecode":
 		v := args[0].V
 		var sb strings.Builder
-		for _, d := range v.D.(oop.ArrayModel) {
+		for _, d := range v.D.(*oop.ListModel).Elems {
 			if d.T != oop.Int {
 				sb.WriteByte(' ')
 			}
@@ -206,16 +206,6 @@ func String(tk obj.Token, args []*oop.Var) oop.Val {
 		arg := args[0]
 		return oop.Val{D: fmt.Sprintf("{data:%s type:%d}", arg.V.D, arg.V.T), T: oop.Str}
 	}
-}
-
-// Append source values to destination array.
-func Append(tk obj.Token, args []*oop.Var) oop.Val {
-	src := args[0].V
-	if src.T != oop.Array {
-		fract.Panic(tk, obj.ValuePanic, "\"src\" must be array!")
-	}
-	src.D = append(args[0].V.D.(oop.ArrayModel), args[1].V.D.(oop.ArrayModel)...)
-	return src
 }
 
 func Panic(tk obj.Token, args []*oop.Var) oop.Val {

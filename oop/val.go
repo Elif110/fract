@@ -15,7 +15,7 @@ const (
 	Str       uint8 = 3
 	Bool      uint8 = 4
 	Func      uint8 = 5
-	Array     uint8 = 6
+	List      uint8 = 6
 	Map       uint8 = 7
 	Package   uint8 = 8
 	StructDef uint8 = 9
@@ -23,8 +23,6 @@ const (
 	ClassDef  uint8 = 11
 	ClassIns  uint8 = 12
 )
-
-type ArrayModel []Val
 
 // Val instance.
 type Val struct {
@@ -44,9 +42,12 @@ func (d Val) Immut() Val {
 			c.M[k] = v
 		}
 		v.D = c
-	case Array:
-		c := make(ArrayModel, len(d.D.(ArrayModel)))
-		copy(c, d.D.(ArrayModel))
+	case List:
+		c := NewListModel()
+		src := *d.D.(*ListModel)
+		c.Elems = make(TypeList, src.Length)
+		copy(c.Elems, src.Elems)
+		c.Length = src.Length
 		v.D = c
 	default:
 		v.D = d.D
@@ -64,8 +65,8 @@ func (d Val) String() string {
 		return "object.struct"
 	case ClassDef:
 		return "object.class"
-	case Array:
-		return fmt.Sprint(d.D)
+	case List:
+		return fmt.Sprint(d.D.(*ListModel).Elems)
 	case Map:
 		s := fmt.Sprint(d.D.(MapModel).M)
 		return "{" + s[4:len(s)-1] + "}"
@@ -106,7 +107,7 @@ func (v Val) Print() bool {
 // Is enumerable?
 func (v Val) IsEnum() bool {
 	switch v.T {
-	case Str, Array, Map:
+	case Str, List, Map:
 		return true
 	default:
 		return false
@@ -118,8 +119,8 @@ func (v Val) Len() int {
 	switch v.T {
 	case Str:
 		return len(v.D.(string))
-	case Array:
-		return len(v.D.(ArrayModel))
+	case List:
+		return v.D.(*ListModel).Length
 	case Map:
 		return len(v.D.(MapModel).M)
 	}

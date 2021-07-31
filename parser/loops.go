@@ -18,9 +18,9 @@ type loop struct {
 
 func (l *loop) run(b func()) {
 	switch l.enum.T {
-	case oop.Array:
+	case oop.List:
 		l.a.T = oop.Int
-		for i, e := range l.enum.D.(oop.ArrayModel) {
+		for i, e := range l.enum.D.(*oop.ListModel).Elems {
 			l.a.D = fmt.Sprint(i)
 			l.b = e
 			b()

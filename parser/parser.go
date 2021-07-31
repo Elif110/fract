@@ -168,21 +168,22 @@ func validName(n string) bool { return n != "_" && n != "this" }
 
 // Process enumerable selections for access to elements.
 func selections(enum, val oop.Val, tk obj.Token) interface{} {
-	if val.T != oop.Array && val.T != oop.Str && val.IsEnum() {
-		fract.IPanic(tk, obj.ValuePanic, "Element selector is can only be array or single value!")
+	if val.T != oop.List && val.T != oop.Str && val.IsEnum() {
+		// TODO: Check here.
+		fract.IPanic(tk, obj.ValuePanic, "Element selector is can only be list or single value!")
 	}
 	if enum.T == oop.Map {
-		if val.T == oop.Array {
-			return val.D.(oop.ArrayModel)
+		if val.T == oop.List {
+			return val.D.(*oop.ListModel)
 		}
 		return val
 	}
 
 	// Array, String.
 	l := enum.Len()
-	if val.T == oop.Array {
+	if val.T == oop.List {
 		var i []int
-		for _, d := range val.D.(oop.ArrayModel) {
+		for _, d := range val.D.(*oop.ListModel).Elems {
 			if d.T != oop.Int {
 				fract.IPanic(tk, obj.ValuePanic, "Only integer values can used in index access!")
 			}
@@ -578,7 +579,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			Params: []oop.Param{{
 				Name:   "value",
 				Params: true,
-				Defval: oop.Val{D: oop.ArrayModel{{D: "", T: oop.Str}}, T: oop.Array},
+				Defval: oop.Val{D: oop.NewListModel(oop.Val{D: "", T: oop.Str}), T: oop.List},
 			}},
 		}, &oop.Fn{
 			Name:          "input",
@@ -650,11 +651,6 @@ func (p *Parser) AddBuiltInFuncs() {
 			Src:           built_in.Float,
 			DefParamCount: 0,
 			Params:        []oop.Param{{Name: "object"}},
-		}, &oop.Fn{
-			Name:          "append",
-			Src:           built_in.Append,
-			DefParamCount: 0,
-			Params:        []oop.Param{{Name: "dest"}, {Name: "src", Params: true}},
 		}, &oop.Fn{
 			Name:          "panic",
 			Src:           built_in.Panic,
