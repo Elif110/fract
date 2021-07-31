@@ -16,10 +16,10 @@ import (
 type Lex struct {
 	lastTk obj.Token
 
-	F            *obj.File
-	Col          int // Last column.
-	Ln           int // Last line.
-	Fin          bool
+	File         *obj.File
+	Column       int // Last column.
+	Line         int // Last line.
+	Finished     bool
 	RangeComment bool
 	Braces       int
 	Brackets     int
@@ -28,10 +28,10 @@ type Lex struct {
 
 // error thrown exception.
 func (l Lex) error(msg string) {
-	fmt.Printf("File: %s\nPosition: %d:%d\n", l.F.P, l.Ln, l.Col)
+	fmt.Printf("File: %s\nPosition: %d:%d\n", l.File.Path, l.Line, l.Column)
 	if !l.RangeComment { // Ignore multiline comment error.
-		fmt.Println("    " + strings.ReplaceAll(l.F.Lns[l.Ln-1], "\t", " "))
-		fmt.Println(str.Full(4+l.Col-2, ' ') + "^")
+		fmt.Println("    " + strings.ReplaceAll(l.File.Lines[l.Line-1], "\t", " "))
+		fmt.Println(str.Full(4+l.Column-2, ' ') + "^")
 	}
 	fmt.Println(msg)
 	panic(nil)
@@ -40,9 +40,9 @@ func (l Lex) error(msg string) {
 // Check expected bracket or like and returns true if require retokenize, returns false if not.
 // Thrown exception is syntax error.
 func (l *Lex) checkExpected(msg string) bool {
-	if l.Fin {
-		if l.F.P != "<stdin>" {
-			l.Ln-- // Subtract for correct line number.
+	if l.Finished {
+		if l.File.Path != "<stdin>" {
+			l.Line-- // Subtract for correct line number.
 			l.error(msg)
 		}
 		return false
@@ -52,37 +52,37 @@ func (l *Lex) checkExpected(msg string) bool {
 
 // Next lex next line.
 func (l *Lex) Next() []obj.Token {
-	var tks []obj.Token
-	if l.Fin {
-		return tks
+	var tokens []obj.Token
+	if l.Finished {
+		return tokens
 	}
 tokenize:
-	if l.lastTk.T != fract.StatementTerminator {
+	if l.lastTk.Type != fract.StatementTerminator {
 		// Restore to defaults.
-		l.Col = 1
-		l.lastTk.T = fract.NA
-		l.lastTk.Ln = 0
-		l.lastTk.Col = 0
-		l.lastTk.V = ""
+		l.Column = 1
+		l.lastTk.Type = fract.NA
+		l.lastTk.Line = 0
+		l.lastTk.Column = 0
+		l.lastTk.Val = ""
 	}
 	// Tokenize line.
 	tk := l.Token()
-	for tk.T != fract.NA {
-		if tk.T == fract.StatementTerminator {
+	for tk.Type != fract.NA {
+		if tk.Type == fract.StatementTerminator {
 			if l.Parentheses == 0 && l.Braces == 0 && l.Brackets == 0 {
 				break
 			}
-			l.Ln++
+			l.Line++
 		}
-		if !l.RangeComment && tk.T != fract.Ignore {
-			tks = append(tks, tk)
+		if !l.RangeComment && tk.Type != fract.Ignore {
+			tokens = append(tokens, tk)
 			l.lastTk = tk
 		}
 		tk = l.Token()
 	}
 	l.lastTk = tk
-	l.Ln++
-	l.Fin = l.Ln > len(l.F.Lns)
+	l.Line++
+	l.Finished = l.Line > len(l.File.Lines)
 	switch {
 	case l.Parentheses > 0:
 		if l.checkExpected("Parentheses is expected to close...") {
@@ -101,7 +101,7 @@ tokenize:
 			goto tokenize
 		}
 	}
-	return tks
+	return tokens
 }
 
 var (
@@ -121,16 +121,16 @@ func getName(ln string) string { return nameRgx.FindString(ln) }
 func getNumeric(ln string) string { return numRgx.FindString(ln) }
 
 // Process string espace sequence.
-func (l *Lex) strseq(sb *strings.Builder, fln string) bool {
+func (l *Lex) strseq(sb *strings.Builder, fullLn string) bool {
 	// Is not espace sequence?
-	if fln[l.Col-1] != '\\' {
+	if fullLn[l.Column-1] != '\\' {
 		return false
 	}
-	l.Col++
-	if l.Col >= len(fln)+1 {
+	l.Column++
+	if l.Column >= len(fullLn)+1 {
 		l.error("String literal is not defined full!")
 	}
-	switch fln[l.Col-1] {
+	switch fullLn[l.Column-1] {
 	case '\\':
 		sb.WriteByte('\\')
 	case '"':
@@ -157,25 +157,25 @@ func (l *Lex) strseq(sb *strings.Builder, fln string) bool {
 	return true
 }
 
-func (l *Lex) lexstr(tk *obj.Token, quote byte, fln string) {
+func (l *Lex) lexString(tk *obj.Token, quote byte, fullLn string) {
 	sb := new(strings.Builder)
 	sb.WriteByte(quote)
-	l.Col++
-	for ; l.Col < len(fln)+1; l.Col++ {
-		c := fln[l.Col-1]
+	l.Column++
+	for ; l.Column < len(fullLn)+1; l.Column++ {
+		c := fullLn[l.Column-1]
 		if c == quote { // Finish?
 			sb.WriteByte(c)
 			break
-		} else if !l.strseq(sb, fln) {
+		} else if !l.strseq(sb, fullLn) {
 			sb.WriteByte(c)
 		}
 	}
-	tk.V = sb.String()
-	if tk.V[len(tk.V)-1] != quote {
+	tk.Val = sb.String()
+	if tk.Val[len(tk.Val)-1] != quote {
 		l.error("Close quote is not found!")
 	}
-	tk.T = fract.Value
-	l.Col -= sb.Len() - 1
+	tk.Type = fract.Value
+	l.Column -= sb.Len() - 1
 }
 
 func (l *Lex) lexname(tk *obj.Token, chk string) bool {
@@ -186,29 +186,29 @@ func (l *Lex) lexname(tk *obj.Token, chk string) bool {
 			chk = chk[:len(chk)-1]
 		}
 	}
-	tk.V = chk
-	tk.T = fract.Name
+	tk.Val = chk
+	tk.Type = fract.Name
 	return true
 }
 
 // Generate next token.
 func (l *Lex) Token() obj.Token {
-	tk := obj.Token{T: fract.NA, F: l.F}
+	tk := obj.Token{Type: fract.NA, File: l.File}
 
-	fln := l.F.Lns[l.Ln-1] // Full line.
+	fullLn := l.File.Lines[l.Line-1] // Full line.
 	// Line is finished.
-	if l.Col > len(fln) {
+	if l.Column > len(fullLn) {
 		if l.RangeComment {
-			l.F.Lns[l.Ln-1] = ""
+			l.File.Lines[l.Line-1] = ""
 		}
 		return tk
 	}
 	// Resume.
-	ln := fln[l.Col-1:]
+	ln := fullLn[l.Column-1:]
 	// Skip spaces.
-	for i, c := range ln {
-		if unicode.IsSpace(c) {
-			l.Col++
+	for i, r := range ln {
+		if unicode.IsSpace(r) {
+			l.Column++
 			continue
 		}
 		ln = ln[i:]
@@ -219,283 +219,280 @@ func (l *Lex) Token() obj.Token {
 		return tk
 	}
 	// Set token values.
-	tk.Col = l.Col
-	tk.Ln = l.Ln
+	tk.Column = l.Column
+	tk.Line = l.Line
 
 	// ************
 	//   Tokenize
 	// ************
-
 	if l.RangeComment { // Range comment.
-		tk.T = fract.Ignore
+		tk.Type = fract.Ignore
 		if strings.HasPrefix(ln, "*/") { // Range comment close.
 			l.RangeComment = false
-			l.Col += 2 // len("<#")
+			l.Column += 2 // len("<#")
 			return tk
 		}
-		l.Col++
+		l.Column++
 		return tk
 	}
-
 	switch chk := getNumeric(ln); {
-	case (chk != "" &&
-		(l.lastTk.V == "" || l.lastTk.T == fract.Operator ||
-			(l.lastTk.T == fract.Brace && l.lastTk.V != "}" && l.lastTk.V != "]" && l.lastTk.V != ")") ||
-			l.lastTk.T == fract.StatementTerminator || l.lastTk.T == fract.Loop ||
-			l.lastTk.T == fract.Comma || l.lastTk.T == fract.In || l.lastTk.T == fract.If ||
-			l.lastTk.T == fract.Else || l.lastTk.T == fract.Ret || l.lastTk.T == fract.Colon)) ||
+	case (chk != "" && (l.lastTk.Val == "" || l.lastTk.Type == fract.Operator ||
+		(l.lastTk.Type == fract.Brace && l.lastTk.Val != "}" && l.lastTk.Val != "]" && l.lastTk.Val != ")") ||
+		l.lastTk.Type == fract.StatementTerminator || l.lastTk.Type == fract.Loop ||
+		l.lastTk.Type == fract.Comma || l.lastTk.Type == fract.In || l.lastTk.Type == fract.If ||
+		l.lastTk.Type == fract.Else || l.lastTk.Type == fract.Ret || l.lastTk.Type == fract.Colon)) ||
 		isKeyword(ln, "NaN"): // Numeric oop.
 		if chk == "" {
 			chk = "NaN"
-			l.Col += 3
+			l.Column += 3
 		} else {
 			// Remove punct.
 			if lst := chk[len(chk)-1]; lst < '0' || lst > '9' {
 				chk = chk[:len(chk)-1]
 			}
-			l.Col += len(chk)
+			l.Column += len(chk)
 			if strings.HasPrefix(chk, "0x") {
 				// Parse hexadecimal to decimal.
-				bi := new(big.Int)
-				bi.SetString(chk[2:], 16)
-				chk = bi.String()
+				bigInt := new(big.Int)
+				bigInt.SetString(chk[2:], 16)
+				chk = bigInt.String()
 			} else {
 				// Parse floating-point.
-				bf := new(big.Float)
-				_, f := bf.SetString(chk)
+				bigFloat := new(big.Float)
+				_, f := bigFloat.SetString(chk)
 				if !f {
-					chk = bf.String()
+					chk = bigFloat.String()
 				}
 			}
 		}
-		tk.V = chk
-		tk.T = fract.Value
+		tk.Val = chk
+		tk.Type = fract.Value
 		return tk
 	case strings.HasPrefix(ln, "//"):
-		l.F.Lns[l.Ln-1] = l.F.Lns[l.Ln-1][:l.Col-1] // Remove comment from original line.
+		l.File.Lines[l.Line-1] = l.File.Lines[l.Line-1][:l.Column-1] // Remove comment from original line.
 		return tk
 	case strings.HasPrefix(ln, "/*"):
 		l.RangeComment = true
-		tk.V = "/*"
-		tk.T = fract.Ignore
+		tk.Val = "/*"
+		tk.Type = fract.Ignore
 	case ln[0] == '#':
-		tk.V = "#"
-		tk.T = fract.Macro
+		tk.Val = "#"
+		tk.Type = fract.Macro
 	case ln[0] == '\'':
-		l.lexstr(&tk, '\'', fln)
+		l.lexString(&tk, '\'', fullLn)
 	case ln[0] == '"':
-		l.lexstr(&tk, '"', fln)
+		l.lexString(&tk, '"', fullLn)
 	case ln[0] == ';':
-		tk.V = ";"
-		tk.T = fract.StatementTerminator
-		l.Ln--
+		tk.Val = ";"
+		tk.Type = fract.StatementTerminator
+		l.Line--
 	case strings.HasPrefix(ln, ":="):
-		tk.V = ":="
-		tk.T = fract.Operator
+		tk.Val = ":="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "+="):
-		tk.V = "+="
-		tk.T = fract.Operator
+		tk.Val = "+="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "**="):
-		tk.V = "**="
-		tk.T = fract.Operator
+		tk.Val = "**="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "*="):
-		tk.V = "*="
-		tk.T = fract.Operator
+		tk.Val = "*="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "/="):
-		tk.V = "/="
-		tk.T = fract.Operator
+		tk.Val = "/="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "%="):
-		tk.V = "%="
-		tk.T = fract.Operator
+		tk.Val = "%="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "-="):
-		tk.V = "-="
-		tk.T = fract.Operator
+		tk.Val = "-="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "<<="):
-		tk.V = "<<="
-		tk.T = fract.Operator
+		tk.Val = "<<="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, ">>="):
-		tk.V = ">>="
-		tk.T = fract.Operator
+		tk.Val = ">>="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "|="):
-		tk.V = "|="
-		tk.T = fract.Operator
+		tk.Val = "|="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "^="):
-		tk.V = "^="
-		tk.T = fract.Operator
+		tk.Val = "^="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "&="):
-		tk.V = "&="
-		tk.T = fract.Operator
+		tk.Val = "&="
+		tk.Type = fract.Operator
 	case ln[0] == '+':
-		tk.V = "+"
-		tk.T = fract.Operator
+		tk.Val = "+"
+		tk.Type = fract.Operator
 	case ln[0] == '-':
-		tk.V = "-"
-		tk.T = fract.Operator
+		tk.Val = "-"
+		tk.Type = fract.Operator
 	case ln[0] == ':':
-		tk.V = ":"
-		tk.T = fract.Colon
+		tk.Val = ":"
+		tk.Type = fract.Colon
 	case strings.HasPrefix(ln, "**"):
-		tk.V = "**"
-		tk.T = fract.Operator
+		tk.Val = "**"
+		tk.Type = fract.Operator
 	case ln[0] == '*':
-		tk.V = "*"
-		tk.T = fract.Operator
+		tk.Val = "*"
+		tk.Type = fract.Operator
 	case ln[0] == '/':
-		tk.V = "/"
-		tk.T = fract.Operator
+		tk.Val = "/"
+		tk.Type = fract.Operator
 	case ln[0] == '%':
-		tk.V = "%"
-		tk.T = fract.Operator
+		tk.Val = "%"
+		tk.Type = fract.Operator
 	case ln[0] == '(':
 		l.Parentheses++
-		tk.V = "("
-		tk.T = fract.Brace
+		tk.Val = "("
+		tk.Type = fract.Brace
 	case ln[0] == ')':
 		l.Parentheses--
 		if l.Parentheses < 0 {
 			l.error("The extra parentheses are closed!")
 		}
-		tk.V = ")"
-		tk.T = fract.Brace
+		tk.Val = ")"
+		tk.Type = fract.Brace
 	case ln[0] == '{':
 		l.Braces++
-		tk.V = "{"
-		tk.T = fract.Brace
+		tk.Val = "{"
+		tk.Type = fract.Brace
 	case ln[0] == '}':
 		l.Braces--
 		if l.Braces < 0 {
 			l.error("The extra brace are closed!")
 		}
-		tk.V = "}"
-		tk.T = fract.Brace
+		tk.Val = "}"
+		tk.Type = fract.Brace
 	case ln[0] == '[':
 		l.Brackets++
-		tk.V = "["
-		tk.T = fract.Brace
+		tk.Val = "["
+		tk.Type = fract.Brace
 	case ln[0] == ']':
 		l.Brackets--
 		if l.Brackets < 0 {
 			l.error("The extra bracket are closed!")
 		}
-		tk.V = "]"
-		tk.T = fract.Brace
+		tk.Val = "]"
+		tk.Type = fract.Brace
 	case strings.HasPrefix(ln, "<<"):
-		tk.V = "<<"
-		tk.T = fract.Operator
+		tk.Val = "<<"
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, ">>"):
-		tk.V = ">>"
-		tk.T = fract.Operator
+		tk.Val = ">>"
+		tk.Type = fract.Operator
 	case ln[0] == ',':
-		tk.V = ","
-		tk.T = fract.Comma
+		tk.Val = ","
+		tk.Type = fract.Comma
 	case strings.HasPrefix(ln, "&&"):
-		tk.V = "&&"
-		tk.T = fract.Operator
+		tk.Val = "&&"
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "||"):
-		tk.V = "||"
-		tk.T = fract.Operator
+		tk.Val = "||"
+		tk.Type = fract.Operator
 	case ln[0] == '|':
-		tk.V = "|"
-		tk.T = fract.Operator
+		tk.Val = "|"
+		tk.Type = fract.Operator
 	case ln[0] == '&':
-		tk.V = "&"
-		tk.T = fract.Operator
+		tk.Val = "&"
+		tk.Type = fract.Operator
 	case ln[0] == '^':
-		tk.V = "^"
-		tk.T = fract.Operator
+		tk.Val = "^"
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, ">="):
-		tk.V = ">="
-		tk.T = fract.Operator
+		tk.Val = ">="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "<="):
-		tk.V = "<="
-		tk.T = fract.Operator
+		tk.Val = "<="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "=="):
-		tk.V = "=="
-		tk.T = fract.Operator
-	case strings.HasPrefix(ln, "<>"):
-		tk.V = "<>"
-		tk.T = fract.Operator
+		tk.Val = "=="
+		tk.Type = fract.Operator
+	case strings.HasPrefix(ln, "!="):
+		tk.Val = "!="
+		tk.Type = fract.Operator
 	case ln[0] == '>':
-		tk.V = ">"
-		tk.T = fract.Operator
+		tk.Val = ">"
+		tk.Type = fract.Operator
 	case ln[0] == '<':
-		tk.V = "<"
-		tk.T = fract.Operator
+		tk.Val = "<"
+		tk.Type = fract.Operator
 	case ln[0] == '=':
-		tk.V = "="
-		tk.T = fract.Operator
+		tk.Val = "="
+		tk.Type = fract.Operator
 	case strings.HasPrefix(ln, "..."):
-		tk.V = "..."
-		tk.T = fract.Params
+		tk.Val = "..."
+		tk.Type = fract.Params
 	case ln[0] == '.':
-		tk.V = "."
-		tk.T = fract.Dot
+		tk.Val = "."
+		tk.Type = fract.Dot
 	case isKeyword(ln, "var"):
-		tk.V = "var"
-		tk.T = fract.Var
+		tk.Val = "var"
+		tk.Type = fract.Var
 	case isKeyword(ln, "mut"):
-		tk.V = "mut"
-		tk.T = fract.Var
+		tk.Val = "mut"
+		tk.Type = fract.Var
 	case isKeyword(ln, "const"):
-		tk.V = "const"
-		tk.T = fract.Var
+		tk.Val = "const"
+		tk.Type = fract.Var
 	case isKeyword(ln, "defer"):
-		tk.V = "defer"
-		tk.T = fract.Defer
+		tk.Val = "defer"
+		tk.Type = fract.Defer
 	case isKeyword(ln, "if"):
-		tk.V = "if"
-		tk.T = fract.If
+		tk.Val = "if"
+		tk.Type = fract.If
 	case isKeyword(ln, "else"):
-		tk.V = "else"
-		tk.T = fract.Else
+		tk.Val = "else"
+		tk.Type = fract.Else
 	case isKeyword(ln, "for"):
-		tk.V = "for"
-		tk.T = fract.Loop
+		tk.Val = "for"
+		tk.Type = fract.Loop
 	case isKeyword(ln, "in"):
-		tk.V = "in"
-		tk.T = fract.In
+		tk.Val = "in"
+		tk.Type = fract.In
 	case isKeyword(ln, "break"):
-		tk.V = "break"
-		tk.T = fract.Break
+		tk.Val = "break"
+		tk.Type = fract.Break
 	case isKeyword(ln, "continue"):
-		tk.V = "continue"
-		tk.T = fract.Continue
+		tk.Val = "continue"
+		tk.Type = fract.Continue
 	case isKeyword(ln, "fn"):
-		tk.V = "fn"
-		tk.T = fract.Fn
+		tk.Val = "fn"
+		tk.Type = fract.Fn
 	case isKeyword(ln, "ret"):
-		tk.V = "ret"
-		tk.T = fract.Ret
+		tk.Val = "ret"
+		tk.Type = fract.Ret
 	case isKeyword(ln, "try"):
-		tk.V = "try"
-		tk.T = fract.Try
+		tk.Val = "try"
+		tk.Type = fract.Try
 	case isKeyword(ln, "catch"):
-		tk.V = "catch"
-		tk.T = fract.Catch
+		tk.Val = "catch"
+		tk.Type = fract.Catch
 	case isKeyword(ln, "open"):
-		tk.V = "open"
-		tk.T = fract.Import
+		tk.Val = "open"
+		tk.Type = fract.Import
 	case isKeyword(ln, "true"):
-		tk.V = "true"
-		tk.T = fract.Value
+		tk.Val = "true"
+		tk.Type = fract.Value
 	case isKeyword(ln, "false"):
-		tk.V = "false"
-		tk.T = fract.Value
+		tk.Val = "false"
+		tk.Type = fract.Value
 	case isKeyword(ln, "go"):
-		tk.V = "go"
-		tk.T = fract.Go
+		tk.Val = "go"
+		tk.Type = fract.Go
 	case isKeyword(ln, "package"):
-		tk.V = "package"
-		tk.T = fract.Package
+		tk.Val = "package"
+		tk.Type = fract.Package
 	case isKeyword(ln, "struct"):
-		tk.V = "struct"
-		tk.T = fract.Struct
+		tk.Val = "struct"
+		tk.Type = fract.Struct
 	case isKeyword(ln, "class"):
-		tk.V = "class"
-		tk.T = fract.Class
+		tk.Val = "class"
+		tk.Type = fract.Class
 	case isKeyword(ln, "none"):
-		tk.V = "none"
-		tk.T = fract.None
+		tk.Val = "none"
+		tk.Type = fract.None
 	default: // Alternates
 		// Check variable name.
 		if chk := getName(ln); chk != "" { // Name.
@@ -506,6 +503,6 @@ func (l *Lex) Token() obj.Token {
 			l.error("Invalid token!")
 		}
 	}
-	l.Col += len(tk.V)
+	l.Column += len(tk.Val)
 	return tk
 }

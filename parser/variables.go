@@ -9,99 +9,99 @@ import (
 )
 
 // Metadata of variable declaration.
-type varinfo struct {
-	sdec     bool
-	constant bool
-	mut      bool
+type varInfo struct {
+	shortDeclaration bool
+	constant         bool
+	mut              bool
 }
 
 // Append variable to source.
-func (p *Parser) varadd(dm *oop.DefMap, md varinfo, tks []obj.Token) {
-	name := tks[0]
-	if !validName(name.V) {
-		fract.IPanic(name, obj.SyntaxPanic, "Invalid name!")
+func (p *Parser) varadd(defs *oop.DefMap, inf varInfo, tokens []obj.Token) {
+	nameTk := tokens[0]
+	if !isValidName(nameTk.Val) {
+		fract.IPanic(nameTk, obj.SyntaxPanic, "Invalid name!")
 	}
 	// Name is already defined?
 	var ln int
-	if &p.defs == dm { // Variable added to defmap of parser.
-		ln = p.definedName(name.V)
+	if &p.defs == defs { // Variable added to defmap of parser.
+		ln = p.defIndexByName(nameTk.Val)
 	} else { // Variable added to another defmap.
-		ln = dm.DefinedName(name.V)
+		ln = defs.DefIndexByName(nameTk.Val)
 	}
 	if ln != -1 {
-		fract.IPanic(name, obj.NamePanic, "\""+name.V+"\" is already defined at line: "+fmt.Sprint(ln))
+		fract.IPanic(nameTk, obj.NamePanic, "\""+nameTk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
 	}
 
-	tksLen := len(tks)
+	tokensLen := len(tokens)
 	// Setter is not defined?
-	if tksLen < 2 {
-		fract.IPanicC(name.F, name.Ln, name.Col+len(name.V), obj.SyntaxPanic, "Setter is not found!")
+	if tokensLen < 2 {
+		fract.IPanicC(nameTk.File, nameTk.Line, nameTk.Column+len(nameTk.Val), obj.SyntaxPanic, "Setter is not found!")
 	}
-	setter := tks[1]
+	setter := tokens[1]
 	// Setter is not a setter operator?
-	if setter.T != fract.Operator || (setter.V != "=" && !md.sdec || setter.V != ":=" && md.sdec) {
-		fract.IPanic(setter, obj.SyntaxPanic, "Invalid setter operator: "+setter.V)
+	if setter.Type != fract.Operator || (setter.Val != "=" && !inf.shortDeclaration || setter.Val != ":=" && inf.shortDeclaration) {
+		fract.IPanic(setter, obj.SyntaxPanic, "Invalid setter operator: "+setter.Val)
 	}
 	// Value is not defined?
-	if tksLen < 3 {
-		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
+	if tokensLen < 3 {
+		fract.IPanicC(setter.File, setter.Line, setter.Column+len(setter.Val), obj.SyntaxPanic, "Value is not given!")
 	}
-	v := *p.procValTks(tks[2:])
-	if v.D == nil {
-		fract.IPanic(tks[2], obj.ValuePanic, "Invalid value!")
+	val := *p.processValTokens(tokens[2:])
+	if val.Data == nil {
+		fract.IPanic(tokens[2], obj.ValuePanic, "Invalid value!")
 	}
 	if p.funcTempVars != -1 {
 		p.funcTempVars++
 	}
-	v.Mut = md.mut
-	v.Const = md.constant
-	dm.Vars = append(dm.Vars, oop.Var{
-		Name: name.V,
-		V:    v,
-		Ln:   name.Ln,
+	val.Mut = inf.mut
+	val.Const = inf.constant
+	defs.Vars = append(defs.Vars, oop.Var{
+		Name: nameTk.Val,
+		Val:  val,
+		Line: nameTk.Line,
 	})
 }
 
 // Process variable declaration to defmap.
-func (p *Parser) fvardec(dm *oop.DefMap, tks []obj.Token) {
+func (p *Parser) fvardec(defs *oop.DefMap, tokens []obj.Token) {
 	// Name is not defined?
-	if len(tks) < 2 {
-		first := tks[0]
-		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Name is not given!")
+	if len(tokens) < 2 {
+		first := tokens[0]
+		fract.IPanicC(first.File, first.Line, first.Column+len(first.Val), obj.SyntaxPanic, "Name is not given!")
 	}
-	md := varinfo{
-		constant: tks[0].V == "const",
-		mut:      tks[0].V == "mut",
+	inf := varInfo{
+		constant: tokens[0].Val == "const",
+		mut:      tokens[0].Val == "mut",
 	}
-	pre := tks[1]
-	if pre.T == fract.Name {
-		p.varadd(dm, md, tks[1:])
-	} else if pre.T == fract.Brace && pre.V == "(" {
-		tks = tks[2 : len(tks)-1]
-		lst := 0
-		ln := tks[0].Ln
-		bc := 0
-		for j, t := range tks {
-			if t.T == fract.Brace {
-				switch t.V {
+	pre := tokens[1]
+	if pre.Type == fract.Name {
+		p.varadd(defs, inf, tokens[1:])
+	} else if pre.Type == fract.Brace && pre.Val == "(" {
+		tokens = tokens[2 : len(tokens)-1]
+		last := 0
+		line := tokens[0].Line
+		braceCount := 0
+		for j, tk := range tokens {
+			if tk.Type == fract.Brace {
+				switch tk.Val {
 				case "{", "[", "(":
-					bc++
+					braceCount++
 				default:
-					bc--
-					ln = t.Ln
+					braceCount--
+					line = tk.Line
 				}
 			}
-			if bc > 0 {
+			if braceCount > 0 {
 				continue
 			}
-			if ln < t.Ln {
-				p.varadd(dm, md, tks[lst:j])
-				lst = j
-				ln = t.Ln
+			if line < tk.Line {
+				p.varadd(defs, inf, tokens[last:j])
+				last = j
+				line = tk.Line
 			}
 		}
-		if len(tks) != lst {
-			p.varadd(dm, md, tks[lst:])
+		if len(tokens) != last {
+			p.varadd(defs, inf, tokens[last:])
 		}
 	} else {
 		fract.IPanic(pre, obj.SyntaxPanic, "Invalid syntax!")
@@ -109,189 +109,189 @@ func (p *Parser) fvardec(dm *oop.DefMap, tks []obj.Token) {
 }
 
 // Process variable declaration to parser.
-func (p *Parser) vardec(tks []obj.Token) { p.fvardec(&p.defs, tks) }
+func (p *Parser) vardec(tokens []obj.Token) { p.fvardec(&p.defs, tokens) }
 
 // Process short variable declaration.
-func (p *Parser) varsdec(tks []obj.Token) {
+func (p *Parser) varsdec(tokens []obj.Token) {
 	// Name is not defined?
-	if len(tks) < 2 {
-		first := tks[0]
-		fract.IPanicC(first.F, first.Ln, first.Col+len(first.V), obj.SyntaxPanic, "Name is not given!")
+	if len(tokens) < 2 {
+		first := tokens[0]
+		fract.IPanicC(first.File, first.Line, first.Column+len(first.Val), obj.SyntaxPanic, "Name is not given!")
 	}
-	if tks[0].T != fract.Name {
-		fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")
+	if tokens[0].Type != fract.Name {
+		fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
 	}
-	var md varinfo
-	md.sdec = true
-	p.varadd(&p.defs, md, tks)
+	var inf varInfo
+	inf.shortDeclaration = true
+	p.varadd(&p.defs, inf, tokens)
 }
 
 // Process variable set statement.
-func (p *Parser) varset(tks []obj.Token) {
+func (p *Parser) varset(tokens []obj.Token) {
 	var (
-		v      *oop.Val
-		s      interface{}
-		vtks   []obj.Token
-		setter obj.Token
+		enumVal    *oop.Val
+		selections interface{}
+		valTokens  []obj.Token
+		setter     obj.Token
 	)
-	bc := 0
-	lbc := -1
-	for i, tk := range tks {
-		if tk.T == fract.Brace {
-			switch tk.V {
+	braceCount := 0
+	lastOpenBrace := -1
+	for i, tk := range tokens {
+		if tk.Type == fract.Brace {
+			switch tk.Val {
 			case "[":
-				bc++
-				if bc == 1 {
-					lbc = i
+				braceCount++
+				if braceCount == 1 {
+					lastOpenBrace = i
 				}
 			case "]":
-				bc--
+				braceCount--
 			}
 		}
-		if bc > 0 {
+		if braceCount > 0 {
 			continue
 		}
-		if tk.T == fract.Operator && tk.V[len(tk.V)-1] == '=' {
+		if tk.Type == fract.Operator && tk.Val[len(tk.Val)-1] == '=' {
 			setter = tk
-			if lbc == -1 {
-				v = p.procValPart(valPartInfo{mut: true, tks: tks[:i]})
-				vtks = tks[i+1:]
+			if lastOpenBrace == -1 {
+				enumVal = p.processValuePart(valuePartInfo{mut: true, tokens: tokens[:i]})
+				valTokens = tokens[i+1:]
 				break
 			}
-			v = p.procValPart(valPartInfo{mut: true, tks: tks[:lbc]})
-			vtks = tks[lbc+1 : i-1]
+			enumVal = p.processValuePart(valuePartInfo{mut: true, tokens: tokens[:lastOpenBrace]})
+			valTokens = tokens[lastOpenBrace+1 : i-1]
 			// Index value is empty?
-			if len(vtks) == 0 {
+			if len(valTokens) == 0 {
 				fract.IPanic(setter, obj.SyntaxPanic, "Index is not given!")
 			}
-			s = selections(*v, *p.procValTks(vtks), setter)
-			vtks = tks[i+1:]
+			selections = enumerableSelections(*enumVal, *p.processValTokens(valTokens), setter)
+			valTokens = tokens[i+1:]
 			break
 		}
 	}
-	if len(vtks) == 0 {
-		fract.IPanicC(setter.F, setter.Ln, setter.Col+len(setter.V), obj.SyntaxPanic, "Value is not given!")
+	if len(valTokens) == 0 {
+		fract.IPanicC(setter.File, setter.Line, setter.Column+len(setter.Val), obj.SyntaxPanic, "Value is not given!")
 	}
 	// Check const state.
-	if v.Const {
+	if enumVal.Const {
 		fract.IPanic(setter, obj.SyntaxPanic, "Values is cannot changed of constant defines!")
 	}
-	val := *p.procValTks(vtks)
-	if val.D == nil {
+	val := *p.processValTokens(valTokens)
+	if val.Data == nil {
 		fract.IPanic(setter, obj.ValuePanic, "Invalid value!")
 	}
-	opr := obj.Token{V: string(setter.V[:len(setter.V)-1])}
-	if s == nil {
-		switch setter.V {
+	operator := obj.Token{Val: string(setter.Val[:len(setter.Val)-1])}
+	if selections == nil {
+		switch setter.Val {
 		case "=": // =
-			*v = val
+			*enumVal = val
 		default: // Other assignments.
-			*v = solveProc(process{
-				opr: opr,
-				f:   tks,
-				fv:  *v,
-				s:   []obj.Token{setter},
-				sv:  val,
-			})
+			*enumVal = arithmeticProcess{
+				operator: operator,
+				left:     tokens,
+				leftVal:  *enumVal,
+				right:    []obj.Token{setter},
+				rightVal: val,
+			}.solve()
 		}
 		return
 	}
-	switch v.T {
+	switch enumVal.Type {
 	case oop.Map:
-		m := v.D.(oop.MapModel)
-		switch setter.V {
+		m := enumVal.Data.(oop.MapModel)
+		switch setter.Val {
 		case "=":
-			switch t := s.(type) {
+			switch t := selections.(type) {
 			case oop.ListModel:
-				for _, k := range t.Elems {
-					m.M[k] = val
+				for _, key := range t.Elems {
+					m.Map[key] = val
 				}
 			case oop.Val:
-				m.M[t] = val
+				m.Map[t] = val
 			}
 		default: // Other assignments.
-			switch t := s.(type) {
+			switch t := selections.(type) {
 			case oop.ListModel:
-				for _, s := range t.Elems {
-					d, ok := m.M[s]
+				for _, key := range t.Elems {
+					v, ok := m.Map[key]
 					if !ok {
-						m.M[s] = val
+						m.Map[key] = val
 						continue
 					}
-					m.M[s] = solveProc(process{
-						opr: opr,
-						f:   tks,
-						fv:  d,
-						s:   []obj.Token{setter},
-						sv:  val,
-					})
+					m.Map[key] = arithmeticProcess{
+						operator: operator,
+						left:     tokens,
+						leftVal:  v,
+						right:    []obj.Token{setter},
+						rightVal: val,
+					}.solve()
 				}
 			case oop.Val:
-				d, ok := m.M[t]
+				d, ok := m.Map[t]
 				if !ok {
-					m.M[t] = val
+					m.Map[t] = val
 					break
 				}
-				m.M[t] = solveProc(process{
-					opr: opr,
-					f:   tks,
-					fv:  d,
-					s:   []obj.Token{setter},
-					sv:  val,
-				})
+				m.Map[t] = arithmeticProcess{
+					operator: operator,
+					left:     tokens,
+					leftVal:  d,
+					right:    []obj.Token{setter},
+					rightVal: val,
+				}.solve()
 			}
 		}
 	case oop.List:
-		for _, pos := range s.([]int) {
-			switch setter.V {
+		for _, i := range selections.([]int) {
+			switch setter.Val {
 			case "=":
-				v.D.(*oop.ListModel).Elems[pos] = val
+				enumVal.Data.(*oop.ListModel).Elems[i] = val
 			default: // Other assignments.
-				v.D.(*oop.ListModel).Elems[pos] = solveProc(process{
-					opr: opr,
-					f:   tks,
-					fv:  v.D.(*oop.ListModel).Elems[pos],
-					s:   []obj.Token{setter},
-					sv:  val,
-				})
+				enumVal.Data.(*oop.ListModel).Elems[i] = arithmeticProcess{
+					operator: operator,
+					left:     tokens,
+					leftVal:  enumVal.Data.(*oop.ListModel).Elems[i],
+					right:    []obj.Token{setter},
+					rightVal: val,
+				}.solve()
 			}
 		}
 	case oop.Str:
-		for _, pos := range s.([]int) {
-			switch setter.V {
+		for _, i := range selections.([]int) {
+			switch setter.Val {
 			case "=":
-				if val.T != oop.Str {
+				if val.Type != oop.Str {
 					fract.IPanic(setter, obj.ValuePanic, "Value type is not string!")
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")
 				}
-				bytes := []byte(v.String())
-				if val.D == "" {
-					bytes[pos] = 0
+				bytes := []byte(enumVal.String())
+				if val.Data == "" {
+					bytes[i] = 0
 				} else {
-					bytes[pos] = val.String()[0]
+					bytes[i] = val.String()[0]
 				}
-				v.D = string(bytes)
+				enumVal.Data = string(bytes)
 			default: // Other assignments.
-				val = solveProc(process{
-					opr: opr,
-					f:   tks,
-					fv:  oop.Val{D: v.D.(string)[pos], T: oop.Int},
-					s:   []obj.Token{setter},
-					sv:  val,
-				})
-				if val.T != oop.Str {
+				val = arithmeticProcess{
+					operator: operator,
+					left:     tokens,
+					leftVal:  oop.Val{Data: enumVal.Data.(string)[i], Type: oop.Int},
+					right:    []obj.Token{setter},
+					rightVal: val,
+				}.solve()
+				if val.Type != oop.Str {
 					fract.IPanic(setter, obj.ValuePanic, "Value type is not string!")
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")
 				}
-				bytes := []byte(v.String())
-				if val.D == "" {
-					bytes[pos] = 0
+				bytes := []byte(enumVal.String())
+				if val.Data == "" {
+					bytes[i] = 0
 				} else {
-					bytes[pos] = val.String()[0]
+					bytes[i] = val.String()[0]
 				}
-				v.D = string(bytes)
+				enumVal.Data = string(bytes)
 			}
 		}
 	}

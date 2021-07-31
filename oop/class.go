@@ -11,27 +11,27 @@ type FuncCallModel interface {
 
 // Class define.
 type Class struct {
-	F           *obj.File
+	File        *obj.File
 	Name        string
 	Constructor *Fn
 	Defs        DefMap
 }
 
 func (c *Class) CallConstructor(model FuncCallModel) ClassInstance {
-	ci := ClassInstance{Name: c.Name, F: c.F, Defs: c.Defs}
-	this := Var{Name: "this", V: Val{D: ci, T: ClassIns, Mut: true}}
+	ins := ClassInstance{Name: c.Name, File: c.File, Defs: c.Defs}
+	this := Var{Name: "this", Val: Val{Data: ins, Type: ClassIns, Mut: true}}
 	model.Func().Args = []Var{this}
-	for _, f := range ci.Defs.Funcs {
-		f.Args = append(f.Args, this)
+	for _, fn := range ins.Defs.Funcs {
+		fn.Args = append(fn.Args, this)
 	}
-	if c.Constructor.Ln != 0 { // Call custom constructor.
+	if c.Constructor.Line != 0 { // Call custom constructor.
 		model.Call()
 	}
-	return ci
+	return ins
 }
 
 type ClassInstance struct {
-	F    *obj.File
+	File *obj.File
 	Name string // Name of based struct.
 	Defs DefMap
 }

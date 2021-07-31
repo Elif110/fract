@@ -7,19 +7,19 @@ import (
 
 // Struct define.
 type Struct struct {
-	L           *lex.Lex
+	Lex         *lex.Lex
 	Name        string
 	Constructor *Fn
 }
 
 func (s *Struct) CallConstructor(args []Var) StructInstance {
-	si := StructInstance{Name: s.Name, F: s.L.F}
-	si.Fields.Vars = append(si.Fields.Vars, args...)
-	return si
+	ins := StructInstance{Name: s.Name, File: s.Lex.File}
+	ins.Fields.Vars = append(ins.Fields.Vars, args...)
+	return ins
 }
 
 type StructInstance struct {
-	F      *obj.File
+	File   *obj.File
 	Name   string // Name of based struct.
 	Fields DefMap
 }

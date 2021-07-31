@@ -1,10 +1,10 @@
 package fract
 
 const (
-	Version     = "0.0.1"  // Version of Fract.
-	Extension   = ".fr"    // File extension of Fract.
+	Version     = "0.0.1"
+	Extension   = ".fr"
 	StdLib      = "stdlib" // Standard library path.
-	FloatFormat = "%g"     // Float format.
+	FloatFormat = "%g"
 
 	NA                  uint8 = 0
 	Ignore              uint8 = 1
@@ -44,7 +44,7 @@ const (
 )
 
 var (
-	TryCount      int // Try-Catch count.
-	ExecPath      string
-	InteractiveSh bool // Interactive shell mode.
+	TryCount         int // Try-Catch count.
+	ExecutablePath   string
+	InteractiveShell bool // Interactive shell mode.
 )

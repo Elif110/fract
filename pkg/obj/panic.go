@@ -17,10 +17,10 @@ const (
 )
 
 type Panic struct {
-	M string // Message.
-	T string // Type.
+	Msg  string
+	Type string
 }
 
-func (p Panic) String() string { return p.M }
+func (p Panic) String() string { return p.Msg }
 
 func (p Panic) Panic() { fmt.Println(p); os.Exit(1) }

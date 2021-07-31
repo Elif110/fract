@@ -10,41 +10,41 @@ import (
 
 // Loop.
 type loop struct {
-	a    oop.Val
-	b    oop.Val
-	enum oop.Val
-	end  bool
+	a         oop.Val
+	b         oop.Val
+	val       oop.Val
+	breakLoop bool
 }
 
 func (l *loop) run(b func()) {
-	switch l.enum.T {
+	switch l.val.Type {
 	case oop.List:
-		l.a.T = oop.Int
-		for i, e := range l.enum.D.(*oop.ListModel).Elems {
-			l.a.D = fmt.Sprint(i)
+		l.a.Type = oop.Int
+		for i, e := range l.val.Data.(*oop.ListModel).Elems {
+			l.a.Data = fmt.Sprint(i)
 			l.b = e
 			b()
-			if l.end {
+			if l.breakLoop {
 				break
 			}
 		}
 	case oop.Str:
-		l.a.T = oop.Int
-		l.b.T = oop.Str
-		for i, e := range l.enum.D.(string) {
-			l.a.D = fmt.Sprint(i)
-			l.b.D = string(e)
+		l.a.Type = oop.Int
+		l.b.Type = oop.Str
+		for i, e := range l.val.Data.(string) {
+			l.a.Data = fmt.Sprint(i)
+			l.b.Data = string(e)
 			b()
-			if l.end {
+			if l.breakLoop {
 				break
 			}
 		}
 	case oop.Map:
-		for k, v := range l.enum.D.(oop.MapModel).M {
+		for k, v := range l.val.Data.(oop.MapModel).Map {
 			l.a = k
 			l.b = v
 			b()
-			if l.end {
+			if l.breakLoop {
 				break
 			}
 		}
@@ -52,81 +52,80 @@ func (l *loop) run(b func()) {
 }
 
 // Returns kwstate's return format.
-func prockws(kws uint8) uint8 {
+func processKeywordState(kws uint8) uint8 {
 	if kws != fract.FUNCReturn {
 		return fract.NA
 	}
 	return kws
 }
 
-// Process loops and returns keyword state.
-func (p *Parser) procLoop(tks []obj.Token) uint8 {
-	bi := findBlock(tks)
-	btks, tks := p.getBlock(tks[bi:]), tks[1:bi]
-	flen := len(p.defs.Funcs)
-	ilen := len(p.packages)
-	brk := false
-	kws := fract.NA
-	ptks := p.Tks
-	pi := p.i
+func (p *Parser) processLoop(tokens []obj.Token) uint8 {
+	blockIndex := findBlock(tokens)
+	blockTokens, tokens := p.getBlock(tokens[blockIndex:]), tokens[1:blockIndex]
+	funcLen := len(p.defs.Funcs)
+	impLen := len(p.packages)
+	breakLoop := false
+	keywordState := fract.NA
+	parserTokens := p.Tokens
+	parserIndex := p.index
 	//*************
 	//    WHILE
 	//*************
-	if len(tks) == 0 || len(tks) >= 1 {
-		if len(tks) == 0 || len(tks) == 1 || len(tks) >= 1 && tks[1].T != fract.In && tks[1].T != fract.Comma {
-			vlen := len(p.defs.Vars)
+	if len(tokens) == 0 || len(tokens) >= 1 {
+		if len(tokens) == 0 || len(tokens) == 1 || len(tokens) >= 1 && tokens[1].Type != fract.In && tokens[1].Type != fract.Comma {
+			varLen := len(p.defs.Vars)
 			// Infinity loop.
-			if len(tks) == 0 {
+			if len(tokens) == 0 {
 			infinity:
-				p.Tks = btks
-				for p.i = 0; p.i < len(p.Tks); p.i++ {
-					kws = p.process(p.Tks[p.i])
-					if kws == fract.LOOPBreak || kws == fract.FUNCReturn { // Break loop or return.
-						p.Tks = ptks
-						p.i = pi
-						return prockws(kws)
-					} else if kws == fract.LOOPContinue { // Continue loop.
+				p.Tokens = blockTokens
+				for p.index = 0; p.index < len(p.Tokens); p.index++ {
+					keywordState = p.processExpression(p.Tokens[p.index])
+					if keywordState == fract.LOOPBreak || keywordState == fract.FUNCReturn { // Break loop or return.
+						p.Tokens = parserTokens
+						p.index = parserIndex
+						return processKeywordState(keywordState)
+					} else if keywordState == fract.LOOPContinue { // Continue loop.
 						break
 					}
 				}
 				// Remove temporary variables.
-				p.defs.Vars = p.defs.Vars[:vlen]
+				p.defs.Vars = p.defs.Vars[:varLen]
 				// Remove temporary functions.
-				p.defs.Funcs = p.defs.Funcs[:flen]
+				p.defs.Funcs = p.defs.Funcs[:funcLen]
 				// Remove temporary imports.
-				p.packages = p.packages[:ilen]
+				p.packages = p.packages[:impLen]
 				goto infinity
 			}
 		while:
 			// Interpret/skip block.
-			c := p.procCondition(tks)
-			p.Tks = btks
-			for p.i = 0; p.i < len(p.Tks); p.i++ {
+			condition := p.prococessCondition(tokens)
+			p.Tokens = blockTokens
+			for p.index = 0; p.index < len(p.Tokens); p.index++ {
 				// Condition is true?
-				if c == "true" {
-					kws = p.process(p.Tks[p.i])
-					if kws == fract.LOOPBreak || kws == fract.FUNCReturn { // Break loop or return.
-						brk = true
+				if condition == "true" {
+					keywordState = p.processExpression(p.Tokens[p.index])
+					if keywordState == fract.LOOPBreak || keywordState == fract.FUNCReturn { // Break loop or return.
+						breakLoop = true
 						break
-					} else if kws == fract.LOOPContinue { // Continue loop.
+					} else if keywordState == fract.LOOPContinue { // Continue loop.
 						break
 					}
 				} else {
-					brk = true
+					breakLoop = true
 					break
 				}
 			}
 			// Remove temporary variables.
-			p.defs.Vars = p.defs.Vars[:vlen]
+			p.defs.Vars = p.defs.Vars[:varLen]
 			// Remove temporary functions.
-			p.defs.Funcs = p.defs.Funcs[:flen]
+			p.defs.Funcs = p.defs.Funcs[:funcLen]
 			// Remove temporary imports.
-			p.packages = p.packages[:ilen]
-			c = p.procCondition(tks)
-			if brk || c != "true" {
-				p.Tks = ptks
-				p.i = pi
-				return prockws(kws)
+			p.packages = p.packages[:impLen]
+			condition = p.prococessCondition(tokens)
+			if breakLoop || condition != "true" {
+				p.Tokens = parserTokens
+				p.index = parserIndex
+				return processKeywordState(keywordState)
 			}
 			goto while
 		}
@@ -134,89 +133,89 @@ func (p *Parser) procLoop(tks []obj.Token) uint8 {
 	//*************
 	//   FOREACH
 	//*************
-	nametk := tks[0]
+	nameTK := tokens[0]
 	// Name is not name?
-	if nametk.T != fract.Name {
-		fract.IPanic(nametk, obj.SyntaxPanic, "This is not a valid name!")
+	if nameTK.Type != fract.Name {
+		fract.IPanic(nameTK, obj.SyntaxPanic, "This is not a valid name!")
 	}
-	if nametk.V != "_" {
-		if !validName(nametk.V) {
-			fract.IPanic(nametk, obj.NamePanic, "Invalid name!")
+	if nameTK.Val != "_" {
+		if !isValidName(nameTK.Val) {
+			fract.IPanic(nameTK, obj.NamePanic, "Invalid name!")
 		}
-		if ln := p.definedName(nametk.V); ln != -1 {
-			fract.IPanic(nametk, obj.NamePanic, "\""+nametk.V+"\" is already defined at line: "+fmt.Sprint(ln))
+		if ln := p.defIndexByName(nameTK.Val); ln != -1 {
+			fract.IPanic(nameTK, obj.NamePanic, "\""+nameTK.Val+"\" is already defined at line: "+fmt.Sprint(ln))
 		}
 	} else {
-		nametk.V = ""
+		nameTK.Val = ""
 	}
 	// Element name?
-	ename := ""
-	if tks[1].T == fract.Comma {
-		if len(tks) < 3 || tks[2].T != fract.Name {
-			fract.IPanic(tks[1], obj.SyntaxPanic, "Element name is not defined!")
+	elemName := ""
+	if tokens[1].Type == fract.Comma {
+		if len(tokens) < 3 || tokens[2].Type != fract.Name {
+			fract.IPanic(tokens[1], obj.SyntaxPanic, "Element name is not defined!")
 		}
-		if tks[2].V != "_" {
-			ename = tks[2].V
-			if !validName(ename) {
-				fract.IPanic(tks[2], obj.NamePanic, "Invalid name!")
+		if tokens[2].Val != "_" {
+			elemName = tokens[2].Val
+			if !isValidName(elemName) {
+				fract.IPanic(tokens[2], obj.NamePanic, "Invalid name!")
 			}
-			if ln := p.definedName(tks[2].V); ln != -1 {
-				fract.IPanic(tks[2], obj.NamePanic, "\""+ename+"\" is already defined at line: "+fmt.Sprint(ln))
+			if ln := p.defIndexByName(tokens[2].Val); ln != -1 {
+				fract.IPanic(tokens[2], obj.NamePanic, "\""+elemName+"\" is already defined at line: "+fmt.Sprint(ln))
 			}
 		}
-		if len(tks)-3 == 0 {
-			tks[2].Col += len(tks[2].V)
-			fract.IPanic(tks[2], obj.SyntaxPanic, "Value is not given!")
+		if len(tokens)-3 == 0 {
+			tokens[2].Column += len(tokens[2].Val)
+			fract.IPanic(tokens[2], obj.SyntaxPanic, "Value is not given!")
 		}
-		tks = tks[2:]
+		tokens = tokens[2:]
 	}
-	if len(tks) < 3 {
-		fract.IPanic(tks[1], obj.SyntaxPanic, "Value is not given!")
-	} else if t := tks[1]; t.T != fract.In && (t.T != fract.Operator || t.V != ":=") {
-		fract.IPanic(tks[1], obj.SyntaxPanic, "Invalid syntax!")
+	if len(tokens) < 3 {
+		fract.IPanic(tokens[1], obj.SyntaxPanic, "Value is not given!")
+	} else if t := tokens[1]; t.Type != fract.In && (t.Type != fract.Operator || t.Val != ":=") {
+		fract.IPanic(tokens[1], obj.SyntaxPanic, "Invalid syntax!")
 	}
-	tks = tks[2:]
-	v := *p.procValTks(tks)
+	tokens = tokens[2:]
+	val := *p.processValTokens(tokens)
 	// Type is not list?
-	if !v.IsEnum() {
-		fract.IPanic(tks[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
+	if !val.IsEnum() {
+		fract.IPanic(tokens[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
 	p.defs.Vars = append(p.defs.Vars,
-		oop.Var{Name: nametk.V, V: oop.Val{D: "0", T: oop.Int}},
-		oop.Var{Name: ename},
+		oop.Var{Name: nameTK.Val, Val: oop.Val{Data: "0", Type: oop.Int}},
+		oop.Var{Name: elemName},
 	)
-	vlen := len(p.defs.Vars)
-	index := &p.defs.Vars[vlen-2]
-	element := &p.defs.Vars[vlen-1]
+	varLen := len(p.defs.Vars)
+	index := &p.defs.Vars[varLen-2]
+	elem := &p.defs.Vars[varLen-1]
 	vars := p.defs.Vars
 	// Interpret block.
-	l := loop{enum: v}
+	l := loop{val: val}
 	l.run(func() {
-		index.V = l.a
-		element.V = l.b
-		p.Tks = btks
-		for p.i = 0; p.i < len(p.Tks); p.i++ {
-			kws = p.process(p.Tks[p.i])
-			if kws == fract.LOOPBreak || kws == fract.FUNCReturn { // Break loop or return.
-				brk = true
+		index.Val = l.a
+		elem.Val = l.b
+		p.Tokens = blockTokens
+		for p.index = 0; p.index < len(p.Tokens); p.index++ {
+			keywordState = p.processExpression(p.Tokens[p.index])
+			if keywordState == fract.LOOPBreak || keywordState == fract.FUNCReturn { // Break loop or return.
+				breakLoop = true
 				break
-			} else if kws == fract.LOOPContinue { // Continue loop.
+			} else if keywordState == fract.LOOPContinue { // Continue loop.
 				break
 			}
 		}
 		// Remove temporary variables.
 		p.defs.Vars = vars
 		// Remove temporary functions.
-		p.defs.Funcs = p.defs.Funcs[:flen]
+		p.defs.Funcs = p.defs.Funcs[:funcLen]
 		// Remove temporary imports.
-		p.packages = p.packages[:ilen]
-		l.end = brk
+		p.packages = p.packages[:impLen]
+		l.breakLoop = breakLoop
 	})
-	p.Tks = ptks
-	p.i = pi
+	p.Tokens = parserTokens
+	p.index = parserIndex
 	// Remove loop variables.
 	index = nil
-	element = nil
+	elem = nil
 	p.defs.Vars = vars[:len(vars)-2]
-	return prockws(kws)
+	return processKeywordState(keywordState)
 }

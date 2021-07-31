@@ -13,25 +13,25 @@ import (
 // Import content into destination interpeter.
 func (p *Parser) Import() {
 	// Interpret all lines.
-	for p.i = 1; p.i < len(p.Tks); p.i++ {
-		switch tks := p.Tks[p.i]; tks[0].T {
+	for p.index = 1; p.index < len(p.Tokens); p.index++ {
+		switch tokens := p.Tokens[p.index]; tokens[0].Type {
 		case fract.Var:
-			p.vardec(tks)
+			p.vardec(tokens)
 		case fract.Fn:
-			p.funcdec(tks)
+			p.funcdec(tokens)
 		case fract.Struct:
-			p.structdec(tks)
+			p.structdec(tokens)
 		case fract.Class:
-			p.classdec(tks)
+			p.classdec(tokens)
 		case fract.Import: // Import.
 			src := new(Parser)
 			src.AddBuiltInFuncs()
-			src.procImport(tks)
+			src.processImport(tokens)
 			p.defs.Vars = append(p.defs.Vars, src.defs.Vars...)
 			p.defs.Funcs = append(p.defs.Funcs, src.defs.Funcs...)
 			p.packages = append(p.packages, src.packages...)
 		case fract.Macro: // Macro.
-			p.procPragma(tks)
+			p.processPragma(tokens)
 			if p.loopCount != -1 { // Breaked import.
 				return
 			}
@@ -43,68 +43,68 @@ func (p *Parser) Import() {
 type importInfo struct {
 	name string  // Package name.
 	src  *Parser // Source of package.
-	ln   int     // Defined line.
+	line int     // Defined line.
 }
 
-func (p *Parser) procImport(tks []obj.Token) {
-	if len(tks) == 1 {
-		fract.IPanic(tks[0], obj.SyntaxPanic, "Import path is not given!")
+func (p *Parser) processImport(tokens []obj.Token) {
+	if len(tokens) == 1 {
+		fract.IPanic(tokens[0], obj.SyntaxPanic, "Import path is not given!")
 	}
-	if tks[1].T != fract.Name && (tks[1].T != fract.Value || tks[1].V[0] != '"' && tks[1].V[0] != '.') {
-		fract.IPanic(tks[1], obj.ValuePanic, "Import path should be string or standard path!")
+	if tokens[1].Type != fract.Name && (tokens[1].Type != fract.Value || tokens[1].Val[0] != '"' && tokens[1].Val[0] != '.') {
+		fract.IPanic(tokens[1], obj.ValuePanic, "Import path should be string or standard path!")
 	}
 	j := 1
-	if len(tks) > 2 {
-		if tks[1].T == fract.Name {
+	if len(tokens) > 2 {
+		if tokens[1].Type == fract.Name {
 			j = 2
 		} else {
-			fract.IPanic(tks[1], obj.NamePanic, "Alias is should be a invalid name!")
+			fract.IPanic(tokens[1], obj.NamePanic, "Alias is should be a invalid name!")
 		}
 	}
-	if j == 1 && len(tks) != 2 {
-		fract.IPanic(tks[2], obj.SyntaxPanic, "Invalid syntax!")
-	} else if j == 2 && len(tks) != 3 {
-		fract.IPanic(tks[3], obj.SyntaxPanic, "Invalid syntax!")
+	if j == 1 && len(tokens) != 2 {
+		fract.IPanic(tokens[2], obj.SyntaxPanic, "Invalid syntax!")
+	} else if j == 2 && len(tokens) != 3 {
+		fract.IPanic(tokens[3], obj.SyntaxPanic, "Invalid syntax!")
 	}
 	src := &Parser{}
 	src.AddBuiltInFuncs()
-	var imppath string
-	if tks[j].T == fract.Name {
-		switch tks[j].V {
+	var impPath string
+	if tokens[j].Type == fract.Name {
+		switch tokens[j].Val {
 		default:
-			imppath = strings.ReplaceAll(fract.StdLib+"/."+tks[j].V, ".", string(os.PathSeparator))
+			impPath = strings.ReplaceAll(fract.StdLib+"/."+tokens[j].Val, ".", string(os.PathSeparator))
 		}
 	} else {
-		imppath = tks[0].F.P[:strings.LastIndex(tks[0].F.P, string(os.PathSeparator))+1] + p.procValTks([]obj.Token{tks[j]}).String()
+		impPath = tokens[0].File.Path[:strings.LastIndex(tokens[0].File.Path, string(os.PathSeparator))+1] + p.processValTokens([]obj.Token{tokens[j]}).String()
 	}
-	imppath = path.Join(fract.ExecPath, imppath)
-	info, err := os.Stat(imppath)
+	impPath = path.Join(fract.ExecutablePath, impPath)
+	info, err := os.Stat(impPath)
 	// Exists directory?
-	if imppath != "" && (err != nil || !info.IsDir()) {
-		fract.IPanic(tks[j], obj.PlainPanic, "Directory not found/access!")
+	if impPath != "" && (err != nil || !info.IsDir()) {
+		fract.IPanic(tokens[j], obj.PlainPanic, "Directory not found/access!")
 	}
-	infos, err := ioutil.ReadDir(imppath)
+	infos, err := ioutil.ReadDir(impPath)
 	if err != nil {
-		fract.IPanic(tks[1], obj.PlainPanic, "There is a problem on import: "+err.Error())
+		fract.IPanic(tokens[1], obj.PlainPanic, "There is a problem on import: "+err.Error())
 	}
 	for _, i := range infos {
 		// Skip directories.
 		if i.IsDir() || !strings.HasSuffix(i.Name(), fract.Extension) {
 			continue
 		}
-		isrc := New(imppath + string(os.PathSeparator) + i.Name())
-		isrc.loopCount = -1 //! Tag as import source.
-		isrc.ready()
-		isrc.AddBuiltInFuncs()
-		bifl := len(isrc.defs.Funcs)
-		isrc.Import()
-		isrc.importPackage() // Import other package files.
-		isrc.loopCount = 0
-		src.defs.Funcs = append(src.defs.Funcs, isrc.defs.Funcs[bifl:]...)
-		src.defs.Vars = append(src.defs.Vars, isrc.defs.Vars...)
-		src.packages = append(src.packages, isrc.packages...)
-		src.pkg = isrc.pkg
+		impSrc := New(impPath + string(os.PathSeparator) + i.Name())
+		impSrc.loopCount = -1 //! Tag as import source.
+		impSrc.ready()
+		impSrc.AddBuiltInFuncs()
+		builtinFuncLen := len(impSrc.defs.Funcs)
+		impSrc.Import()
+		impSrc.importPackage() // Import other package files.
+		impSrc.loopCount = 0
+		src.defs.Funcs = append(src.defs.Funcs, impSrc.defs.Funcs[builtinFuncLen:]...)
+		src.defs.Vars = append(src.defs.Vars, impSrc.defs.Vars...)
+		src.packages = append(src.packages, impSrc.packages...)
+		src.packageName = impSrc.packageName
 		break
 	}
-	p.packages = append(p.packages, importInfo{name: src.pkg, src: src, ln: tks[0].Ln})
+	p.packages = append(p.packages, importInfo{name: src.packageName, src: src, line: tokens[0].Line})
 }

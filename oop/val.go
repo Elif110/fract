@@ -26,37 +26,37 @@ const (
 
 // Val instance.
 type Val struct {
-	D     interface{}
-	T     uint8
+	Data  interface{}
+	Type  uint8
 	Mut   bool
 	Const bool
 }
 
-// Returns immutable copy.
+// Immut returns immutable copy.
 func (d Val) Immut() Val {
-	v := Val{T: d.T}
-	switch d.T {
+	val := Val{Type: d.Type}
+	switch d.Type {
 	case Map:
-		c := NewMapModel()
-		for k, v := range d.D.(MapModel).M {
-			c.M[k] = v
+		cpy := NewMapModel()
+		for k, v := range d.Data.(MapModel).Map {
+			cpy.Map[k] = v
 		}
-		v.D = c
+		val.Data = cpy
 	case List:
-		c := NewListModel()
-		src := *d.D.(*ListModel)
-		c.Elems = make(TypeList, src.Length)
-		copy(c.Elems, src.Elems)
-		c.Length = src.Length
-		v.D = c
+		cpy := NewListModel()
+		src := *d.Data.(*ListModel)
+		cpy.Elems = make(TypeList, src.Len)
+		copy(cpy.Elems, src.Elems)
+		cpy.Len = src.Len
+		val.Data = cpy
 	default:
-		v.D = d.D
+		val.Data = d.Data
 	}
-	return v
+	return val
 }
 
 func (d Val) String() string {
-	switch d.T {
+	switch d.Type {
 	case Func:
 		return "object.func"
 	case Package:
@@ -66,38 +66,38 @@ func (d Val) String() string {
 	case ClassDef:
 		return "object.class"
 	case List:
-		return fmt.Sprint(d.D.(*ListModel).Elems)
+		return fmt.Sprint(d.Data.(*ListModel).Elems)
 	case Map:
-		s := fmt.Sprint(d.D.(MapModel).M)
-		return "{" + s[4:len(s)-1] + "}"
+		str := fmt.Sprint(d.Data.(MapModel).Map)
+		return "{" + str[4:len(str)-1] + "}"
 	case StructIns:
-		var s strings.Builder
-		d := d.D.(StructInstance)
-		s.WriteString("struct{")
-		for _, f := range d.Fields.Vars {
-			s.WriteString(f.Name)
-			s.WriteRune(':')
-			s.WriteString(f.V.String())
-			s.WriteRune(' ')
+		var sb strings.Builder
+		ins := d.Data.(StructInstance)
+		sb.WriteString("struct{")
+		for _, f := range ins.Fields.Vars {
+			sb.WriteString(f.Name)
+			sb.WriteRune(':')
+			sb.WriteString(f.Val.String())
+			sb.WriteRune(' ')
 		}
-		if len(d.Fields.Vars) == 0 {
-			return s.String() + "}"
+		if len(ins.Fields.Vars) == 0 {
+			return sb.String() + "}"
 		}
-		return s.String()[:s.Len()-1] + "}"
+		return sb.String()[:sb.Len()-1] + "}"
 	case ClassIns:
 		return "object.classins"
 	case None:
 		return "none"
 	default:
-		if d.D == nil {
+		if d.Data == nil {
 			return ""
 		}
-		return d.D.(string)
+		return d.Data.(string)
 	}
 }
 
 func (v Val) Print() bool {
-	if v.D == nil {
+	if v.Data == nil {
 		return false
 	}
 	fmt.Print(v.String())
@@ -106,7 +106,7 @@ func (v Val) Print() bool {
 
 // Is enumerable?
 func (v Val) IsEnum() bool {
-	switch v.T {
+	switch v.Type {
 	case Str, List, Map:
 		return true
 	default:
@@ -116,37 +116,37 @@ func (v Val) IsEnum() bool {
 
 // Length.
 func (v Val) Len() int {
-	switch v.T {
+	switch v.Type {
 	case Str:
-		return len(v.D.(string))
+		return len(v.Data.(string))
 	case List:
-		return v.D.(*ListModel).Length
+		return v.Data.(*ListModel).Len
 	case Map:
-		return len(v.D.(MapModel).M)
+		return len(v.Data.(MapModel).Map)
 	}
 	return -1
 }
 
-func (v Val) Equals(dt Val) bool {
-	return reflect.DeepEqual(v.D, dt.D)
+func (v Val) Equals(val Val) bool {
+	return reflect.DeepEqual(v.Data, val.Data)
 }
 
-func (v Val) NotEquals(dt Val) bool {
-	return !v.Equals(dt)
+func (v Val) NotEquals(val Val) bool {
+	return !v.Equals(val)
 }
 
-func (v Val) Greater(dt Val) bool {
-	return (v.T == Str && v.String() > dt.String()) || (v.T != Str && str.Conv(v.String()) > str.Conv(dt.String()))
+func (v Val) Greater(val Val) bool {
+	return (v.Type == Str && v.String() > val.String()) || (v.Type != Str && str.Conv(v.String()) > str.Conv(val.String()))
 }
 
-func (v Val) Less(dt Val) bool {
-	return (v.T == Str && v.String() < dt.String()) || (v.T != Str && str.Conv(v.String()) < str.Conv(dt.String()))
+func (v Val) Less(val Val) bool {
+	return (v.Type == Str && v.String() < val.String()) || (v.Type != Str && str.Conv(v.String()) < str.Conv(val.String()))
 }
 
-func (v Val) GreaterEquals(dt Val) bool {
-	return (v.T == Str && v.String() >= dt.String()) || (v.T != Str && str.Conv(v.String()) >= str.Conv(dt.String()))
+func (v Val) GreaterEquals(val Val) bool {
+	return (v.Type == Str && v.String() >= val.String()) || (v.Type != Str && str.Conv(v.String()) >= str.Conv(val.String()))
 }
 
-func (v Val) LessEquals(dt Val) bool {
-	return (v.T == Str && v.String() <= dt.String()) || (v.T != Str && str.Conv(v.String()) <= str.Conv(dt.String()))
+func (v Val) LessEquals(val Val) bool {
+	return (v.Type == Str && v.String() <= val.String()) || (v.Type != Str && str.Conv(v.String()) <= str.Conv(val.String()))
 }

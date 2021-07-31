@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// Full returns r as string by length.
+// Full returns rune as string by length.
 func Full(len int, r rune) string {
 	var sb strings.Builder
 	for len >= 0 {
@@ -15,7 +15,7 @@ func Full(len int, r rune) string {
 	return sb.String()
 }
 
-// Parse string to arithmetic oop.
+// Conv parse string to arithmetic value.
 func Conv(v string) float64 {
 	switch v {
 	case "true":

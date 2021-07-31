@@ -47,7 +47,7 @@ fn IsIdentifier(str) {
     ret false
   }
   for _, char in str {
-    if char <> '_' && IsLetter(char) == false && isNumericChar(char) == false {
+    if char != '_' && IsLetter(char) == false && isNumericChar(char) == false {
       ret false
     }
   }
@@ -82,7 +82,7 @@ fn IsSpace(str) {
     ret false
   }
   for _, char in str {
-    if char <> '\t' && char <> ' ' && char <> '\v' && char <> '\n' && char <> '\r' && char <> '\f' {
+    if char != '\t' && char != ' ' && char != '\v' && char != '\n' && char != '\r' && char != '\f' {
       ret false
     }
   }

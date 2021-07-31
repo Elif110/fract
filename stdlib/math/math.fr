@@ -53,12 +53,12 @@ fn Floor(n) {
 }
 
 // Returns true if number is NaN, false if not.
-fn IsNaN(x) { ret x <> x }
+fn IsNaN(x) { ret x != x }
 
 // Returns true if object is numeric, returns false if not.
 fn IsNumeric(object) {
   result := float(object)
-  ret result <> 0 || result == 0 && (object == 0 || object == '0')
+  ret result != 0 || result == 0 && (object == 0 || object == '0')
 }
 
 // Returns maximum number.

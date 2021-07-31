@@ -17,110 +17,110 @@ import (
 
 // Exit from application with code.
 func Exit(tk obj.Token, args []oop.Var) oop.Val {
-	c := args[0].V
-	if c.T != oop.Int {
+	code := args[0].Val
+	if code.Type != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Exit code is only be integer!")
 	}
-	ec, _ := strconv.ParseInt(c.String(), 10, 64)
-	os.Exit(int(ec))
+	exitCode, _ := strconv.ParseInt(code.String(), 10, 64)
+	os.Exit(int(exitCode))
 	return oop.Val{}
 }
 
 // Float convert object to float.
 func Float(tk obj.Token, args []oop.Var) oop.Val {
 	return oop.Val{
-		D: fmt.Sprintf(fract.FloatFormat, str.Conv(args[0].V.String())),
-		T: oop.Float,
+		Data: fmt.Sprintf(fract.FloatFormat, str.Conv(args[0].Val.String())),
+		Type: oop.Float,
 	}
 }
 
 // Input returns input from command-line.
 func Input(tk obj.Token, args []oop.Var) oop.Val {
-	args[0].V.Print()
+	args[0].Val.Print()
 	//! Don't use fmt.Scanln
 	s := bufio.NewScanner(os.Stdin)
 	s.Scan()
-	return oop.Val{D: s.Text(), T: oop.Str}
+	return oop.Val{Data: s.Text(), Type: oop.Str}
 }
 
 // Int convert object to integer.
 func Int(tk obj.Token, args []oop.Var) oop.Val {
-	switch args[1].V.D { // Cast type.
+	switch args[1].Val.Data { // Cast type.
 	case "strcode":
-		v := oop.NewListModel()
-		for _, byt := range []byte(args[0].V.String()) {
-			v.PushBack(oop.Val{D: fmt.Sprint(byt), T: oop.Int})
+		codes := oop.NewListModel()
+		for _, byt := range []byte(args[0].Val.String()) {
+			codes.PushBack(oop.Val{Data: fmt.Sprint(byt), Type: oop.Int})
 		}
-		return oop.Val{D: v, T: oop.List}
+		return oop.Val{Data: codes, Type: oop.List}
 	default: // Object.
 		return oop.Val{
-			D: fmt.Sprint(int(str.Conv(args[0].V.String()))),
-			T: oop.Int,
+			Data: fmt.Sprint(int(str.Conv(args[0].Val.String()))),
+			Type: oop.Int,
 		}
 	}
 }
 
 // Len returns length of object.
 func Len(tk obj.Token, args []oop.Var) oop.Val {
-	return oop.Val{D: fmt.Sprint(args[0].V.Len()), T: oop.Int}
+	return oop.Val{Data: fmt.Sprint(args[0].Val.Len()), Type: oop.Int}
 }
 
 // Calloc list by size.
 func Calloc(tk obj.Token, args []oop.Var) oop.Val {
-	sz := args[0].V
-	if sz.T != oop.Int {
+	size := args[0].Val
+	if size.Type != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Size is only be integer!")
 	}
-	szv, _ := strconv.Atoi(sz.String())
-	if szv < 0 {
+	sizeInt, _ := strconv.Atoi(size.String())
+	if sizeInt < 0 {
 		fract.Panic(tk, obj.ValuePanic, "Size should be minimum zero!")
 	}
-	v := oop.Val{T: oop.List}
-	if szv > 0 {
+	value := oop.Val{Type: oop.List}
+	if sizeInt > 0 {
 		var index int
-		data := oop.NewListModel()
-		for ; index < szv; index++ {
-			data.PushBack(oop.Val{D: "0", T: oop.Int})
+		list := oop.NewListModel()
+		for ; index < sizeInt; index++ {
+			list.PushBack(oop.Val{Data: "0", Type: oop.Int})
 		}
-		v.D = data
+		value.Data = list
 	} else {
-		v.D = oop.NewListModel()
+		value.Data = oop.NewListModel()
 	}
-	return v
+	return value
 }
 
 // Realloc list by size.
 func Realloc(tk obj.Token, args []oop.Var) oop.Val {
-	if args[0].V.T != oop.List {
+	if args[0].Val.Type != oop.List {
 		fract.Panic(tk, obj.ValuePanic, "Value is must be list!")
 	}
-	szv, _ := strconv.Atoi(args[1].V.String())
-	if szv < 0 {
+	size, _ := strconv.Atoi(args[1].Val.String())
+	if size < 0 {
 		fract.Panic(tk, obj.ValuePanic, "Size should be minimum zero!")
 	}
 	var (
-		data = oop.NewListModel()
-		b    = args[0].V.D.(*oop.ListModel)
-		v    = oop.Val{T: oop.List}
-		c    = 0
+		list   = oop.NewListModel()
+		dest   = args[0].Val.Data.(*oop.ListModel)
+		val    = oop.Val{Type: oop.List}
+		length = 0
 	)
-	if b.Length <= szv {
-		data = b
-		c = b.Length
+	if dest.Len <= size {
+		list = dest
+		length = dest.Len
 	} else {
-		v.D = b.Elems[:szv]
-		return v
+		val.Data = dest.Elems[:size]
+		return val
 	}
-	for ; c <= szv; c++ {
-		data.PushBack(oop.Val{D: "0", T: oop.Int})
+	for ; length <= size; length++ {
+		list.PushBack(oop.Val{Data: "0", Type: oop.Int})
 	}
-	v.D = data
-	return v
+	val.Data = list
+	return val
 }
 
 // Print values to cli.
 func Print(tk obj.Token, args []oop.Var) oop.Val {
-	for _, d := range args[0].V.D.(*oop.ListModel).Elems {
+	for _, d := range args[0].Val.Data.(*oop.ListModel).Elems {
 		fmt.Print(d)
 	}
 	return oop.Val{}
@@ -135,47 +135,47 @@ func Println(tk obj.Token, args []oop.Var) oop.Val {
 
 // Range returns list by parameters.
 func Range(tk obj.Token, args []oop.Var) oop.Val {
-	start := args[0].V
-	to := args[1].V
-	step := args[2].V
-	if start.T != oop.Int && start.T != oop.Float {
+	start := args[0].Val
+	to := args[1].Val
+	step := args[2].Val
+	if start.Type != oop.Int && start.Type != oop.Float {
 		fract.Panic(tk, obj.ValuePanic, `"start" argument should be numeric!`)
-	} else if to.T != oop.Int && to.T != oop.Float {
+	} else if to.Type != oop.Int && to.Type != oop.Float {
 		fract.Panic(tk, obj.ValuePanic, `"to" argument should be numeric!`)
-	} else if step.T != oop.Int && step.T != oop.Float {
+	} else if step.Type != oop.Int && step.Type != oop.Float {
 		fract.Panic(tk, obj.ValuePanic, `"step" argument should be numeric!`)
 	}
-	startV, _ := strconv.ParseFloat(start.String(), 64)
-	toV, _ := strconv.ParseFloat(to.String(), 64)
-	stepV, _ := strconv.ParseFloat(step.String(), 64)
-	if stepV <= 0 {
-		return oop.Val{T: oop.List}
+	startFloat, _ := strconv.ParseFloat(start.String(), 64)
+	toFloat, _ := strconv.ParseFloat(to.String(), 64)
+	stepFloat, _ := strconv.ParseFloat(step.String(), 64)
+	if stepFloat <= 0 {
+		return oop.Val{Type: oop.List}
 	}
-	t := oop.Int
-	if start.T == oop.Float || to.T == oop.Float || step.T == oop.Float {
-		t = oop.Float
+	typ := oop.Int
+	if start.Type == oop.Float || to.Type == oop.Float || step.Type == oop.Float {
+		typ = oop.Float
 	}
-	data := oop.NewListModel()
-	if startV <= toV {
-		for ; startV <= toV; startV += stepV {
-			data.PushBack(oop.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
+	list := oop.NewListModel()
+	if startFloat <= toFloat {
+		for ; startFloat <= toFloat; startFloat += stepFloat {
+			list.PushBack(oop.Val{Data: fmt.Sprintf(fract.FloatFormat, startFloat), Type: typ})
 		}
 	} else {
-		for ; startV >= toV; startV -= stepV {
-			data.PushBack(oop.Val{D: fmt.Sprintf(fract.FloatFormat, startV), T: t})
+		for ; startFloat >= toFloat; startFloat -= stepFloat {
+			list.PushBack(oop.Val{Data: fmt.Sprintf(fract.FloatFormat, startFloat), Type: typ})
 		}
 	}
-	return oop.Val{D: data, T: oop.List}
+	return oop.Val{Data: list, Type: oop.List}
 }
 
 // String convert object to string.
 func String(tk obj.Token, args []oop.Var) oop.Val {
-	switch args[1].V.D {
+	switch args[1].Val.Data {
 	case "parse":
 		str := ""
-		if val := args[0].V; val.T == oop.List {
-			data := val.D.(*oop.ListModel)
-			if data.Length == 0 {
+		if val := args[0].Val; val.Type == oop.List {
+			data := val.Data.(*oop.ListModel)
+			if data.Len == 0 {
 				str = "[]"
 			} else {
 				var sb strings.Builder
@@ -186,35 +186,35 @@ func String(tk obj.Token, args []oop.Var) oop.Val {
 				str = sb.String()[:sb.Len()-1] + "]"
 			}
 		} else {
-			str = args[0].V.String()
+			str = args[0].Val.String()
 		}
-		return oop.Val{D: str, T: oop.Str}
+		return oop.Val{Data: str, Type: oop.Str}
 	case "bytecode":
-		v := args[0].V
+		val := args[0].Val
 		var sb strings.Builder
-		for _, d := range v.D.(*oop.ListModel).Elems {
-			if d.T != oop.Int {
+		for _, element := range val.Data.(*oop.ListModel).Elems {
+			if element.Type != oop.Int {
 				sb.WriteByte(' ')
 			}
-			r, _ := strconv.ParseInt(d.String(), 10, 32)
+			r, _ := strconv.ParseInt(element.String(), 10, 32)
 			sb.WriteByte(byte(r))
 		}
-		return oop.Val{D: sb.String(), T: oop.Str}
+		return oop.Val{Data: sb.String(), Type: oop.Str}
 	default: // Object.
 		arg := args[0]
-		return oop.Val{D: fmt.Sprintf("{data:%s type:%d}", arg.V.D, arg.V.T), T: oop.Str}
+		return oop.Val{Data: fmt.Sprintf("{data:%s type:%d}", arg.Val.Data, arg.Val.Type), Type: oop.Str}
 	}
 }
 
 func Panic(tk obj.Token, args []oop.Var) oop.Val {
-	p := obj.Panic{M: args[0].V.String()}
+	p := obj.Panic{Msg: args[0].Val.String()}
 	if fract.TryCount > 0 {
 		panic(p)
 	}
-	fmt.Println("panic: " + p.M)
+	fmt.Println("panic: " + p.Msg)
 	panic("")
 }
 
 func Type(tk obj.Token, args []oop.Var) oop.Val {
-	return oop.Val{D: fmt.Sprint(args[0].V.T), T: oop.Int}
+	return oop.Val{Data: fmt.Sprint(args[0].Val.Type), Type: oop.Int}
 }

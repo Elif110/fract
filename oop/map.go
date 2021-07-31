@@ -9,13 +9,13 @@ import (
 type MapType map[Val]Val
 
 type MapModel struct {
-	M    MapType
+	Map  MapType
 	Defs DefMap
 }
 
 func NewMapModel() MapModel {
 	var m MapModel
-	m.M = MapType{}
+	m.Map = MapType{}
 	m.Defs.Funcs = []*Fn{
 		{Name: "keys", Src: m.keysF},
 		{Name: "values", Src: m.valuesF},
@@ -26,23 +26,23 @@ func NewMapModel() MapModel {
 
 func (m *MapModel) keysF(tk obj.Token, args []Var) Val {
 	keys := NewListModel()
-	for k := range m.M {
-		keys.PushBack(k)
+	for key := range m.Map {
+		keys.PushBack(key)
 	}
-	return Val{D: keys, T: List}
+	return Val{Data: keys, Type: List}
 }
 
 func (m *MapModel) valuesF(tk obj.Token, args []Var) Val {
 	vals := NewListModel()
-	for _, v := range m.M {
-		vals.PushBack(v)
+	for _, val := range m.Map {
+		vals.PushBack(val)
 	}
-	return Val{D: vals, T: List}
+	return Val{Data: vals, Type: List}
 }
 
 func (m *MapModel) removeKeyF(tk obj.Token, args []Var) Val {
-	arg := args[0]
-	_, ok := m.M[arg.V]
-	delete(m.M, arg.V)
-	return Val{D: fmt.Sprint(ok), T: Bool}
+	keyArg := args[0]
+	_, ok := m.Map[keyArg.Val]
+	delete(m.Map, keyArg.Val)
+	return Val{Data: fmt.Sprint(ok), Type: Bool}
 }

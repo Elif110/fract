@@ -9,53 +9,53 @@ import (
 )
 
 // buildClass from tokens.
-func (p *Parser) buildClass(name string, tks []obj.Token) *oop.Val {
-	blk := p.getBlock(tks)
-	c := oop.Class{Name: name, F: p.L.F}
-	for _, tks := range blk {
-		switch tks[0].T {
+func (p *Parser) buildClass(name string, tokens []obj.Token) *oop.Val {
+	block := p.getBlock(tokens)
+	class := oop.Class{Name: name, File: p.Lex.File}
+	for _, tokens := range block {
+		switch tokens[0].Type {
 		case fract.Var:
-			p.fvardec(&c.Defs, tks)
+			p.fvardec(&class.Defs, tokens)
 		case fract.Fn:
-			p.ffuncdec(&c.Defs, tks)
-			if f := c.Defs.Funcs[len(c.Defs.Funcs)-1]; f.Name == c.Name {
-				if c.Constructor != nil {
-					fract.IPanic(tks[0], obj.NamePanic, "Constructor is already defined!")
+			p.ffuncdec(&class.Defs, tokens)
+			if f := class.Defs.Funcs[len(class.Defs.Funcs)-1]; f.Name == class.Name {
+				if class.Constructor != nil {
+					fract.IPanic(tokens[0], obj.NamePanic, "Constructor is already defined!")
 				}
-				c.Constructor = f
-				c.Defs.Funcs = c.Defs.Funcs[:len(c.Defs.Funcs)-1]
+				class.Constructor = f
+				class.Defs.Funcs = class.Defs.Funcs[:len(class.Defs.Funcs)-1]
 			}
 		default:
-			fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")
+			fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
 		}
 	}
-	if c.Constructor == nil { // Constructor is not given.
-		c.Constructor = &oop.Fn{Name: c.Name + ".constructor", Src: p}
+	if class.Constructor == nil { // Constructor is not given.
+		class.Constructor = &oop.Fn{Name: class.Name + ".constructor", Src: p}
 	}
-	return &oop.Val{D: c, T: oop.ClassDef}
+	return &oop.Val{Data: class, Type: oop.ClassDef}
 }
 
 // Process class declaration.
-func (p *Parser) classdec(tks []obj.Token) {
-	l := len(tks)
-	if l < 2 {
-		fract.IPanic(tks[0], obj.SyntaxPanic, "Invalid syntax!")
+func (p *Parser) classdec(tokens []obj.Token) {
+	tokensLen := len(tokens)
+	if tokensLen < 2 {
+		fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
 	}
-	name := tks[1]
-	if name.T != fract.Name {
-		fract.IPanic(tks[1], obj.SyntaxPanic, "Name is not valid!")
+	nameTk := tokens[1]
+	if nameTk.Type != fract.Name {
+		fract.IPanic(tokens[1], obj.SyntaxPanic, "Name is not valid!")
 	}
-	if ln := p.definedName(tks[1].V); ln != -1 {
-		fract.IPanic(tks[1], obj.NamePanic, "\""+tks[1].V+"\" is already defined at line: "+fmt.Sprint(ln))
+	if line := p.defIndexByName(tokens[1].Val); line != -1 {
+		fract.IPanic(tokens[1], obj.NamePanic, "\""+tokens[1].Val+"\" is already defined at line: "+fmt.Sprint(line))
 	}
-	v := *p.buildClass(name.V, tks[2:])
-	v.Const = true
+	classVal := *p.buildClass(nameTk.Val, tokens[2:])
+	classVal.Const = true
 	if p.funcTempVars != -1 {
 		p.funcTempVars++
 	}
 	p.defs.Vars = append(p.defs.Vars, oop.Var{
-		Name: name.V,
-		Ln:   tks[0].Ln,
-		V:    v,
+		Name: nameTk.Val,
+		Line: tokens[0].Line,
+		Val:  classVal,
 	})
 }

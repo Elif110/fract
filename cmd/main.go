@@ -34,8 +34,7 @@ import (
 	"github.com/fract-lang/fract/pkg/str"
 )
 
-// Returns ns of command.
-func ns(cmd string) string {
+func getNamespace(cmd string) string {
 	i := strings.IndexByte(cmd, ' ')
 	if i == -1 {
 		return cmd
@@ -43,8 +42,7 @@ func ns(cmd string) string {
 	return cmd[0:i]
 }
 
-// Remove namespace from command.
-func remns(cmd string) string {
+func removeNamespace(cmd string) string {
 	i := strings.IndexByte(cmd, ' ')
 	if i == -1 {
 		return ""
@@ -64,23 +62,23 @@ var p *parser.Parser
 
 func interpret() {
 	for {
-		p.L.F.Lns = []string{input(">> ")}
+		p.Lex.File.Lines = []string{input(">> ")}
 	reTokenize:
-		p.Tks = nil
+		p.Tokens = nil
 	reTokenizeUnNil:
-		p.L.Fin = false
-		p.L.Braces = 0
-		p.L.Brackets = 0
-		p.L.Parentheses = 0
-		p.L.RangeComment = false
-		p.L.Ln = 1
-		p.L.Col = 1
+		p.Lex.Finished = false
+		p.Lex.Braces = 0
+		p.Lex.Brackets = 0
+		p.Lex.Parentheses = 0
+		p.Lex.RangeComment = false
+		p.Lex.Line = 1
+		p.Lex.Column = 1
 		/* Tokenize all lines. */
-		for !p.L.Fin {
-			tks := p.L.Next()
+		for !p.Lex.Finished {
+			tks := p.Lex.Next()
 			// Check multiline comment.
-			if p.L.RangeComment {
-				p.L.F.Lns = append(p.L.F.Lns, []string{input(" | ")}...)
+			if p.Lex.RangeComment {
+				p.Lex.File.Lines = append(p.Lex.File.Lines, []string{input(" | ")}...)
 				goto reTokenizeUnNil
 			}
 			// cacheTokens are empty?
@@ -88,22 +86,22 @@ func interpret() {
 				continue
 			}
 			// Check parentheses.
-			if p.L.Braces > 0 || p.L.Brackets > 0 || p.L.Parentheses > 0 {
-				p.L.F.Lns = append(p.L.F.Lns, []string{input(" | ")}...)
+			if p.Lex.Braces > 0 || p.Lex.Brackets > 0 || p.Lex.Parentheses > 0 {
+				p.Lex.File.Lines = append(p.Lex.File.Lines, []string{input(" | ")}...)
 				goto reTokenize
 			}
-			p.Tks = append(p.Tks, tks)
+			p.Tokens = append(p.Tokens, tks)
 		}
 		p.Interpret()
 	}
 }
 
 func catch(e obj.Panic) {
-	if e.M == "" {
+	if e.Msg == "" {
 		return
 	}
 	fmt.Println("Fract is panicked, sorry this is a problem with Fract!")
-	fmt.Println(e.M)
+	fmt.Println(e.Msg)
 }
 
 func help(cmd string) {
@@ -111,19 +109,19 @@ func help(cmd string) {
 		fmt.Println("This module can only be used!")
 		return
 	}
-	d := map[string]string{
+	helpMap := map[string]string{
 		"version": "Show version.",
 		"help":    "Show help.",
 	}
-	mlen := 0
-	for k := range d {
-		if mlen < len(k) {
-			mlen = len(k)
+	maxKeyLen := 0
+	for k := range helpMap {
+		if maxKeyLen < len(k) {
+			maxKeyLen = len(k)
 		}
 	}
-	mlen += 5
-	for k := range d {
-		fmt.Println(k + " " + str.Full(mlen-len(k), ' ') + d[k])
+	maxKeyLen += 5
+	for k := range helpMap {
+		fmt.Println(k + " " + str.Full(maxKeyLen-len(k), ' ') + helpMap[k])
 	}
 }
 
@@ -135,6 +133,7 @@ func version(cmd string) {
 	fmt.Println("Fract Version [" + fract.Version + "]")
 }
 
+// make module is interpret source file.
 func make(cmd string) {
 	if cmd == "" {
 		fmt.Println("This module cannot only be used!")
@@ -156,23 +155,24 @@ func make(cmd string) {
 	}).Do()
 }
 
-func makechk(p string) bool {
-	if strings.HasSuffix(p, fract.Extension) {
+// makeCheck is check command is valid source code path or not.
+func makeCheck(path string) bool {
+	if strings.HasSuffix(path, fract.Extension) {
 		return true
 	}
-	info, err := os.Stat(p + fract.Extension)
+	info, err := os.Stat(path + fract.Extension)
 	return err == nil && !info.IsDir()
 }
 
-func proccmd(ns, cmd string) {
-	switch ns {
+func processCommand(namespace, cmd string) {
+	switch namespace {
 	case "help":
 		help(cmd)
 	case "version":
 		version(cmd)
 	default:
-		if makechk(ns) {
-			make(ns)
+		if makeCheck(namespace) {
+			make(namespace)
 		} else {
 			fmt.Println("There is no such command!")
 		}
@@ -180,9 +180,9 @@ func proccmd(ns, cmd string) {
 }
 
 func init() {
-	fract.ExecPath = filepath.Dir(os.Args[0])
+	fract.ExecutablePath = filepath.Dir(os.Args[0])
 	// Check standard library.
-	if info, err := os.Stat(path.Join(fract.ExecPath, fract.StdLib)); err != nil || !info.IsDir() {
+	if info, err := os.Stat(path.Join(fract.ExecutablePath, fract.StdLib)); err != nil || !info.IsDir() {
 		fmt.Println("Standard library not found!")
 		input("\nPress enter for exit...")
 		os.Exit(1)
@@ -198,12 +198,12 @@ func init() {
 		sb.WriteString(" " + arg)
 	}
 	os.Args[0] = sb.String()[1:]
-	proccmd(ns(os.Args[0]), remns(os.Args[0]))
+	processCommand(getNamespace(os.Args[0]), removeNamespace(os.Args[0]))
 }
 
 func main() {
 	fmt.Println("Fract " + fract.Version + " (c) MIT License.\n" + "Fract Developer Team.\n")
-	fract.InteractiveSh = true
+	fract.InteractiveShell = true
 	p = parser.NewStdin()
 	p.AddBuiltInFuncs()
 	b := &obj.Block{
