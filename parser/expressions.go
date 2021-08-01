@@ -14,7 +14,7 @@ import (
 )
 
 func compareValues(operator string, left, right oop.Val) bool {
-	if left.Type != right.Type && (left.Type == oop.Str || right.Type == oop.Str) {
+	if left.Type != right.Type && (left.Type == oop.String || right.Type == oop.String) {
 		return false
 	}
 	switch operator {
@@ -68,7 +68,7 @@ func compare(left, right oop.Val, operator obj.Token) bool {
 		if left.Type == oop.List {
 			rightStr := right.String()
 			for _, elem := range left.Data.(*oop.ListModel).Elems {
-				if elem.Type != oop.Str {
+				if elem.Type != oop.String {
 					fract.IPanic(operator, obj.ValuePanic, "All values is not string!")
 				}
 				if strings.Contains(rightStr, elem.String()) {
@@ -76,7 +76,7 @@ func compare(left, right oop.Val, operator obj.Token) bool {
 				}
 			}
 		} else {
-			if right.Type != oop.Str {
+			if right.Type != oop.String {
 				fract.IPanic(operator, obj.ValuePanic, "All datas is not string!")
 			}
 			if strings.Contains(right.String(), left.String()) {
@@ -174,9 +174,9 @@ func (p arithmeticProcess) solve() oop.Val {
 	leftLen := p.leftVal.Len()
 	rightLen := p.rightVal.Len()
 	// String?
-	if (leftLen != 0 && p.leftVal.Type == oop.Str) || (rightLen != 0 && p.rightVal.Type == oop.Str) {
+	if (leftLen != 0 && p.leftVal.Type == oop.String) || (rightLen != 0 && p.rightVal.Type == oop.String) {
 		if p.leftVal.Type == p.rightVal.Type { // Both string?
-			val.Type = oop.Str
+			val.Type = oop.String
 			switch p.operator.Val {
 			case "+":
 				val.Data = p.leftVal.String() + p.rightVal.String()
@@ -208,8 +208,8 @@ func (p arithmeticProcess) solve() oop.Val {
 			return val
 		}
 
-		val.Type = oop.Str
-		if p.rightVal.Type == oop.Str {
+		val.Type = oop.String
+		if p.rightVal.Type == oop.String {
 			p.leftVal, p.rightVal = p.rightVal, p.leftVal
 		}
 		if p.rightVal.Type == oop.List {
@@ -407,8 +407,8 @@ func solveArithmeticProcess(operator obj.Token, left, right float64) float64 {
 
 // Check data and set ready.
 func readyData(process arithmeticProcess, val oop.Val) oop.Val {
-	if process.leftVal.Type == oop.Str || process.rightVal.Type == oop.Str {
-		val.Type = oop.Str
+	if process.leftVal.Type == oop.String || process.rightVal.Type == oop.String {
+		val.Type = oop.String
 	} else if process.operator.Val == "/" || process.leftVal.Type == oop.Float || process.rightVal.Type == oop.Float {
 		val.Type = oop.Float
 		return val
@@ -455,8 +455,8 @@ func (p *Parser) selectEnumerable(mut bool, v oop.Val, tk obj.Token, s interface
 			}
 			return &val
 		}
-	case oop.Str:
-		result = oop.Val{Data: "", Type: oop.Str}
+	case oop.String:
+		result = oop.Val{Data: oop.NewStringModel(""), Type: oop.String}
 		for _, i := range s.([]int) {
 			result.Data = result.String() + string(v.String()[i])
 		}
@@ -508,7 +508,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 	// Single oop.
 	if tk := part.tokens[0]; len(part.tokens) == 1 {
 		if tk.Val[0] == '\'' || tk.Val[0] == '"' {
-			result = &oop.Val{Data: tk.Val[1 : len(tk.Val)-1], Type: oop.Str}
+			result = &oop.Val{Data: oop.NewStringModel(tk.Val[1 : len(tk.Val)-1]), Type: oop.String}
 			goto end
 		} else if tk.Val == "true" || tk.Val == "false" {
 			result = &oop.Val{Data: tk.Val, Type: oop.Bool}
@@ -596,6 +596,14 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 					fract.IPanic(nameTk, obj.NamePanic, "Name is not defined: "+nameTk.Val)
 				}
 				result = &oop.Val{Data: list.Defs.Funcs[i], Type: oop.Func}
+				goto end
+			case oop.String:
+				str := val.Data.(oop.StringModel)
+				i := str.Defs.FuncIndexByName(nameTk.Val)
+				if i == -1 {
+					fract.IPanic(nameTk, obj.NamePanic, "Name is not defined: "+nameTk.Val)
+				}
+				result = &oop.Val{Data: str.Defs.Funcs[i], Type: oop.Func}
 				goto end
 			default:
 				fract.IPanic(valTk, obj.ValuePanic, "Object is not support sub fields!")

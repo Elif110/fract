@@ -564,7 +564,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			Params: []oop.Param{{
 				Name:       "value",
 				Params:     true,
-				DefaultVal: oop.Val{Data: "", Type: oop.Str},
+				DefaultVal: oop.Val{Data: "", Type: oop.String},
 			}},
 		}, &oop.Fn{
 			Name:              "println",
@@ -573,7 +573,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			Params: []oop.Param{{
 				Name:       "value",
 				Params:     true,
-				DefaultVal: oop.Val{Data: oop.NewListModel(oop.Val{Data: "", Type: oop.Str}), Type: oop.List},
+				DefaultVal: oop.Val{Data: oop.NewListModel(oop.Val{Data: "", Type: oop.String}), Type: oop.List},
 			}},
 		}, &oop.Fn{
 			Name:              "input",
@@ -581,7 +581,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			DefaultParamCount: 1,
 			Params: []oop.Param{{
 				Name:       "message",
-				DefaultVal: oop.Val{Data: "", Type: oop.Str},
+				DefaultVal: oop.Val{Data: "", Type: oop.String},
 			}},
 		}, &oop.Fn{
 			Name:              "exit",
@@ -626,7 +626,7 @@ func (p *Parser) AddBuiltInFuncs() {
 				{Name: "object"},
 				{
 					Name:       "type",
-					DefaultVal: oop.Val{Data: "parse", Type: oop.Str},
+					DefaultVal: oop.Val{Data: "parse", Type: oop.String},
 				},
 			},
 		}, &oop.Fn{
@@ -637,7 +637,7 @@ func (p *Parser) AddBuiltInFuncs() {
 				{Name: "object"},
 				{
 					Name:       "type",
-					DefaultVal: oop.Val{Data: "parse", Type: oop.Str},
+					DefaultVal: oop.Val{Data: "parse", Type: oop.String},
 				},
 			},
 		}, &oop.Fn{
@@ -804,7 +804,7 @@ func (p *Parser) processTryCatch(tokens []obj.Token) uint8 {
 				p.defs.Vars = append(p.defs.Vars, oop.Var{
 					Name: nameTk.Val,
 					Line: nameTk.Line,
-					Val:  oop.Val{Data: cp.Msg, Type: oop.Str},
+					Val:  oop.Val{Data: cp.Msg, Type: oop.String},
 				})
 			}
 			var block [][]obj.Token

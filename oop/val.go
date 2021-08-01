@@ -12,7 +12,7 @@ const (
 	None      uint8 = 0
 	Int       uint8 = 1
 	Float     uint8 = 2
-	Str       uint8 = 3
+	String    uint8 = 3
 	Bool      uint8 = 4
 	Func      uint8 = 5
 	List      uint8 = 6
@@ -88,6 +88,8 @@ func (d Val) String() string {
 		return "object.classins"
 	case None:
 		return "none"
+	case String:
+		return d.Data.(StringModel).Value
 	default:
 		if d.Data == nil {
 			return ""
@@ -107,7 +109,7 @@ func (v Val) Print() bool {
 // Is enumerable?
 func (v Val) IsEnum() bool {
 	switch v.Type {
-	case Str, List, Map:
+	case String, List, Map:
 		return true
 	default:
 		return false
@@ -117,7 +119,7 @@ func (v Val) IsEnum() bool {
 // Length.
 func (v Val) Len() int {
 	switch v.Type {
-	case Str:
+	case String:
 		return len(v.Data.(string))
 	case List:
 		return v.Data.(*ListModel).Len
@@ -136,17 +138,17 @@ func (v Val) NotEquals(val Val) bool {
 }
 
 func (v Val) Greater(val Val) bool {
-	return (v.Type == Str && v.String() > val.String()) || (v.Type != Str && str.Conv(v.String()) > str.Conv(val.String()))
+	return (v.Type == String && v.String() > val.String()) || (v.Type != String && str.Conv(v.String()) > str.Conv(val.String()))
 }
 
 func (v Val) Less(val Val) bool {
-	return (v.Type == Str && v.String() < val.String()) || (v.Type != Str && str.Conv(v.String()) < str.Conv(val.String()))
+	return (v.Type == String && v.String() < val.String()) || (v.Type != String && str.Conv(v.String()) < str.Conv(val.String()))
 }
 
 func (v Val) GreaterEquals(val Val) bool {
-	return (v.Type == Str && v.String() >= val.String()) || (v.Type != Str && str.Conv(v.String()) >= str.Conv(val.String()))
+	return (v.Type == String && v.String() >= val.String()) || (v.Type != String && str.Conv(v.String()) >= str.Conv(val.String()))
 }
 
 func (v Val) LessEquals(val Val) bool {
-	return (v.Type == Str && v.String() <= val.String()) || (v.Type != Str && str.Conv(v.String()) <= str.Conv(val.String()))
+	return (v.Type == String && v.String() <= val.String()) || (v.Type != String && str.Conv(v.String()) <= str.Conv(val.String()))
 }

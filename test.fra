@@ -163,6 +163,7 @@ println(none)
 println([print(x*100, ' ') for x in range(1, 100)])
 */
 
+/*
 // OOP Array(List).
 list := range(0, 10)
 println(list)
@@ -180,7 +181,7 @@ println(list)
 list.sort()
 println(list)
 println(list.unique())
-println(list.include(0), ' ', list.include(-100))
+// println(list.include(0), ' ', list.include(-100)) // include removed.
 list.removeAt(len(list)-1)
 println(list)
 list.pushBack(9)
@@ -194,3 +195,21 @@ list.removeRange(2, len(list)-2)
 println(list)
 list.clear()
 println(list)
+*/
+
+// OOP String.
+str := '   Fract Programming Language çşĞü   '
+println(str)
+println(str.upper())
+println(str.lower())
+println(str.isUpper(), ' ', str.upper().isUpper())
+println(str.isLower(), ' ', str.lower().isLower())
+println(str.trim())
+println(str.trimLeft())
+println(str.trimRight())
+println(str.sub(9, 11))
+println(str.index('test'), ' ', str.index('ng'), ' ', str.indexLast('ng'))
+println(str.split('test'), ' ', str.split('ng'))
+println(str.hasPrefix('   Fract'), ' ', str.hasPrefix('Fract'))
+println(str.hasSuffix('çşĞü   '), ' ', str.hasSuffix('çşĞü'))
+println(str.replace('çşĞü   ', ''), ' ', str.replaceAll('çşĞü', ''))

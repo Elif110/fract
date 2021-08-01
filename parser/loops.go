@@ -28,9 +28,9 @@ func (l *loop) run(b func()) {
 				break
 			}
 		}
-	case oop.Str:
+	case oop.String:
 		l.a.Type = oop.Int
-		l.b.Type = oop.Str
+		l.b.Type = oop.String
 		for i, e := range l.val.Data.(string) {
 			l.a.Data = fmt.Sprint(i)
 			l.b.Data = string(e)

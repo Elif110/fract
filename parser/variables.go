@@ -256,11 +256,11 @@ func (p *Parser) varset(tokens []obj.Token) {
 				}.solve()
 			}
 		}
-	case oop.Str:
+	case oop.String:
 		for _, i := range selections.([]int) {
 			switch setter.Val {
 			case "=":
-				if val.Type != oop.Str {
+				if val.Type != oop.String {
 					fract.IPanic(setter, obj.ValuePanic, "Value type is not string!")
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")
@@ -280,7 +280,7 @@ func (p *Parser) varset(tokens []obj.Token) {
 					right:    []obj.Token{setter},
 					rightVal: val,
 				}.solve()
-				if val.Type != oop.Str {
+				if val.Type != oop.String {
 					fract.IPanic(setter, obj.ValuePanic, "Value type is not string!")
 				} else if len(val.String()) > 1 {
 					fract.IPanic(setter, obj.ValuePanic, "Value length is should be maximum one!")

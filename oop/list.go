@@ -23,21 +23,20 @@ func NewListModel(elems ...Val) *ListModel {
 	copy(list.Elems, elems)
 	list.Defs.Funcs = []*Fn{
 		{Name: "pushBack", Src: list.PushBackF, Params: []Param{{Name: "v", Params: true}}},
-		{Name: "pushFront", Src: list.PushFrontF, Params: []Param{{Name: "v", Params: true}}},
-		{Name: "index", Src: list.IndexF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
-		{Name: "indexLast", Src: list.IndexLastF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
-		{Name: "insert", Src: list.InsertF, Params: []Param{{Name: "i"}, {Name: "v", Params: true}}},
-		{Name: "sub", Src: list.SubF, Params: []Param{{Name: "start"}, {Name: "to"}}},
-		{Name: "removeAt", Src: list.RemoveAtF, Params: []Param{{Name: "i"}}},
-		{Name: "remove", Src: list.RemoveF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
-		{Name: "removeLast", Src: list.RemoveLastF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
-		{Name: "removeAll", Src: list.RemoveAllF, Params: []Param{{Name: "v"}}},
-		{Name: "removeRange", Src: list.RemoveRangeF, Params: []Param{{Name: "start"}, {Name: "to"}}},
-		{Name: "reverse", Src: list.ReverseF},
-		{Name: "sort", Src: list.SortF, DefaultParamCount: 1, Params: []Param{{Name: "desc", DefaultVal: Val{Data: "false", Type: Bool}}}},
-		{Name: "unique", Src: list.UniqueF},
-		{Name: "clear", Src: list.ClearF},
-		{Name: "include", Src: list.IncludeF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
+		{Name: "pushFront", Src: list.pushFrontF, Params: []Param{{Name: "v", Params: true}}},
+		{Name: "index", Src: list.indexF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
+		{Name: "indexLast", Src: list.indexLastF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
+		{Name: "insert", Src: list.insertF, Params: []Param{{Name: "i"}, {Name: "v", Params: true}}},
+		{Name: "sub", Src: list.subF, Params: []Param{{Name: "start"}, {Name: "len"}}},
+		{Name: "removeAt", Src: list.removeAtF, Params: []Param{{Name: "i"}}},
+		{Name: "remove", Src: list.removeF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
+		{Name: "removeLast", Src: list.removeLastF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
+		{Name: "removeAll", Src: list.removeAllF, Params: []Param{{Name: "v"}}},
+		{Name: "removeRange", Src: list.removeRangeF, Params: []Param{{Name: "start"}, {Name: "to"}}},
+		{Name: "reverse", Src: list.reverseF},
+		{Name: "sort", Src: list.sortF, DefaultParamCount: 1, Params: []Param{{Name: "desc", DefaultVal: Val{Data: "false", Type: Bool}}}},
+		{Name: "unique", Src: list.uniqueF},
+		{Name: "clear", Src: list.clearF},
 	}
 	return list
 }
@@ -52,14 +51,14 @@ func (l *ListModel) PushBackF(tk obj.Token, args []Var) Val {
 	return Val{}
 }
 
-func (l *ListModel) PushFrontF(tk obj.Token, args []Var) Val {
+func (l *ListModel) pushFrontF(tk obj.Token, args []Var) Val {
 	elems := args[0].Val.Data.(*ListModel).Elems
 	l.Len += len(elems)
 	l.Elems = append(elems, l.Elems...)
 	return Val{}
 }
 
-func (l *ListModel) IndexF(tk obj.Token, args []Var) Val {
+func (l *ListModel) indexF(tk obj.Token, args []Var) Val {
 	indexArg := args[1].Val
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -77,7 +76,7 @@ func (l *ListModel) IndexF(tk obj.Token, args []Var) Val {
 	return Val{Data: "-1", Type: Int}
 }
 
-func (l *ListModel) IndexLastF(tk obj.Token, args []Var) Val {
+func (l *ListModel) indexLastF(tk obj.Token, args []Var) Val {
 	indexArg := args[1].Val
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -100,25 +99,7 @@ func (l *ListModel) IndexLastF(tk obj.Token, args []Var) Val {
 	return Val{Data: "-1", Type: Int}
 }
 
-func (l *ListModel) IncludeF(tk obj.Token, args []Var) Val {
-	indexArg := args[1].Val
-	if indexArg.Type != Int {
-		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
-	}
-	index, _ := strconv.Atoi(indexArg.String())
-	if index < 0 || index > l.Len {
-		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
-	}
-	elem := args[0].Val
-	for ; index < l.Len; index++ {
-		if l.Elems[index] == elem {
-			return Val{Data: "true", Type: Bool}
-		}
-	}
-	return Val{Data: "false", Type: Bool}
-}
-
-func (l *ListModel) InsertF(tk obj.Token, args []Var) Val {
+func (l *ListModel) insertF(tk obj.Token, args []Var) Val {
 	indexArg := args[0].Val
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -133,20 +114,20 @@ func (l *ListModel) InsertF(tk obj.Token, args []Var) Val {
 	return Val{}
 }
 
-func (l *ListModel) SubF(tk obj.Token, args []Var) Val {
+func (l *ListModel) subF(tk obj.Token, args []Var) Val {
 	startArg := args[0].Val
 	if startArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
 	}
-	toArg := args[1].Val
-	if toArg.Type != Int {
+	lenArg := args[1].Val
+	if lenArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Length must be integer!")
 	}
 	index, _ := strconv.Atoi(startArg.String())
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
-	len, _ := strconv.Atoi(toArg.String())
+	len, _ := strconv.Atoi(lenArg.String())
 	list := NewListModel()
 	if len < 0 {
 		return Val{Data: list, Type: List}
@@ -157,7 +138,7 @@ func (l *ListModel) SubF(tk obj.Token, args []Var) Val {
 	return Val{Data: list, Type: List}
 }
 
-func (l *ListModel) ReverseF(tk obj.Token, args []Var) Val {
+func (l *ListModel) reverseF(tk obj.Token, args []Var) Val {
 	for i := 0; i < l.Len/2; i++ {
 		l.Elems[i], l.Elems[l.Len-i-1] = l.Elems[l.Len-i-1], l.Elems[i]
 	}
@@ -186,12 +167,12 @@ func quicksort(elems []Val) {
 	quicksort(elems[i+1:])
 }
 
-func (l *ListModel) SortF(tk obj.Token, args []Var) Val {
+func (l *ListModel) sortF(tk obj.Token, args []Var) Val {
 	quicksort(l.Elems)
 	return Val{}
 }
 
-func (l *ListModel) UniqueF(tk obj.Token, args []Var) Val {
+func (l *ListModel) uniqueF(tk obj.Token, args []Var) Val {
 	list := NewListModel()
 	for _, elem := range l.Elems {
 		var exist bool
@@ -208,7 +189,7 @@ func (l *ListModel) UniqueF(tk obj.Token, args []Var) Val {
 	return Val{Data: list, Type: List}
 }
 
-func (l *ListModel) RemoveAtF(tk obj.Token, args []Var) Val {
+func (l *ListModel) removeAtF(tk obj.Token, args []Var) Val {
 	indexArg := args[0].Val
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -222,7 +203,7 @@ func (l *ListModel) RemoveAtF(tk obj.Token, args []Var) Val {
 	return Val{}
 }
 
-func (l *ListModel) RemoveF(tk obj.Token, args []Var) Val {
+func (l *ListModel) removeF(tk obj.Token, args []Var) Val {
 	indexArg := args[1].Val
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -242,7 +223,7 @@ func (l *ListModel) RemoveF(tk obj.Token, args []Var) Val {
 	return Val{Data: "false", Type: Bool}
 }
 
-func (l *ListModel) RemoveLastF(tk obj.Token, args []Var) Val {
+func (l *ListModel) removeLastF(tk obj.Token, args []Var) Val {
 	indexArg := args[1].Val
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -267,7 +248,7 @@ func (l *ListModel) RemoveLastF(tk obj.Token, args []Var) Val {
 	return Val{Data: "false", Type: Bool}
 }
 
-func (l *ListModel) RemoveAllF(tk obj.Token, args []Var) Val {
+func (l *ListModel) removeAllF(tk obj.Token, args []Var) Val {
 	elem := args[0].Val
 	for i := 0; i < l.Len; i++ {
 		if l.Elems[i] == elem {
@@ -279,7 +260,7 @@ func (l *ListModel) RemoveAllF(tk obj.Token, args []Var) Val {
 	return Val{}
 }
 
-func (l *ListModel) RemoveRangeF(tk obj.Token, args []Var) Val {
+func (l *ListModel) removeRangeF(tk obj.Token, args []Var) Val {
 	startArg := args[0].Val
 	if startArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -303,7 +284,7 @@ func (l *ListModel) RemoveRangeF(tk obj.Token, args []Var) Val {
 	return Val{}
 }
 
-func (l *ListModel) ClearF(tk obj.Token, args []Var) Val {
+func (l *ListModel) clearF(tk obj.Token, args []Var) Val {
 	l.Elems = TypeList{}
 	l.Len = 0
 	return Val{}
