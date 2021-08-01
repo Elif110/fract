@@ -2,7 +2,7 @@ package fract
 
 const (
 	Version     = "0.0.1"
-	Extension   = ".fr"
+	Extension   = ".fra"
 	StdLib      = "stdlib" // Standard library path.
 	FloatFormat = "%g"
 
