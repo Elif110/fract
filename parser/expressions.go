@@ -205,6 +205,7 @@ func (p arithmeticProcess) solve() oop.Val {
 			default:
 				fract.IPanic(p.operator, obj.ArithmeticPanic, "This operator is not defined for string types!")
 			}
+			val.Data = oop.NewStringModel(val.Data.(string))
 			return val
 		}
 
@@ -241,21 +242,22 @@ func (p arithmeticProcess) solve() oop.Val {
 			if p.rightVal.Type != oop.Int {
 				fract.IPanic(p.right[0], obj.ArithmeticPanic, "Only string and integer values can concatenate string values!")
 			}
-			var str string
 			runeInt, _ := strconv.ParseInt(p.rightVal.String(), 10, 64)
 			run := byte(runeInt)
+			var sb strings.Builder
 			for _, r := range p.leftVal.String() {
 				switch p.operator.Val {
 				case "+":
-					str += string(byte(r) + run)
+					sb.WriteByte(byte(r) + run)
 				case "-":
-					str += string(byte(r) - run)
+					sb.WriteByte(byte(r) - run)
 				default:
 					fract.IPanic(p.operator, obj.ArithmeticPanic, "This operator is not defined for string types!")
 				}
 			}
-			val.Data = str
+			val.Data = sb.String()
 		}
+		val.Data = oop.NewStringModel(val.Data.(string))
 		return val
 	}
 

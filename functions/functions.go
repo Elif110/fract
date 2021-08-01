@@ -188,7 +188,7 @@ func String(tk obj.Token, args []oop.Var) oop.Val {
 		} else {
 			str = args[0].Val.String()
 		}
-		return oop.Val{Data: str, Type: oop.String}
+		return oop.Val{Data: oop.NewStringModel(str), Type: oop.String}
 	case "bytecode":
 		val := args[0].Val
 		var sb strings.Builder
@@ -199,10 +199,10 @@ func String(tk obj.Token, args []oop.Var) oop.Val {
 			r, _ := strconv.ParseInt(element.String(), 10, 32)
 			sb.WriteByte(byte(r))
 		}
-		return oop.Val{Data: sb.String(), Type: oop.String}
+		return oop.Val{Data: oop.NewStringModel(sb.String()), Type: oop.String}
 	default: // Object.
 		arg := args[0]
-		return oop.Val{Data: fmt.Sprintf("{data:%s type:%d}", arg.Val.Data, arg.Val.Type), Type: oop.String}
+		return oop.Val{Data: oop.NewStringModel(fmt.Sprintf("{data:%s type:%d}", arg.Val.Data, arg.Val.Type)), Type: oop.String}
 	}
 }
 

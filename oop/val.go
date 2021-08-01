@@ -120,7 +120,7 @@ func (v Val) IsEnum() bool {
 func (v Val) Len() int {
 	switch v.Type {
 	case String:
-		return len(v.Data.(string))
+		return len(v.Data.(StringModel).Value)
 	case List:
 		return v.Data.(*ListModel).Len
 	case Map:

@@ -226,7 +226,7 @@ func findBlock(tokens []obj.Token) int {
 			}
 		}
 	}
-	fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
+	fract.IPanic(tokens[0], obj.SyntaxPanic, "Block is not given!")
 	return -1
 }
 
@@ -235,7 +235,7 @@ func (p *Parser) getBlock(tokens []obj.Token) [][]obj.Token {
 		p.index++
 		tokens = p.Tokens[p.index]
 	}
-	if tokens[0].Type != fract.Brace && tokens[0].Val != "{" {
+	if tokens[0].Type != fract.Brace || tokens[0].Val != "{" {
 		fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
 	}
 	braceCount := 0
