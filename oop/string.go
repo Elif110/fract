@@ -27,9 +27,9 @@ func NewStringModel(val string) StringModel {
 		{Name: "trimLeft", Src: str.trimLeftF},
 		{Name: "trimRight", Src: str.trimRightF},
 		{Name: "sub", Src: str.subF, Params: []Param{{Name: "start"}, {Name: "len"}}},
-		{Name: "index", Src: str.indexF, DefaultParamCount: 1, Params: []Param{{Name: "sub"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
-		{Name: "indexLast", Src: str.indexLastF, DefaultParamCount: 1, Params: []Param{{Name: "sub"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
-		{Name: "split", Src: str.splitF, Params: []Param{{Name: "sub"}}},
+		{Name: "index", Src: str.indexF, DefaultParamCount: 1, Params: []Param{{Name: "sub"}}},
+		{Name: "indexLast", Src: str.indexLastF, DefaultParamCount: 1, Params: []Param{{Name: "sub"}}},
+		{Name: "split", Src: str.splitF, DefaultParamCount: 1, Params: []Param{{Name: "sep"}, {Name: "count", DefaultVal: Val{Data: "-1", Type: Int}}}},
 		{Name: "hasPrefix", Src: str.hasPrefixF, Params: []Param{{Name: "sub"}}},
 		{Name: "hasSuffix", Src: str.hasSuffixF, Params: []Param{{Name: "sub"}}},
 		{Name: "replace", Src: str.replaceF, DefaultParamCount: 1, Params: []Param{{Name: "old"}, {Name: "new"}, {Name: "count", DefaultVal: Val{Data: "1", Type: Int}}}},
@@ -99,19 +99,6 @@ func (s *StringModel) subF(tk obj.Token, args []Var) Val {
 }
 
 func (s *StringModel) indexF(tk obj.Token, args []Var) Val {
-	indexArg := args[1].Val
-	if indexArg.Type != Int {
-		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
-	}
-	var index int
-	if indexArg.Data == "" {
-		index = len(s.Value) - 1
-	} else {
-		index, _ = strconv.Atoi(indexArg.String())
-	}
-	if index < 0 || index > len(s.Value) {
-		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
-	}
 	sub := args[0].Val
 	if sub.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -120,19 +107,6 @@ func (s *StringModel) indexF(tk obj.Token, args []Var) Val {
 }
 
 func (s *StringModel) indexLastF(tk obj.Token, args []Var) Val {
-	indexArg := args[1].Val
-	if indexArg.Type != Int {
-		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
-	}
-	var index int
-	if indexArg.Data == "" {
-		index = len(s.Value) - 1
-	} else {
-		index, _ = strconv.Atoi(indexArg.String())
-	}
-	if index < 0 || index > len(s.Value) {
-		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
-	}
 	sub := args[0].Val
 	if sub.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -141,12 +115,17 @@ func (s *StringModel) indexLastF(tk obj.Token, args []Var) Val {
 }
 
 func (s *StringModel) splitF(tk obj.Token, args []Var) Val {
-	sub := args[0].Val
-	if sub.Type != String {
+	sep := args[0].Val
+	if sep.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
 	}
+	countArg := args[1].Val
+	if countArg.Type != Int {
+		fract.Panic(tk, obj.ValuePanic, "Count must be integer!")
+	}
+	count, _ := strconv.Atoi(countArg.String())
 	list := NewListModel()
-	parts := strings.Split(s.Value, sub.String())
+	parts := strings.SplitN(s.Value, sep.String(), count)
 	list.Elems = make(TypeList, len(parts))
 	for i, p := range parts {
 		list.Elems[i] = Val{Data: NewStringModel(p), Type: String}
