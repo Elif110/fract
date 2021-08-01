@@ -24,10 +24,10 @@
 
 ## What look like Fract code?
 
-```go
+```v
 package main
 
-func fib(a, b) {
+fn fib(a, b) {
     val := a + b
     println(val)
     if val < 1000 {
