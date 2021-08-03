@@ -3,13 +3,17 @@
     <img width="300" src="https://raw.githubusercontent.com/fract-lang/resources/main/logo/fract.svg?sanitize=true">
 </p>
 <h1>The Fract Programming Language</h1>
+Fast, efficient, reliable, safe and simple. <br>
+Designed for powerful scripting programming.
+    
+<strong>
 
 [Website](https://fract-lang.github.io/website/) |
 [Docs](https://fract-lang.github.io/website/pages/docs/docs.html) |
 [A Tour of Fract](https://fract-lang.github.io/website/pages/tour.html) |
 [Samples](https://fract-lang.github.io/website/pages/samples.html) |
 [Contributing](#contributing)
-
+</strong>
 </div>
 
 ## Key features
@@ -23,8 +27,7 @@
 + Pragmas
 
 ## What look like Fract code?
-
-```v
+```go
 package main
 
 fn fib(a, b) {
@@ -36,6 +39,54 @@ fn fib(a, b) {
 }
 
 fib(0, 1)
+```
+
+## Object Oriented Programming
+### Structures
+```v
+struct People {
+    Name
+    Surname
+}
+
+p := People('Tony', 'Stark')
+println(p) // {Name:Tony Surname:Stark}
+```
+### Classes
+```csharp
+class Employee {
+  var (
+    Name    = ''
+    Surname = ''
+    Age     = 0
+    Salary  = 0
+  )
+
+  // Constructor.
+  fn Employee(name, surname, age, salary=9000) {
+    this.Name    = name.trim()
+    this.Surname = surname.trim()
+    this.Age     = age
+    this.Salary  = salary
+  }
+
+  fn FullName() {
+    ret this.Name + ' ' + this.Surname
+  }
+
+  fn InfoString() {
+    ret (
+      'Name: '     + this.Name +
+      ' Surname: ' + this.Surname +
+      ' Age: '     + string(this.Age) +
+      ' Salary: '  + string(this.Salary)
+    )
+  }
+}
+
+e := Employee('Daniel', 'Garry', 44, 12550)
+println(e.FullName())   // Daniel Garry
+println(e.InfoString()) // Name: Daniel Surname: Garry Age: 44 Salary: 12550
 ```
 
 ## Interactive Shell
