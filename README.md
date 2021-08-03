@@ -110,6 +110,21 @@ Success!
 >> exit(0)
 ```
 
+## How to run Fract code
+Example on Manjaro Linux; <br>
+Fract file: ``main.fra``
+```go
+package main
+
+println("Hello, World!")
+```
+Run code:
+```
+$ ./fract main.fra
+Hello, World!
+$ 
+```
+
 ## How to Compile
 There are scripts prepared for compiling of Fract. <br>
 These scripts are written to run from the home directory. <br>
