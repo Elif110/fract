@@ -40,7 +40,7 @@ func Input(tk obj.Token, args []oop.Var) oop.Val {
 	//! Don't use fmt.Scanln
 	s := bufio.NewScanner(os.Stdin)
 	s.Scan()
-	return oop.Val{Data: s.Text(), Type: oop.String}
+	return oop.Val{Data: oop.NewStringModel(s.Text()), Type: oop.String}
 }
 
 // Int convert object to integer.

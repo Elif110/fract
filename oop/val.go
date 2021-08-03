@@ -130,6 +130,12 @@ func (v Val) Len() int {
 }
 
 func (v Val) Equals(val Val) bool {
+	if v.Type != val.Type {
+		return false
+	}
+	if v.Type == String {
+		return v.String() == val.String()
+	}
 	return reflect.DeepEqual(v.Data, val.Data)
 }
 
