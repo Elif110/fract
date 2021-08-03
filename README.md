@@ -92,10 +92,21 @@ println(e.InfoString()) // Name: Daniel Surname: Garry Age: 44 Salary: 12550
 ## Interactive Shell
 <img src="https://github.com/fract-lang/resources/blob/main/preview/fract_cli.gif?raw=true">
 
-## How to compile?
-Fract is written in Go. <br>
-Run one of the scripts ``scripts/brun.bat`` or ``scripts/brun.sh`` to compile. <br>
-Also can be write manually: ``go build cmd/main.go``
+## How to Compile
+There are scripts prepared for compiling of Fract. <br>
+These scripts are written to run from the home directory. <br>
+
+``brun`` scripts used for compile and execute if compiling is successful. <br>
+`build` scripts used for compile. <br>
+
+Fract is compiled from a single file. <br>
+You can write a custom script yourself or choose to compile/run it directly from go compiler. <br>
+For compile: ``go build cmd/main.go`` <br>
+For run: ``go run cmd/main.go``
+
+## License
+Fract is distributed under the terms of the MIT license. <br>
+[See license details.](https://fract-lang.github.io/website/pages/license.html)
 
 <h2 id="contributing">Contributing</h2>
 Thanks for you want contributing to Fract!
