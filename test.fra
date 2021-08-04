@@ -197,6 +197,7 @@ list.clear()
 println(list)
 */
 
+/*
 // OOP String.
 str := '   Fract Programming Language çşĞü   '
 println(str)
@@ -213,3 +214,15 @@ println(str.split('test'), ' ', str.split('ng'))
 println(str.hasPrefix('   Fract'), ' ', str.hasPrefix('Fract'))
 println(str.hasSuffix('çşĞü   '), ' ', str.hasSuffix('çşĞü'))
 println(str.replace('çşĞü   ', ''), ' ', str.replaceAll('çşĞü', ''))
+*/
+
+open reflect
+println(reflect.NameOfType(0))
+info := reflect.TypeInfo(0)
+println(info)
+println(info.Name())
+println(info.Code())
+println(info.Value())
+println(info.IsNumeric())
+println(info.IsEnumerable())
+println(info.IsInstance())
