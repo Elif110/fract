@@ -90,7 +90,40 @@ println(e.InfoString()) // Name: Daniel Surname: Garry Age: 44 Salary: 12550
 ```
 
 ## Interactive Shell
-<img src="https://github.com/fract-lang/resources/blob/main/preview/fract_cli.gif?raw=true">
+Fract has an interactive shell. You can try quickly without writing the codes to the file. <br>
+Exampe on Manjaro Linux;
+```shell
+$ ./fract
+Fract 0.0.1 (c) MIT License.
+Fract Developer Team.
+
+>> var name = input('Username: ')
+Username: fract
+>> var pass = input('Password: ')
+Password: root
+>> if name == 'fract' && pass = 'root' {
+ |   println('success!')
+ | } else {
+ |   println('failed!')
+ | }
+Success!
+>> exit(0)
+```
+
+## How to run Fract code
+Example on Manjaro Linux; <br>
+Fract file: ``main.fra``
+```go
+package main
+
+println("Hello, World!")
+```
+Run code:
+```
+$ ./fract main.fra
+Hello, World!
+$ 
+```
 
 ## How to Compile
 There are scripts prepared for compiling of Fract. <br>
