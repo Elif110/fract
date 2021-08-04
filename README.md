@@ -137,15 +137,28 @@ You can write a custom script yourself or choose to compile/run it directly from
 For compile: ``go build cmd/main.go`` <br>
 For run: ``go run cmd/main.go``
 
-## License
-Fract is distributed under the terms of the MIT license. <br>
-[See license details.](https://fract-lang.github.io/website/pages/license.html)
-
 <h2 id="contributing">Contributing</h2>
 Thanks for you want contributing to Fract!
-<br>
-The Fract project use issues for only bug reports and proposals.
 <br><br>
-To contribute, please read the contribution guidelines from <a href="https://fract-lang.github.io/website/pages/contributor_guide.html">here</a>.
-<br><br>
+The Fract project use issues for only bug reports and proposals. <br>
+To contribute, please read the contribution guidelines from <a href="https://fract-lang.github.io/website/pages/contributor_guide.html">here</a>. <br>
 To discussions and questions, please use <a href="https://github.com/fract-lang/fract/discussions">discussions</a>.
+<br><br>
+All contributions to Fract, no matter how small or large, are welcome. <br>
+From a simple typo correction to a contribution to the code, all contributions are welcome and appreciated. <br>
+Before you start contributing, you should familiarize yourself with the following repository structure; <br>
+
++ ``cmd/`` main and compile files.
++ ``functions/`` built-In functions.
++ ``lex/`` lexer.
++ ``oop/`` object oriented programming infrastructure and all value, object components.
++ ``parser/`` interpreter.
++ ``pkg/`` utility packages.
++ ``samples/`` sample codes of Fract.
++ ``scripts/`` the build and run, build and other all batch, bash or another scripts.
++ ``stdlib/`` the standard library of Fract.
++ ``tests/`` contains categorized tests for the interpreter and standard library.
+
+## License
+Fract and standard library is distributed under the terms of the MIT license. <br>
+[See license details.](https://fract-lang.github.io/website/pages/license.html)
