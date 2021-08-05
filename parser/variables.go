@@ -208,8 +208,13 @@ func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 	if len(values) == 0 {
 		fract.IPanic(tokens[setterIndex], obj.SyntaxPanic, "Value is not given!")
 	} else if len(values) == 1 {
+		val := values[0]
+		if val.Tag == "function_multiple_returns" {
+			if len(names) != 1 {
+				goto multiple
+			}
+		}
 		for _, info := range names {
-			val := values[0]
 			switch info.varType {
 			case "mut":
 				val.Mut = true
@@ -224,12 +229,23 @@ func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 				Val:  val,
 				Line: setter.Line,
 			})
+			val.Mut = false
+			val.Const = false
 		}
 		values = nil
 		return
-	} else if len(values) != len(names) {
+	}
+multiple:
+	if len(values) != len(names) {
+		if len(values) == 1 && values[0].Tag == "function_multiple_returns" {
+			values = values[0].Data.(*oop.ListModel).Elems
+			if len(values) == len(names) {
+				goto create
+			}
+		}
 		fract.IPanic(tokens[setterIndex], obj.SyntaxPanic, "Value assignment is wrong!")
 	}
+create:
 	for index, info := range names {
 		val := values[index]
 		switch info.varType {

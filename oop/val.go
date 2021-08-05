@@ -30,6 +30,7 @@ type Val struct {
 	Type  uint8
 	Mut   bool
 	Const bool
+	Tag   string
 }
 
 // Immut returns immutable copy.

@@ -229,6 +229,15 @@ println(info.IsEnumerable())
 println(info.IsInstance())
 */
 
+/*
 // Multiple variable setting test.
 a, b mut, c const := 10, 20, 30
+println(a, ' ', b, ' ', c)
+*/
+
+// Multiple returns test.
+fn func() {
+  ret 1, 2, 3
+}
+a, b, c := 1, func(), 30
 println(a, ' ', b, ' ', c)

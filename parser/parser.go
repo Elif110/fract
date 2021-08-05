@@ -29,8 +29,7 @@ type Parser struct {
 	loopCount    int
 	funcCount    int
 	index        int
-	returnVal    *oop.Val // Pointer of last return oop.
-	packageName  string   // Package name.
+	packageName  string // Package name.
 
 	Lex    *lex.Lex
 	Tokens [][]obj.Token // All Tokens of code file.
@@ -896,13 +895,6 @@ func (p *Parser) processExpression(tks []obj.Token) uint8 {
 		if p.funcCount < 1 {
 			fract.IPanic(firstTk, obj.SyntaxPanic, "Return keyword only used in functions!")
 		}
-		if len(tks) > 1 {
-			value := p.processValTokens(tks[1:])
-			p.returnVal = value
-		} else {
-			p.returnVal = nil
-		}
-		return fract.FUNCReturn
 	case fract.Fn:
 		p.funcdec(tks)
 	case fract.Try:
