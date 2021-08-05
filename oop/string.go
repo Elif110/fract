@@ -38,7 +38,7 @@ func NewStringModel(val string) StringModel {
 	return str
 }
 
-func (s *StringModel) isLowerF(tk obj.Token, args []Var) Val {
+func (s *StringModel) isLowerF(tk obj.Token, args []*Var) Val {
 	for _, r := range s.Value {
 		if unicode.IsLetter(r) && !unicode.IsLower(r) {
 			return Val{Data: "false", Type: Bool}
@@ -47,7 +47,7 @@ func (s *StringModel) isLowerF(tk obj.Token, args []Var) Val {
 	return Val{Data: "true", Type: Bool}
 }
 
-func (s *StringModel) isUpperF(tk obj.Token, args []Var) Val {
+func (s *StringModel) isUpperF(tk obj.Token, args []*Var) Val {
 	for _, r := range s.Value {
 		if unicode.IsLetter(r) && !unicode.IsUpper(r) {
 			return Val{Data: "false", Type: Bool}
@@ -56,27 +56,27 @@ func (s *StringModel) isUpperF(tk obj.Token, args []Var) Val {
 	return Val{Data: "true", Type: Bool}
 }
 
-func (s *StringModel) lowerF(tk obj.Token, args []Var) Val {
+func (s *StringModel) lowerF(tk obj.Token, args []*Var) Val {
 	return Val{Data: NewStringModel(strings.ToLower(s.Value)), Type: String}
 }
 
-func (s *StringModel) upperF(tk obj.Token, args []Var) Val {
+func (s *StringModel) upperF(tk obj.Token, args []*Var) Val {
 	return Val{Data: NewStringModel(strings.ToUpper(s.Value)), Type: String}
 }
 
-func (s *StringModel) trimF(tk obj.Token, args []Var) Val {
+func (s *StringModel) trimF(tk obj.Token, args []*Var) Val {
 	return Val{Data: NewStringModel(strings.TrimFunc(s.Value, unicode.IsSpace)), Type: String}
 }
 
-func (s *StringModel) trimLeftF(tk obj.Token, args []Var) Val {
+func (s *StringModel) trimLeftF(tk obj.Token, args []*Var) Val {
 	return Val{Data: NewStringModel(strings.TrimLeftFunc(s.Value, unicode.IsSpace)), Type: String}
 }
 
-func (s *StringModel) trimRightF(tk obj.Token, args []Var) Val {
+func (s *StringModel) trimRightF(tk obj.Token, args []*Var) Val {
 	return Val{Data: NewStringModel(strings.TrimRightFunc(s.Value, unicode.IsSpace)), Type: String}
 }
 
-func (s *StringModel) subF(tk obj.Token, args []Var) Val {
+func (s *StringModel) subF(tk obj.Token, args []*Var) Val {
 	startArg := args[0].Val
 	if startArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -98,7 +98,7 @@ func (s *StringModel) subF(tk obj.Token, args []Var) Val {
 	return Val{Data: NewStringModel(s.Value[index : index+length]), Type: String}
 }
 
-func (s *StringModel) indexF(tk obj.Token, args []Var) Val {
+func (s *StringModel) indexF(tk obj.Token, args []*Var) Val {
 	sub := args[0].Val
 	if sub.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -106,7 +106,7 @@ func (s *StringModel) indexF(tk obj.Token, args []Var) Val {
 	return Val{Data: fmt.Sprint(strings.Index(s.Value, sub.String())), Type: Int}
 }
 
-func (s *StringModel) indexLastF(tk obj.Token, args []Var) Val {
+func (s *StringModel) indexLastF(tk obj.Token, args []*Var) Val {
 	sub := args[0].Val
 	if sub.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -114,7 +114,7 @@ func (s *StringModel) indexLastF(tk obj.Token, args []Var) Val {
 	return Val{Data: fmt.Sprint(strings.LastIndex(s.Value, sub.String())), Type: Int}
 }
 
-func (s *StringModel) splitF(tk obj.Token, args []Var) Val {
+func (s *StringModel) splitF(tk obj.Token, args []*Var) Val {
 	sep := args[0].Val
 	if sep.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -133,7 +133,7 @@ func (s *StringModel) splitF(tk obj.Token, args []Var) Val {
 	return Val{Data: list, Type: List}
 }
 
-func (s *StringModel) hasPrefixF(tk obj.Token, args []Var) Val {
+func (s *StringModel) hasPrefixF(tk obj.Token, args []*Var) Val {
 	sub := args[0].Val
 	if sub.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -144,7 +144,7 @@ func (s *StringModel) hasPrefixF(tk obj.Token, args []Var) Val {
 	return Val{Data: "false", Type: Bool}
 }
 
-func (s *StringModel) hasSuffixF(tk obj.Token, args []Var) Val {
+func (s *StringModel) hasSuffixF(tk obj.Token, args []*Var) Val {
 	sub := args[0].Val
 	if sub.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
@@ -155,7 +155,7 @@ func (s *StringModel) hasSuffixF(tk obj.Token, args []Var) Val {
 	return Val{Data: "false", Type: Bool}
 }
 
-func (s *StringModel) replaceF(tk obj.Token, args []Var) Val {
+func (s *StringModel) replaceF(tk obj.Token, args []*Var) Val {
 	countArg := args[2].Val
 	if countArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
@@ -177,7 +177,7 @@ func (s *StringModel) replaceF(tk obj.Token, args []Var) Val {
 	return Val{Data: NewStringModel(strings.Replace(s.Value, old.String(), new.String(), count)), Type: String}
 }
 
-func (s *StringModel) replaceAllF(tk obj.Token, args []Var) Val {
+func (s *StringModel) replaceAllF(tk obj.Token, args []*Var) Val {
 	old := args[0].Val
 	if old.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")

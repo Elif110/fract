@@ -55,6 +55,16 @@ func (d Val) Immut() Val {
 	return val
 }
 
+// Get is returns value by mutability.
+func (d *Val) Get(mut bool) *Val {
+	if !d.Mut && !mut { //! Immutability.
+		result := new(Val)
+		*result = d.Immut()
+		return result
+	}
+	return d
+}
+
 func (d Val) String() string {
 	switch d.Type {
 	case Func:

@@ -181,12 +181,12 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 		fract.IPanic(tokens[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
 	p.defs.Vars = append(p.defs.Vars,
-		oop.Var{Name: nameTK.Val, Val: oop.Val{Data: "0", Type: oop.Int}},
-		oop.Var{Name: elemName},
+		&oop.Var{Name: nameTK.Val, Val: oop.Val{Data: "0", Type: oop.Int}},
+		&oop.Var{Name: elemName},
 	)
 	varLen := len(p.defs.Vars)
-	index := &p.defs.Vars[varLen-2]
-	elem := &p.defs.Vars[varLen-1]
+	index := p.defs.Vars[varLen-2]
+	elem := p.defs.Vars[varLen-1]
 	vars := p.defs.Vars
 	// Interpret block.
 	l := loop{val: val}

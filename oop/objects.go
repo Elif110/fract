@@ -16,7 +16,7 @@ type Fn struct {
 	Line              int // Line of define.
 	Tokens            [][]obj.Token
 	Params            []Param
-	Args              []Var // Default vars.
+	Args              []*Var // Default vars.
 	DefaultParamCount int
 }
 

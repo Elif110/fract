@@ -801,7 +801,7 @@ func (p *Parser) processTryCatch(tokens []obj.Token) uint8 {
 				if ln := p.defIndexByName(nameTk.Val); ln != -1 {
 					fract.IPanic(nameTk, obj.NamePanic, "\""+nameTk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
 				}
-				p.defs.Vars = append(p.defs.Vars, oop.Var{
+				p.defs.Vars = append(p.defs.Vars, &oop.Var{
 					Name: nameTk.Val,
 					Line: nameTk.Line,
 					Val:  oop.Val{Data: cp.Msg, Type: oop.String},

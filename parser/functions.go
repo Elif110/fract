@@ -13,7 +13,7 @@ import (
 type funcCall struct {
 	fn    *oop.Fn
 	errTk obj.Token
-	args  []oop.Var
+	args  []*oop.Var
 }
 
 func (c *funcCall) Func() *oop.Fn { return c.fn }
@@ -22,7 +22,7 @@ func (c *funcCall) Call() *oop.Val {
 	var returnVal oop.Val
 	// Is built-in function?
 	if c.fn.Tokens == nil {
-		returnVal = c.fn.Src.(func(obj.Token, []oop.Var) oop.Val)(c.errTk, c.args)
+		returnVal = c.fn.Src.(func(obj.Token, []*oop.Var) oop.Val)(c.errTk, c.args)
 		c.args = nil
 		c.fn = nil
 		return &returnVal
@@ -164,7 +164,7 @@ type funcArgInfo struct {
 }
 
 // Process function argument.
-func (p *Parser) processFuncArg(inf funcArgInfo) oop.Var {
+func (p *Parser) processFuncArg(inf funcArgInfo) *oop.Var {
 	var paramSet bool
 	length := *inf.index - *inf.lastComma
 	if length < 1 {
@@ -173,7 +173,7 @@ func (p *Parser) processFuncArg(inf funcArgInfo) oop.Var {
 		fract.IPanic(inf.tk, obj.SyntaxPanic, "Argument overflow!")
 	}
 	param := inf.fn.Params[*inf.count]
-	resultVar := oop.Var{Name: param.Name}
+	resultVar := &oop.Var{Name: param.Name}
 	valTokens := inf.tokens[*inf.lastComma:*inf.index]
 	inf.tk = valTokens[0]
 	// Check param set.
@@ -192,7 +192,7 @@ func (p *Parser) processFuncArg(inf funcArgInfo) oop.Var {
 				*inf.count++
 				paramSet = true
 				*inf.names = append(*inf.names, inf.tk.Val)
-				retv := oop.Var{Name: inf.tk.Val}
+				retv := &oop.Var{Name: inf.tk.Val}
 				//Parameter is params typed?
 				if param.Params {
 					*inf.lastComma += 2
@@ -224,7 +224,7 @@ func (p *Parser) processFuncArg(inf funcArgInfo) oop.Var {
 func (p *Parser) funcCallModel(fn *oop.Fn, tokens []obj.Token) *funcCall {
 	var (
 		names    []string
-		args     []oop.Var
+		args     []*oop.Var
 		argCount = 0
 		tk       = tokens[0]
 	)
@@ -293,7 +293,7 @@ func (p *Parser) funcCallModel(fn *oop.Fn, tokens []obj.Token) *funcCall {
 	for ; argCount < len(fn.Params); argCount++ {
 		param := fn.Params[argCount]
 		if param.DefaultVal.Data != nil {
-			args = append(args, oop.Var{Name: param.Name, Val: param.DefaultVal})
+			args = append(args, &oop.Var{Name: param.Name, Val: param.DefaultVal})
 		}
 	}
 	return &funcCall{fn: fn, errTk: tk, args: args}

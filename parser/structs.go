@@ -62,7 +62,7 @@ func (p *Parser) structdec(tokens []obj.Token) {
 	if p.funcTempVars != -1 {
 		p.funcTempVars++
 	}
-	p.defs.Vars = append(p.defs.Vars, oop.Var{
+	p.defs.Vars = append(p.defs.Vars, &oop.Var{
 		Name: nameTk.Val,
 		Line: tokens[0].Line,
 		Val:  val,

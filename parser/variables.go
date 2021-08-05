@@ -55,7 +55,7 @@ func (p *Parser) varadd(defs *oop.DefMap, inf varInfo, tokens []obj.Token) {
 	}
 	val.Mut = inf.mut
 	val.Const = inf.constant
-	defs.Vars = append(defs.Vars, oop.Var{
+	defs.Vars = append(defs.Vars, &oop.Var{
 		Name: nameTk.Val,
 		Val:  val,
 		Line: nameTk.Line,
@@ -219,7 +219,7 @@ func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 			if p.funcTempVars != -1 {
 				p.funcTempVars++
 			}
-			p.defs.Vars = append(p.defs.Vars, oop.Var{
+			p.defs.Vars = append(p.defs.Vars, &oop.Var{
 				Name: info.name,
 				Val:  val,
 				Line: setter.Line,
@@ -241,7 +241,7 @@ func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 		if p.funcTempVars != -1 {
 			p.funcTempVars++
 		}
-		p.defs.Vars = append(p.defs.Vars, oop.Var{
+		p.defs.Vars = append(p.defs.Vars, &oop.Var{
 			Name: info.name,
 			Val:  val,
 			Line: setter.Line,

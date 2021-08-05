@@ -425,12 +425,7 @@ func (p *Parser) selectEnumerable(mut bool, v oop.Val, tk obj.Token, s interface
 	case oop.List:
 		index := s.([]int)
 		if len(index) == 1 {
-			val := v.Data.(*oop.ListModel).Elems[index[0]]
-			if !val.Mut && !mut { //! Immutability.
-				val = val.Immut()
-			}
-			val.Mut = val.Mut || mut
-			return &val
+			return v.Data.(*oop.ListModel).Elems[index[0]].Get(mut)
 		}
 		list := oop.NewListModel()
 		for _, pos := range index {
@@ -486,12 +481,7 @@ func (p *Parser) processNameValue(mut bool, tk obj.Token) *oop.Val {
 	case 'p': // Package.
 		result = &oop.Val{Data: p.packages[defIndex], Type: oop.Package}
 	case 'v': // Value.
-		val := p.defs.Vars[defIndex]
-		result = &val.Val
-		if !val.Val.Mut && !mut { //! Immutability.
-			*result = val.Val.Immut()
-		}
-		result.Mut = val.Val.Mut || mut
+		result = p.defs.Vars[defIndex].Val.Get(mut)
 	}
 	return result
 }
@@ -584,11 +574,11 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 				case 'f': // Function.
 					result = &oop.Val{Data: ins.Defs.Funcs[defIndex], Type: oop.Func}
 				case 'v': // Value.
-					result = &ins.Defs.Vars[defIndex].Val
-					if !result.Mut && !part.mut { //! Immutability.
-						*result = result.Immut()
+					if p.defs.VarIndexByName("this") != -1 {
+						result = &ins.Defs.Vars[defIndex].Val
+					} else {
+						result = ins.Defs.Vars[defIndex].Val.Get(part.mut)
 					}
-					result.Mut = result.Mut || part.mut
 				}
 				goto end
 			case oop.List:
@@ -937,8 +927,8 @@ func (p *Parser) processListComprehension(tokens []obj.Token) *oop.Val {
 	} else if !isValidName(nameTk.Val) {
 		fract.IPanic(nameTk, obj.NamePanic, "Invalid name!")
 	}
-	p.defs.Vars = append(p.defs.Vars, oop.Var{Name: nameTk.Val})
-	elem := &p.defs.Vars[len(p.defs.Vars)-1]
+	p.defs.Vars = append(p.defs.Vars, &oop.Var{Name: nameTk.Val})
+	elem := p.defs.Vars[len(p.defs.Vars)-1]
 	// Interpret block.
 	list := oop.NewListModel()
 	l := loop{val: varVal}

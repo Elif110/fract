@@ -19,8 +19,8 @@ type Class struct {
 
 func (c *Class) CallConstructor(model FuncCallModel) ClassInstance {
 	ins := ClassInstance{Name: c.Name, File: c.File, Defs: c.Defs}
-	this := Var{Name: "this", Val: Val{Data: ins, Type: ClassIns, Mut: true}}
-	model.Func().Args = []Var{this}
+	this := &Var{Name: "this", Val: Val{Data: ins, Type: ClassIns, Mut: true}}
+	model.Func().Args = []*Var{this}
 	for _, fn := range ins.Defs.Funcs {
 		fn.Args = append(fn.Args, this)
 	}
