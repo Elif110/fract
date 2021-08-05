@@ -216,6 +216,7 @@ println(str.hasSuffix('çşĞü   '), ' ', str.hasSuffix('çşĞü'))
 println(str.replace('çşĞü   ', ''), ' ', str.replaceAll('çşĞü', ''))
 */
 
+/*
 open reflect
 println(reflect.NameOfType(0))
 info := reflect.TypeInfo(0)
@@ -226,3 +227,8 @@ println(info.Value())
 println(info.IsNumeric())
 println(info.IsEnumerable())
 println(info.IsInstance())
+*/
+
+// Multiple variable setting test.
+a, b mut, c const := 10, 20, 30
+println(a, ' ', b, ' ', c)

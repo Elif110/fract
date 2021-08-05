@@ -111,19 +111,144 @@ func (p *Parser) fvardec(defs *oop.DefMap, tokens []obj.Token) {
 // Process variable declaration to parser.
 func (p *Parser) vardec(tokens []obj.Token) { p.fvardec(&p.defs, tokens) }
 
+type shortVarDecNameInfo struct {
+	name    string
+	varType string
+}
+
+func (p *Parser) getShortVarDecNames(tokens []obj.Token) []shortVarDecNameInfo {
+	var names []shortVarDecNameInfo
+	var info shortVarDecNameInfo
+	lastIndex := 0
+	for index, tk := range tokens {
+		switch tk.Type {
+		case fract.Var:
+			if info.name == "" {
+				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+			} else if info.varType != "" {
+				fract.IPanic(tk, obj.SyntaxPanic, "Type repetition!")
+			}
+			info.varType = tk.Val
+		case fract.Name:
+			if info.name != "" {
+				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+			}
+			if !isValidName(tk.Val) {
+				fract.IPanic(tk, obj.SyntaxPanic, "Invalid name!")
+			}
+			// Name duplicate?
+			for _, info := range names {
+				if info.name == tk.Val {
+					fract.IPanic(tk, obj.NamePanic, "Name duplicate!")
+				}
+			}
+			// Name is already defined?
+			if ln := p.defIndexByName(tk.Val); ln != -1 {
+				fract.IPanic(tk, obj.NamePanic, "\""+tk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
+			}
+			info.name = tk.Val
+		case fract.Comma:
+			if info.name == "" {
+				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+			}
+			names = append(names, info)
+			info.name = ""
+			info.varType = ""
+			lastIndex = index + 1
+		}
+	}
+	if lastIndex < len(tokens) {
+		if info.name == "" {
+			fract.IPanic(tokens[lastIndex], obj.SyntaxPanic, "Invalid syntax!")
+		}
+		names = append(names, info)
+	}
+	return names
+}
+
+func (p *Parser) getShortVarDecValues(tokens []obj.Token) []oop.Val {
+	var values []oop.Val
+	braceCount := 0
+	lastIndex := 0
+	for index, tk := range tokens {
+		switch tk.Type {
+		case fract.Brace:
+			switch tk.Val {
+			case "{", "[", "(":
+				braceCount++
+			default:
+				braceCount--
+			}
+		case fract.Comma:
+			if braceCount != 0 {
+				break
+			}
+			values = append(values, *p.processValTokens(tokens[lastIndex:index]))
+			lastIndex = index + 1
+		}
+	}
+	if lastIndex < len(tokens) {
+		values = append(values, *p.processValTokens(tokens[lastIndex:]))
+	}
+	return values
+}
+
 // Process short variable declaration.
-func (p *Parser) varsdec(tokens []obj.Token) {
+func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 	// Name is not defined?
 	if len(tokens) < 2 {
 		first := tokens[0]
 		fract.IPanicC(first.File, first.Line, first.Column+len(first.Val), obj.SyntaxPanic, "Name is not given!")
 	}
-	if tokens[0].Type != fract.Name {
-		fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
-	}
 	var inf varInfo
 	inf.shortDeclaration = true
-	p.varadd(&p.defs, inf, tokens)
+	names := p.getShortVarDecNames(tokens[:setterIndex])
+	values := p.getShortVarDecValues(tokens[setterIndex+1:])
+	setter := tokens[setterIndex]
+	if len(values) == 0 {
+		fract.IPanic(tokens[setterIndex], obj.SyntaxPanic, "Value is not given!")
+	} else if len(values) == 1 {
+		for _, info := range names {
+			val := values[0]
+			switch info.varType {
+			case "mut":
+				val.Mut = true
+			case "const":
+				val.Const = true
+			}
+			if p.funcTempVars != -1 {
+				p.funcTempVars++
+			}
+			p.defs.Vars = append(p.defs.Vars, oop.Var{
+				Name: info.name,
+				Val:  val,
+				Line: setter.Line,
+			})
+		}
+		values = nil
+		return
+	} else if len(values) != len(names) {
+		fract.IPanic(tokens[setterIndex], obj.SyntaxPanic, "Value assignment is wrong!")
+	}
+	for index, info := range names {
+		val := values[index]
+		switch info.varType {
+		case "mut":
+			val.Mut = true
+		case "const":
+			val.Const = true
+		}
+		if p.funcTempVars != -1 {
+			p.funcTempVars++
+		}
+		p.defs.Vars = append(p.defs.Vars, oop.Var{
+			Name: info.name,
+			Val:  val,
+			Line: setter.Line,
+		})
+	}
+	names = nil
+	values = nil
 }
 
 // Process variable set statement.

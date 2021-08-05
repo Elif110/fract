@@ -843,7 +843,7 @@ func (p *Parser) processExpression(tks []obj.Token) uint8 {
 	case fract.Value, fract.Brace, fract.Name:
 		if firstTk.Type == fract.Name {
 			braceCount := 0
-			for _, tk := range tks {
+			for index, tk := range tks {
 				if tk.Type == fract.Brace {
 					switch tk.Val {
 					case " {", "[", "(":
@@ -861,7 +861,7 @@ func (p *Parser) processExpression(tks []obj.Token) uint8 {
 						p.varset(tks)
 						return fract.NA
 					case ":=":
-						p.varsdec(tks)
+						p.varsdec(tks, index)
 						return fract.NA
 					}
 				}
