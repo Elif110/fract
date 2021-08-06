@@ -22,7 +22,7 @@ func (c *funcCall) Call() *oop.Val {
 	var returnVal oop.Val
 	// Is built-in function?
 	if c.fn.Tokens == nil {
-		returnVal = c.fn.Src.(oop.BuiltInFuncType)(c.errTk, c.args)
+		returnVal = c.fn.Src.(func(obj.Token, []oop.VarDef) oop.Val)(c.errTk, c.args)
 		c.args = nil
 		c.fn = nil
 		return &returnVal
@@ -51,46 +51,15 @@ func (c *funcCall) Call() *oop.Val {
 	block := obj.Block{
 		Try: func() {
 			for p.index = 0; p.index < len(p.Tokens); p.index++ {
-				switch tks := p.Tokens[p.index]; tks[0].Type {
-				case fract.Ret:
-					if len(tks) > 1 {
-						tks = tks[1:]
-						list := oop.NewListModel()
-						var lastIndex int
-						var braceCount int
-						for index, tk := range tks {
-							switch tk.Type {
-							case fract.Brace:
-								switch tk.Val {
-								case "{", "[", "(":
-									braceCount++
-								default:
-									braceCount--
-								}
-							case fract.Comma:
-								if braceCount > 0 {
-									break
-								}
-								list.PushBack(*p.processValTokens(tks[lastIndex:index]))
-								lastIndex = index + 1
-							}
-						}
-						if lastIndex == 0 {
-							list = nil
-							returnVal = *p.processValTokens(tks)
-						} else {
-							if lastIndex < len(tks) {
-								list.PushBack(*p.processValTokens(tks[lastIndex:]))
-							}
-							returnVal.Data = list
-							returnVal.Type = oop.List
-							returnVal.Tag = "function_multiple_returns"
-						}
+				if p.processExpression(p.Tokens[p.index]) == fract.FUNCReturn {
+					src.returnVal = p.returnVal
+					if src.returnVal == nil {
+						break
 					}
-					p.index = len(p.Tokens) - 1
-					continue
+					returnVal = *src.returnVal
+					src.returnVal = nil
+					break
 				}
-				p.processExpression(p.Tokens[p.index])
 			}
 		},
 	}

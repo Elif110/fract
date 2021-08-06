@@ -1,0 +1,5 @@
+package std
+
+struct error {
+    message
+}

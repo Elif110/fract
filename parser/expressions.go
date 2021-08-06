@@ -542,7 +542,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 			part.mut = false
 			switch val.Type {
 			case oop.Package:
-				impInf := val.Data.(importInfo)
+				impInf := val.Data.(*importInfo)
 				checkPublic(nil, nameTk)
 				result = impInf.src.processNameValue(part.mut, nameTk)
 				goto end

@@ -24,12 +24,13 @@ var (
 // Parser of Fract.
 type Parser struct {
 	defs         oop.DefMap
-	packages     []importInfo
+	packages     []*importInfo
 	funcTempVars int // Count of function temporary variables.
 	loopCount    int
 	funcCount    int
 	index        int
-	packageName  string // Package name.
+	packageName  string   // Package name.
+	returnVal    *oop.Val // Last returned value.
 
 	Lex    *lex.Lex
 	Tokens [][]obj.Token // All Tokens of code file.
@@ -125,6 +126,7 @@ func (p *Parser) importPackage() {
 
 func (p *Parser) Interpret() {
 	if p.Lex.File.Path == "<stdin>" {
+		p.importStdlibLocal()
 		// Interpret all lines.
 		for p.index = 0; p.index < len(p.Tokens); p.index++ {
 			p.processExpression(p.Tokens[p.index])
@@ -136,6 +138,7 @@ func (p *Parser) Interpret() {
 		return
 	}
 	p.ready()
+	p.importStdlibLocal()
 	p.importPackage()
 	// Interpret all lines.
 	for p.index = 1; p.index < len(p.Tokens); p.index++ {
@@ -895,6 +898,43 @@ func (p *Parser) processExpression(tks []obj.Token) uint8 {
 		if p.funcCount < 1 {
 			fract.IPanic(firstTk, obj.SyntaxPanic, "Return keyword only used in functions!")
 		}
+		if len(tks) > 1 {
+			tks = tks[1:]
+			list := oop.NewListModel()
+			var lastIndex int
+			var braceCount int
+			for index, tk := range tks {
+				switch tk.Type {
+				case fract.Brace:
+					switch tk.Val {
+					case "{", "[", "(":
+						braceCount++
+					default:
+						braceCount--
+					}
+				case fract.Comma:
+					if braceCount > 0 {
+						break
+					}
+					list.PushBack(*p.processValTokens(tks[lastIndex:index]))
+					lastIndex = index + 1
+				}
+			}
+			if lastIndex == 0 {
+				list = nil
+				p.returnVal = p.processValTokens(tks)
+			} else {
+				if lastIndex < len(tks) {
+					list.PushBack(*p.processValTokens(tks[lastIndex:]))
+				}
+				p.returnVal = nil
+				p.returnVal = new(oop.Val)
+				p.returnVal.Data = list
+				p.returnVal.Type = oop.List
+				p.returnVal.Tag = "function_multiple_returns"
+			}
+		}
+		return fract.FUNCReturn
 	case fract.Fn:
 		p.funcdec(tks)
 	case fract.Try:
