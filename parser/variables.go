@@ -133,18 +133,20 @@ func (p *Parser) getShortVarDecNames(tokens []obj.Token) []shortVarDecNameInfo {
 			if info.name != "" {
 				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 			}
-			if !isValidName(tk.Val) {
-				fract.IPanic(tk, obj.SyntaxPanic, "Invalid name!")
-			}
-			// Name duplicate?
-			for _, info := range names {
-				if info.name == tk.Val {
-					fract.IPanic(tk, obj.NamePanic, "Name duplicate!")
+			if tk.Val != "_" {
+				if !isValidName(tk.Val) {
+					fract.IPanic(tk, obj.SyntaxPanic, "Invalid name!")
 				}
-			}
-			// Name is already defined?
-			if ln := p.defIndexByName(tk.Val); ln != -1 {
-				fract.IPanic(tk, obj.NamePanic, "\""+tk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
+				// Name duplicate?
+				for _, info := range names {
+					if info.name == tk.Val {
+						fract.IPanic(tk, obj.NamePanic, "Name duplicate!")
+					}
+				}
+				// Name is already defined?
+				if ln := p.defIndexByName(tk.Val); ln != -1 {
+					fract.IPanic(tk, obj.NamePanic, "\""+tk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
+				}
 			}
 			info.name = tk.Val
 		case fract.Comma:
@@ -214,6 +216,9 @@ func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 				goto multiple
 			}
 		}
+		if len(names) == 1 && names[0].name == "_" {
+			fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid name!")
+		}
 		for _, info := range names {
 			switch info.varType {
 			case "mut":
@@ -247,6 +252,9 @@ multiple:
 	}
 create:
 	for index, info := range names {
+		if info.name == "_" {
+			continue
+		}
 		val := values[index]
 		switch info.varType {
 		case "mut":

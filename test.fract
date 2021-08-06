@@ -244,6 +244,16 @@ a, b, c := 1, func(), 30
 println(a, ' ', b, ' ', c)
 */
 
+/*
 // Stdlib local package file test.
 println(error)
 println(error('Error Message'))
+*/
+
+// Multiple definition ignore test.
+fn test() {
+  ret 1, 2, 3
+}
+
+a, _, b := test()
+println(a, ' ', b)
