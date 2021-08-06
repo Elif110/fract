@@ -499,7 +499,7 @@ func findConditionOperator(tokens []obj.Token) (int, obj.Token) {
 		switch tk.Type {
 		case fract.Operator:
 			switch tk.Val {
-			case "&&", "||", "==", "<>", ">", "<", "<=", ">=":
+			case "&&", "||", "==", "!=", ">", "<", "<=", ">=":
 				return i, tk
 			}
 		case fract.In:
