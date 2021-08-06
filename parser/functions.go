@@ -13,7 +13,7 @@ import (
 type funcCall struct {
 	fn    *oop.Fn
 	errTk obj.Token
-	args  []*oop.Var
+	args  []oop.VarDef
 }
 
 func (c *funcCall) Func() *oop.Fn { return c.fn }
@@ -22,7 +22,7 @@ func (c *funcCall) Call() *oop.Val {
 	var returnVal oop.Val
 	// Is built-in function?
 	if c.fn.Tokens == nil {
-		returnVal = c.fn.Src.(func(obj.Token, []*oop.Var) oop.Val)(c.errTk, c.args)
+		returnVal = c.fn.Src.(oop.BuiltInFuncType)(c.errTk, c.args)
 		c.args = nil
 		c.fn = nil
 		return &returnVal
@@ -255,7 +255,7 @@ func (p *Parser) processFuncArg(inf funcArgInfo) *oop.Var {
 func (p *Parser) funcCallModel(fn *oop.Fn, tokens []obj.Token) *funcCall {
 	var (
 		names    []string
-		args     []*oop.Var
+		args     []oop.VarDef
 		argCount = 0
 		tk       = tokens[0]
 	)

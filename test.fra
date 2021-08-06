@@ -237,7 +237,7 @@ println(a, ' ', b, ' ', c)
 
 // Multiple returns test.
 fn func() {
-  ret 1, 2, 3
+    ret 1, 2, 3
 }
 a, b, c := 1, func(), 30
 println(a, ' ', b, ' ', c)

@@ -46,7 +46,7 @@ func (d Val) Immut() Val {
 	case List:
 		cpy := NewListModel()
 		src := *d.Data.(*ListModel)
-		cpy.Elems = make(TypeList, src.Len)
+		cpy.Elems = make(ListType, src.Len)
 		copy(cpy.Elems, src.Elems)
 		cpy.Len = src.Len
 		val.Data = cpy

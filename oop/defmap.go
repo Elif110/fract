@@ -1,7 +1,7 @@
 package oop
 
 type DefMap struct {
-	Vars  []*Var
+	Vars  []VarDef
 	Funcs []*Fn
 }
 

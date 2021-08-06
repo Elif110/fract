@@ -12,7 +12,7 @@ type Struct struct {
 	Constructor *Fn
 }
 
-func (s *Struct) CallConstructor(args []*Var) StructInstance {
+func (s *Struct) CallConstructor(args []VarDef) StructInstance {
 	ins := StructInstance{Name: s.Name, File: s.Lex.File}
 	ins.Fields.Vars = append(ins.Fields.Vars, args...)
 	return ins

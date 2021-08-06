@@ -4,21 +4,20 @@ package samples
 
 // PRIME NUMBER BETWEEN 1 an 100
 for _, x in range(2, 100) {
-  if x ==  2 {
-    print(x)
-    continue
+    if x ==  2 {
+        print(x)
+        continue
     } else if x < 2 || x % 2 == 0 {
-    continue
-  }
-  var prime = true
-  for _, y in range(2, x - 1) {
-    if x % y == 0 {
-      prime = false
-      break
+        continue
     }
-  }
-  if prime {
-    print(x)
-  }
+    var prime = true
+    for _, y in range(2, x - 1) {
+        if x % y == 0 {
+            prime = false
+            break
+        }
+    }
+    if prime {
+        print(x)
+    }
 }
-

@@ -26,94 +26,94 @@
 package reflect
 
 const (
-  None      = 0
-  Int       = 1
-  Float     = 2
-  String    = 3
-  Bool      = 4
-  Func      = 5
-  List      = 6
-  Map       = 7
-  Package   = 8
-  StructDef = 9  // Struct define.
-  StructIns = 10 // Struct instance.
-  ClassDef  = 11 // Class define.
-  ClassIns  = 12 // Class instance.
+    None      = 0
+    Int       = 1
+    Float     = 2
+    String    = 3
+    Bool      = 4
+    Func      = 5
+    List      = 6
+    Map       = 7
+    Package   = 8
+    StructDef = 9  // Struct define.
+    StructIns = 10 // Struct instance.
+    ClassDef  = 11 // Class define.
+    ClassIns  = 12 // Class instance.
 )
 
 // NameOfType is returns string name of specified object.
 fn NameOfType(obj) {
-  code := type(obj)
-  if code == None {
-    ret "None"
-  } else if code == Int {
-    ret "Int"
-  } else if code == Float {
-    ret "Float"
-  } else if code == String {
-    ret "String"
-  } else if code == Bool {
-    ret "Bool"
-  } else if code == Func {
-    ret "Func"
-  } else if code == List {
-    ret "List"
-  } else if code == Package {
-    ret "Package"
-  } else if code == StructDef {
-    ret "StructDef"
-  } else if code == StructIns {
-    ret "StructIns"
-  } else if code == ClassDef {
-    ret "ClassDef"
-  } else if code == ClassIns {
-    ret "ClassIns"
-  }
+    code := type(obj)
+    if code == None {
+        ret "None"
+    } else if code == Int {
+        ret "Int"
+    } else if code == Float {
+        ret "Float"
+    } else if code == String {
+        ret "String"
+    } else if code == Bool {
+        ret "Bool"
+    } else if code == Func {
+        ret "Func"
+    } else if code == List {
+        ret "List"
+    } else if code == Package {
+        ret "Package"
+    } else if code == StructDef {
+        ret "StructDef"
+    } else if code == StructIns {
+        ret "StructIns"
+    } else if code == ClassDef {
+        ret "ClassDef"
+    } else if code == ClassIns {
+        ret "ClassIns"
+    }
 }
 
 // TypeInfo is type information of object.
 class TypeInfo {
-  var (
-    name  = ''   // Type name.
-    code  = 0    // Type code.
-    value = none // Value of object.
-  )
+    var (
+        name  = ''   // Type name.
+        code  = 0    // Type code.
+        value = none // Value of object.
+    )
 
-  // Create instance for type information of specified object.
-  fn TypeInfo(obj) {
-    this.value = obj
-    this.code = type(obj)
-    this.name = NameOfType(this.code)
-  }
+    // Create instance for type information of specified object.
+    fn TypeInfo(obj) {
+        this.value = obj
+        this.code = type(obj)
+        this.name = NameOfType(this.code)
+    }
 
-  // Name is returns string name of type.
-  fn Name() {
-    ret this.name
-  }
+    // Name is returns string name of type.
+    fn Name() {
+        ret this.name
+    }
 
-  // Code is returns code of type.
-  fn Code() {
-    ret this.code
-  }
+    // Code is returns code of type.
+    fn Code() {
+        ret this.code
+    }
 
-  // IsEnumerable returns true if object is enumerable object,
-  // returns false if not.
-  fn IsEnumerable() {
-    ret this.code == String || this.code == List || this.code == Map
-  }
+    // IsEnumerable returns true if object is enumerable object,
+    // returns false if not.
+    fn IsEnumerable() {
+        ret this.code == String || this.code == List || this.code == Map
+    }
 
-  // IsNumeric is returns object is numeric type.
-  fn IsNumeric() {
-    ret this.code == Int || this.code == Float
-  }
+    // IsNumeric is returns object is numeric type.
+    fn IsNumeric() {
+        ret this.code == Int || this.code == Float
+    }
 
-  // IsInstance is returns object is instance of any class or struct.
-  fn IsInstance() {
-    ret this.code == ClassIns || this.code == StructIns
-  }
+    // IsInstance is returns object is instance of any class or struct.
+    fn IsInstance() {
+        ret this.code == ClassIns || this.code == StructIns
+    }
 
-  // Value is returns value of object.
-  fn Value() {
-    ret this.value
-  }
+    // Value is returns value of object.
+    fn Value() {
+        ret this.value
+    }
 }

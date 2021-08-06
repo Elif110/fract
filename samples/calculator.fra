@@ -13,24 +13,24 @@ print('4 - Divide')
 print('0 - Exit')
 
 for {
-  const choice = input('Select your operation: ')
-  if choice == '0' {
-    break
-  } else if choice in ['1', '2', '3', '4'] {
-    const (
-      first  = float(input('Enter first number: '))
-      second = float(input('Enter second number: '))
-    )
-    if choice == '1' {
-      print(first + second)
-    } else if choice == '2' {
-      print(first - second)
-    } else if choice == '3' {
-      print(first * second)
+    const choice = input('Select your operation: ')
+    if choice == '0' {
+        break
+    } else if choice in ['1', '2', '3', '4'] {
+        const (
+            first  = float(input('Enter first number: '))
+            second = float(input('Enter second number: '))
+        )
+        if choice == '1' {
+            print(first + second)
+        } else if choice == '2' {
+            print(first - second)
+        } else if choice == '3' {
+            print(first * second)
+        } else {
+            print(first / second)
+        }
     } else {
-      print(first / second)
+        print('Invalid choice!')
     }
-  } else {
-    print('Invalid choice!')
-  }
 }
