@@ -171,7 +171,7 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 	}
 	if len(tokens) < 3 {
 		fract.IPanic(tokens[1], obj.SyntaxPanic, "Value is not given!")
-	} else if t := tokens[1]; t.Type != fract.In && (t.Type != fract.Operator || t.Val != ":=") {
+	} else if t := tokens[1]; t.Type != fract.In {
 		fract.IPanic(tokens[1], obj.SyntaxPanic, "Invalid syntax!")
 	}
 	tokens = tokens[2:]
@@ -180,19 +180,15 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 	if !val.IsEnum() {
 		fract.IPanic(tokens[0], obj.ValuePanic, "Foreach loop must defined enumerable value!")
 	}
-	p.defs.Vars = append(p.defs.Vars,
-		&oop.Var{Name: nameTK.Val, Val: oop.Val{Data: "0", Type: oop.Int}},
-		&oop.Var{Name: elemName},
-	)
-	varLen := len(p.defs.Vars)
-	index := p.defs.Vars[varLen-2]
-	elem := p.defs.Vars[varLen-1]
+	index := &oop.Var{Name: nameTK.Val, Val: oop.Val{Data: "0", Type: oop.Int}}
+	element := &oop.Var{Name: elemName}
+	p.defs.Vars = append(p.defs.Vars, index, element)
 	vars := p.defs.Vars
 	// Interpret block.
 	l := loop{val: val}
 	l.run(func() {
 		index.Val = l.a
-		elem.Val = l.b
+		element.Val = l.b
 		p.Tokens = blockTokens
 		for p.index = 0; p.index < len(p.Tokens); p.index++ {
 			keywordState = p.processExpression(p.Tokens[p.index])
@@ -215,7 +211,7 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 	p.index = parserIndex
 	// Remove loop variables.
 	index = nil
-	elem = nil
+	element = nil
 	p.defs.Vars = vars[:len(vars)-2]
 	return processKeywordState(keywordState)
 }

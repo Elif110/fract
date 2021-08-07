@@ -912,7 +912,7 @@ func (p *Parser) processListComprehension(tokens []obj.Token) *oop.Val {
 	if lenLoopTokens := len(loopTokens); lenLoopTokens < 3 {
 		tk := tokens[0]
 		fract.IPanicC(tk.File, tk.Line, loopTokens[1].Column+len(loopTokens[1].Val), obj.SyntaxPanic, "Value is not given!")
-	} else if tk := loopTokens[2]; tk.Type != fract.In && (tk.Type != fract.Operator || tk.Val != ":=") {
+	} else if tk := loopTokens[2]; tk.Type != fract.In {
 		fract.IPanic(loopTokens[2], obj.SyntaxPanic, "Invalid syntax!")
 	} else if lenLoopTokens < 4 {
 		fract.IPanic(loopTokens[2], obj.SyntaxPanic, "Value is not given!")
