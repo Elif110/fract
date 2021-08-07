@@ -99,8 +99,6 @@ func (d Val) String() string {
 		return "object.classins"
 	case None:
 		return "none"
-	case String:
-		return d.Data.(StringModel).Value
 	default:
 		if d.Data == nil {
 			return ""
@@ -131,7 +129,7 @@ func (v Val) IsEnum() bool {
 func (v Val) Len() int {
 	switch v.Type {
 	case String:
-		return len(v.Data.(StringModel).Value)
+		return len(v.Data.(string))
 	case List:
 		return v.Data.(*ListModel).Len
 	case Map:

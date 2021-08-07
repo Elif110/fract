@@ -205,7 +205,6 @@ func (p arithmeticProcess) solve() oop.Val {
 			default:
 				fract.IPanic(p.operator, obj.ArithmeticPanic, "This operator is not defined for string types!")
 			}
-			val.Data = oop.NewStringModel(val.Data.(string))
 			return val
 		}
 
@@ -257,7 +256,6 @@ func (p arithmeticProcess) solve() oop.Val {
 			}
 			val.Data = sb.String()
 		}
-		val.Data = oop.NewStringModel(val.Data.(string))
 		return val
 	}
 
@@ -453,10 +451,11 @@ func (p *Parser) selectEnumerable(mut bool, v oop.Val, tk obj.Token, s interface
 			return &val
 		}
 	case oop.String:
-		result = oop.Val{Data: oop.NewStringModel(""), Type: oop.String}
+		var str string
 		for _, i := range s.([]int) {
-			result.Data = result.String() + string(v.String()[i])
+			str += string(v.String()[i])
 		}
+		result = oop.Val{Data: str, Type: oop.String}
 	}
 	return &result
 }
@@ -497,10 +496,10 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 		result = p.processValuePart(part)
 		goto end
 	}
-	// Single oop.
+	// Single value.
 	if tk := part.tokens[0]; len(part.tokens) == 1 {
 		if tk.Val[0] == '\'' || tk.Val[0] == '"' {
-			result = &oop.Val{Data: oop.NewStringModel(tk.Val[1 : len(tk.Val)-1]), Type: oop.String}
+			result = &oop.Val{Data: tk.Val[1 : len(tk.Val)-1], Type: oop.String}
 			goto end
 		} else if tk.Val == "true" || tk.Val == "false" {
 			result = &oop.Val{Data: tk.Val, Type: oop.Bool}
@@ -590,7 +589,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 				result = &oop.Val{Data: list.Defs.Funcs[i], Type: oop.Func}
 				goto end
 			case oop.String:
-				str := val.Data.(oop.StringModel)
+				str := oop.NewStringModel(val.Data.(string))
 				i := str.Defs.FuncIndexByName(nameTk.Val)
 				if i == -1 {
 					fract.IPanic(nameTk, obj.NamePanic, "Name is not defined: "+nameTk.Val)

@@ -57,23 +57,23 @@ func (s *StringModel) isUpperF(tk obj.Token, args []VarDef) Val {
 }
 
 func (s *StringModel) lowerF(tk obj.Token, args []VarDef) Val {
-	return Val{Data: NewStringModel(strings.ToLower(s.Value)), Type: String}
+	return Val{Data: strings.ToLower(s.Value), Type: String}
 }
 
 func (s *StringModel) upperF(tk obj.Token, args []VarDef) Val {
-	return Val{Data: NewStringModel(strings.ToUpper(s.Value)), Type: String}
+	return Val{Data: strings.ToUpper(s.Value), Type: String}
 }
 
 func (s *StringModel) trimF(tk obj.Token, args []VarDef) Val {
-	return Val{Data: NewStringModel(strings.TrimFunc(s.Value, unicode.IsSpace)), Type: String}
+	return Val{Data: strings.TrimFunc(s.Value, unicode.IsSpace), Type: String}
 }
 
 func (s *StringModel) trimLeftF(tk obj.Token, args []VarDef) Val {
-	return Val{Data: NewStringModel(strings.TrimLeftFunc(s.Value, unicode.IsSpace)), Type: String}
+	return Val{Data: strings.TrimLeftFunc(s.Value, unicode.IsSpace), Type: String}
 }
 
 func (s *StringModel) trimRightF(tk obj.Token, args []VarDef) Val {
-	return Val{Data: NewStringModel(strings.TrimRightFunc(s.Value, unicode.IsSpace)), Type: String}
+	return Val{Data: strings.TrimRightFunc(s.Value, unicode.IsSpace), Type: String}
 }
 
 func (s *StringModel) subF(tk obj.Token, args []VarDef) Val {
@@ -91,11 +91,11 @@ func (s *StringModel) subF(tk obj.Token, args []VarDef) Val {
 	}
 	length, _ := strconv.Atoi(lenArg.String())
 	if length < 0 {
-		return Val{Data: NewStringModel(""), Type: String}
+		return Val{Data: "", Type: String}
 	} else if index+length > len(s.Value) {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
-	return Val{Data: NewStringModel(s.Value[index : index+length]), Type: String}
+	return Val{Data: s.Value[index : index+length], Type: String}
 }
 
 func (s *StringModel) indexF(tk obj.Token, args []VarDef) Val {
@@ -128,7 +128,7 @@ func (s *StringModel) splitF(tk obj.Token, args []VarDef) Val {
 	parts := strings.SplitN(s.Value, sep.String(), count)
 	list.Elems = make(ListType, len(parts))
 	for i, p := range parts {
-		list.Elems[i] = Val{Data: NewStringModel(p), Type: String}
+		list.Elems[i] = Val{Data: p, Type: String}
 	}
 	return Val{Data: list, Type: List}
 }
@@ -174,7 +174,7 @@ func (s *StringModel) replaceF(tk obj.Token, args []VarDef) Val {
 	if new.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
 	}
-	return Val{Data: NewStringModel(strings.Replace(s.Value, old.String(), new.String(), count)), Type: String}
+	return Val{Data: strings.Replace(s.Value, old.String(), new.String(), count), Type: String}
 }
 
 func (s *StringModel) replaceAllF(tk obj.Token, args []VarDef) Val {
@@ -186,5 +186,5 @@ func (s *StringModel) replaceAllF(tk obj.Token, args []VarDef) Val {
 	if new.Type != String {
 		fract.Panic(tk, obj.OutOfRangePanic, "Value is not string!")
 	}
-	return Val{Data: NewStringModel(strings.ReplaceAll(s.Value, old.String(), new.String())), Type: String}
+	return Val{Data: strings.ReplaceAll(s.Value, old.String(), new.String()), Type: String}
 }
