@@ -50,7 +50,7 @@ In addition, it gives importance to simplicity and readability. Fract code looks
 ```go
 package main
 
-fn fib(a, b) {
+func fib(a, b) {
     val := a + b
     println(val)
     if val < 1000 {
@@ -102,7 +102,7 @@ println(p) // {Name:Tony Surname:Stark}
 
 Classes can contain fields, methods and have a constructor method privately.
 
-```cpp
+```java
 package main
 
 class Employee {
