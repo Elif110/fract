@@ -21,7 +21,7 @@ func (l *loop) run(b func()) {
 	case oop.List:
 		l.a.Type = oop.Int
 		for i, e := range l.val.Data.(*oop.ListModel).Elems {
-			l.a.Data = fmt.Sprint(i)
+			l.a.Data = float64(i)
 			l.b = e
 			b()
 			if l.breakLoop {
@@ -32,7 +32,7 @@ func (l *loop) run(b func()) {
 		l.a.Type = oop.Int
 		l.b.Type = oop.String
 		for i, e := range l.val.Data.(string) {
-			l.a.Data = fmt.Sprint(i)
+			l.a.Data = float64(i)
 			l.b.Data = string(e)
 			b()
 			if l.breakLoop {
@@ -102,7 +102,7 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 			p.Tokens = blockTokens
 			for p.index = 0; p.index < len(p.Tokens); p.index++ {
 				// Condition is true?
-				if condition == "true" {
+				if condition {
 					keywordState = p.processExpression(p.Tokens[p.index])
 					if keywordState == fract.LOOPBreak || keywordState == fract.FUNCReturn { // Break loop or return.
 						breakLoop = true
@@ -122,7 +122,7 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 			// Remove temporary imports.
 			p.packages = p.packages[:impLen]
 			condition = p.prococessCondition(tokens)
-			if breakLoop || condition != "true" {
+			if breakLoop || !condition {
 				p.Tokens = parserTokens
 				p.index = parserIndex
 				return processKeywordState(keywordState)

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"unicode"
 
@@ -187,11 +186,7 @@ func enumerableSelections(enum, selectVal oop.Val, tk obj.Token) interface{} {
 			if d.Type != oop.Int {
 				fract.IPanic(tk, obj.ValuePanic, "Only integer values can used in index access!")
 			}
-			pos, err := strconv.Atoi(d.String())
-			if err != nil {
-				fract.IPanic(tk, obj.OutOfRangePanic, "Value out of range!")
-			}
-			pos = processIndex(enumLen, pos)
+			pos := processIndex(enumLen, int(d.Data.(float64)))
 			if pos == -1 {
 				fract.IPanic(tk, obj.OutOfRangePanic, "Index is out of range!")
 			}
@@ -202,11 +197,7 @@ func enumerableSelections(enum, selectVal oop.Val, tk obj.Token) interface{} {
 	if selectVal.Type != oop.Int {
 		fract.IPanic(tk, obj.ValuePanic, "Only integer values can used in index access!")
 	}
-	pos, err := strconv.Atoi(selectVal.String())
-	if err != nil {
-		fract.IPanic(tk, obj.OutOfRangePanic, "Value out of range!")
-	}
-	pos = processIndex(enumLen, pos)
+	pos := processIndex(enumLen, int(selectVal.Data.(float64)))
 	if pos == -1 {
 		fract.IPanic(tk, obj.OutOfRangePanic, "Index is out of range!")
 	}
@@ -676,7 +667,7 @@ func (p *Parser) processIf(tokens []obj.Token) uint8 {
 	keywordState := fract.NA
 	for _, tokens := range blockTokens {
 		// Condition is true?
-		if condition == "true" && keywordState == fract.NA {
+		if condition && keywordState == fract.NA {
 			if keywordState = p.processExpression(tokens); keywordState != fract.NA {
 				break
 			}
@@ -703,13 +694,13 @@ rep:
 			first := tokens[1]
 			fract.IPanicC(first.File, first.Line, first.Column+len(first.Val), obj.SyntaxPanic, "Condition is empty!")
 		}
-		if condition == "true" {
+		if condition {
 			goto rep
 		}
 		condition = p.prococessCondition(conditionTokens)
 		for _, tokens := range blockTokens {
 			// Condition is true?
-			if condition == "true" && keywordState == fract.NA {
+			if condition && keywordState == fract.NA {
 				if keywordState = p.processExpression(tokens); keywordState != fract.NA {
 					break
 				}
@@ -720,7 +711,7 @@ rep:
 		goto rep
 	}
 	blockTokens = p.getBlock(tokens[1:])
-	if condition == "true" {
+	if condition {
 		goto end
 	}
 	for _, tokens := range blockTokens {

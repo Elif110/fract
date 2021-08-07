@@ -21,15 +21,14 @@ func Exit(tk obj.Token, args []oop.VarDef) oop.Val {
 	if code.Type != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Exit code is only be integer!")
 	}
-	exitCode, _ := strconv.ParseInt(code.String(), 10, 64)
-	os.Exit(int(exitCode))
+	os.Exit(int(code.Data.(float64)))
 	return oop.Val{}
 }
 
 // Float convert object to float.
 func Float(tk obj.Token, args []oop.VarDef) oop.Val {
 	return oop.Val{
-		Data: fmt.Sprintf(fract.FloatFormat, str.Conv(args[0].Val.String())),
+		Data: str.Conv(args[0].Val.String()),
 		Type: oop.Float,
 	}
 }
@@ -49,12 +48,12 @@ func Int(tk obj.Token, args []oop.VarDef) oop.Val {
 	case "strcode":
 		codes := oop.NewListModel()
 		for _, byt := range []byte(args[0].Val.String()) {
-			codes.PushBack(oop.Val{Data: fmt.Sprint(byt), Type: oop.Int})
+			codes.PushBack(oop.Val{Data: float64(byt), Type: oop.Int})
 		}
 		return oop.Val{Data: codes, Type: oop.List}
 	default: // Object.
 		return oop.Val{
-			Data: fmt.Sprint(int(str.Conv(args[0].Val.String()))),
+			Data: str.Conv(args[0].Val.String()),
 			Type: oop.Int,
 		}
 	}
@@ -62,7 +61,7 @@ func Int(tk obj.Token, args []oop.VarDef) oop.Val {
 
 // Len returns length of object.
 func Len(tk obj.Token, args []oop.VarDef) oop.Val {
-	return oop.Val{Data: fmt.Sprint(args[0].Val.Len()), Type: oop.Int}
+	return oop.Val{Data: float64(args[0].Val.Len()), Type: oop.Int}
 }
 
 // Calloc list by size.
@@ -71,13 +70,13 @@ func Calloc(tk obj.Token, args []oop.VarDef) oop.Val {
 	if size.Type != oop.Int {
 		fract.Panic(tk, obj.ValuePanic, "Size is only be integer!")
 	}
-	sizeInt, _ := strconv.Atoi(size.String())
+	sizeInt := size.Data.(float64)
 	if sizeInt < 0 {
 		fract.Panic(tk, obj.ValuePanic, "Size should be minimum zero!")
 	}
 	value := oop.Val{Type: oop.List}
 	if sizeInt > 0 {
-		var index int
+		var index float64
 		list := oop.NewListModel()
 		for ; index < sizeInt; index++ {
 			list.PushBack(oop.Val{Data: "0", Type: oop.Int})
@@ -145,9 +144,9 @@ func Range(tk obj.Token, args []oop.VarDef) oop.Val {
 	} else if step.Type != oop.Int && step.Type != oop.Float {
 		fract.Panic(tk, obj.ValuePanic, `"step" argument should be numeric!`)
 	}
-	startFloat, _ := strconv.ParseFloat(start.String(), 64)
-	toFloat, _ := strconv.ParseFloat(to.String(), 64)
-	stepFloat, _ := strconv.ParseFloat(step.String(), 64)
+	startFloat := start.Data.(float64)
+	toFloat := to.Data.(float64)
+	stepFloat := step.Data.(float64)
 	if stepFloat <= 0 {
 		return oop.Val{Type: oop.List}
 	}
@@ -158,11 +157,11 @@ func Range(tk obj.Token, args []oop.VarDef) oop.Val {
 	list := oop.NewListModel()
 	if startFloat <= toFloat {
 		for ; startFloat <= toFloat; startFloat += stepFloat {
-			list.PushBack(oop.Val{Data: fmt.Sprintf(fract.FloatFormat, startFloat), Type: typ})
+			list.PushBack(oop.Val{Data: startFloat, Type: typ})
 		}
 	} else {
 		for ; startFloat >= toFloat; startFloat -= stepFloat {
-			list.PushBack(oop.Val{Data: fmt.Sprintf(fract.FloatFormat, startFloat), Type: typ})
+			list.PushBack(oop.Val{Data: startFloat, Type: typ})
 		}
 	}
 	return oop.Val{Data: list, Type: oop.List}
@@ -196,8 +195,7 @@ func String(tk obj.Token, args []oop.VarDef) oop.Val {
 			if element.Type != oop.Int {
 				sb.WriteByte(' ')
 			}
-			r, _ := strconv.ParseInt(element.String(), 10, 32)
-			sb.WriteByte(byte(r))
+			sb.WriteByte(byte(element.Data.(float64)))
 		}
 		return oop.Val{Data: sb.String(), Type: oop.String}
 	default: // Object.

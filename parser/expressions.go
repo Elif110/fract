@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"math"
 	"math/big"
-	"strconv"
 	"strings"
 
 	"github.com/fract-lang/fract/oop"
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
-	"github.com/fract-lang/fract/pkg/str"
 )
 
 func compareValues(operator string, left, right oop.Val) bool {
@@ -88,8 +86,8 @@ func compare(left, right oop.Val, operator obj.Token) bool {
 	return compareValues(operator.Val, left, right)
 }
 
-func (p *Parser) prococessCondition(tokens []obj.Token) string {
-	trueVal := oop.Val{Data: "true", Type: oop.Bool}
+func (p *Parser) prococessCondition(tokens []obj.Token) bool {
+	trueVal := oop.Val{Data: true, Type: oop.Bool}
 	// Process condition.
 	orParts := conditionalProcesses(tokens, "||")
 	for _, or := range orParts {
@@ -102,10 +100,7 @@ func (p *Parser) prococessCondition(tokens []obj.Token) string {
 				// Operator is not found?
 				if index == -1 {
 					operator.Val = "=="
-					if compare(*p.processValTokens(and), trueVal, operator) {
-						return "true"
-					}
-					return "false"
+					return compare(*p.processValTokens(and), trueVal, operator)
 				}
 				// Operator is first or last?
 				if index == 0 {
@@ -114,17 +109,17 @@ func (p *Parser) prococessCondition(tokens []obj.Token) string {
 					fract.IPanic(and[len(and)-1], obj.SyntaxPanic, "Comparison values are missing!")
 				}
 				if !compare(*p.processValTokens(and[:index]), *p.processValTokens(and[index+1:]), operator) {
-					return "false"
+					return false
 				}
 			}
-			return "true"
+			return true
 		}
 		index, operator := findConditionOperator(or)
 		// Operator is not found?
 		if index == -1 {
 			operator.Val = "=="
 			if compare(*p.processValTokens(or), trueVal, operator) {
-				return "true"
+				return true
 			}
 			continue
 		}
@@ -135,15 +130,14 @@ func (p *Parser) prococessCondition(tokens []obj.Token) string {
 			fract.IPanic(or[len(or)-1], obj.SyntaxPanic, "Comparison values are missing!")
 		}
 		if compare(*p.processValTokens(or[:index]), *p.processValTokens(or[index+1:]), operator) {
-			return "true"
+			return true
 		}
 	}
-	return "false"
+	return false
 }
 
 // Returns string arithmetic compatible data.
-func arithmetic(tk obj.Token, val oop.Val) string {
-	result := val.String()
+func arithmetic(tk obj.Token, val oop.Val) float64 {
 	switch val.Type {
 	case oop.Func,
 		oop.Package,
@@ -151,13 +145,18 @@ func arithmetic(tk obj.Token, val oop.Val) string {
 		oop.ClassDef,
 		oop.ClassIns,
 		oop.None:
-		fract.IPanic(tk, obj.ArithmeticPanic, "\""+result+"\" is not compatible with arithmetic processes!")
+		fract.IPanic(tk, obj.ArithmeticPanic, "\""+val.String()+"\" is not compatible with arithmetic processes!")
 	case oop.Map:
 		fract.IPanic(tk, obj.ArithmeticPanic, "\"object.map\" is not compatible with arithmetic processes!")
 	case oop.StructIns:
 		fract.IPanic(tk, obj.ArithmeticPanic, "\"object.structins\" is not compatible with arithmetic processes!")
+	case oop.Bool:
+		if val.Data.(bool) {
+			return 1
+		}
+		return 0
 	}
-	return result
+	return val.Data.(float64)
 }
 
 // arithmeticProcess instance for solver.
@@ -180,83 +179,12 @@ func (p arithmeticProcess) solve() oop.Val {
 			switch p.operator.Val {
 			case "+":
 				val.Data = p.leftVal.String() + p.rightVal.String()
-			case "-":
-				if leftLen == 0 || rightLen == 0 {
-					val.Data = ""
-					break
-				}
-				if leftLen == 1 && rightLen > 1 {
-					runeInt, _ := strconv.ParseInt(p.leftVal.String(), 10, 32)
-					run := rune(runeInt)
-					for _, r := range p.rightVal.String() {
-						val.Data = val.String() + string(run-r)
-					}
-				} else if rightLen == 1 && leftLen > 1 {
-					runeInt, _ := strconv.ParseInt(p.rightVal.String(), 10, 32)
-					run := rune(runeInt)
-					for _, r := range p.leftVal.String() {
-						val.Data = val.String() + string(run-r)
-					}
-				} else {
-					for i, r := range p.leftVal.String() {
-						val.Data = val.String() + string(r-rune(p.rightVal.String()[i]))
-					}
-				}
 			default:
 				fract.IPanic(p.operator, obj.ArithmeticPanic, "This operator is not defined for string types!")
 			}
 			return val
 		}
-
-		val.Type = oop.String
-		if p.rightVal.Type == oop.String {
-			p.leftVal, p.rightVal = p.rightVal, p.leftVal
-		}
-		if p.rightVal.Type == oop.List {
-			if rightLen == 0 {
-				val.Data = p.leftVal.Data
-				return val
-			}
-			if len(p.leftVal.String()) != rightLen && (len(p.leftVal.String()) != 1 && rightLen != 1) {
-				fract.IPanic(p.right[0], obj.ArithmeticPanic, "List element count is not one or equals to first list!")
-			}
-			if strings.Contains(p.rightVal.String(), ".") {
-				fract.IPanic(p.right[0], obj.ArithmeticPanic, "Only string and integer values can concatenate string values!")
-			}
-			runeInt, _ := strconv.ParseInt(p.rightVal.String(), 10, 64)
-			run := rune(runeInt)
-			var sb strings.Builder
-			for _, r := range p.leftVal.String() {
-				switch p.operator.Val {
-				case "+":
-					sb.WriteByte(byte(r + run))
-				case "-":
-					sb.WriteByte(byte(r - run))
-				default:
-					fract.IPanic(p.operator, obj.ArithmeticPanic, "This operator is not defined for string types!")
-				}
-			}
-			val.Data = sb.String()
-		} else {
-			if p.rightVal.Type != oop.Int {
-				fract.IPanic(p.right[0], obj.ArithmeticPanic, "Only string and integer values can concatenate string values!")
-			}
-			runeInt, _ := strconv.ParseInt(p.rightVal.String(), 10, 64)
-			run := byte(runeInt)
-			var sb strings.Builder
-			for _, r := range p.leftVal.String() {
-				switch p.operator.Val {
-				case "+":
-					sb.WriteByte(byte(r) + run)
-				case "-":
-					sb.WriteByte(byte(r) - run)
-				default:
-					fract.IPanic(p.operator, obj.ArithmeticPanic, "This operator is not defined for string types!")
-				}
-			}
-			val.Data = sb.String()
-		}
-		return val
+		fract.IPanic(p.operator, obj.ArithmeticPanic, "Invalid data types!")
 	}
 
 	if p.leftVal.Type == oop.List && p.rightVal.Type == oop.List {
@@ -276,7 +204,7 @@ func (p arithmeticProcess) solve() oop.Val {
 			if left.Len() != 1 {
 				left, right = right, left
 			}
-			arith := str.Conv(arithmetic(p.operator, left.Data.(*oop.ListModel).Elems[0]))
+			arith := arithmetic(p.operator, left.Data.(*oop.ListModel).Elems[0])
 			for i, elem := range right.Data.(*oop.ListModel).Elems {
 				if elem.Type == oop.List {
 					right.Data.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
@@ -291,7 +219,7 @@ func (p arithmeticProcess) solve() oop.Val {
 					})
 				} else {
 					right.Data.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
-						Data: fmt.Sprintf(fract.FloatFormat, solveArithmeticProcess(p.operator, arith, str.Conv(arithmetic(p.operator, elem)))),
+						Data: solveArithmeticProcess(p.operator, arith, arithmetic(p.operator, elem)),
 						Type: oop.Int,
 					})
 				}
@@ -318,7 +246,7 @@ func (p arithmeticProcess) solve() oop.Val {
 					})
 				} else {
 					p.leftVal.Data.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
-						Data: fmt.Sprintf(fract.FloatFormat, solveArithmeticProcess(p.operator, str.Conv(arithmetic(p.operator, elem)), str.Conv(right.String()))),
+						Data: solveArithmeticProcess(p.operator, arithmetic(p.operator, elem), right.Data.(float64)),
 						Type: oop.Int,
 					})
 				}
@@ -338,7 +266,7 @@ func (p arithmeticProcess) solve() oop.Val {
 		if left.Type != oop.List {
 			left, right = right, left
 		}
-		arith := str.Conv(arithmetic(p.operator, right))
+		arith := arithmetic(p.operator, right)
 		for i, elem := range left.Data.(*oop.ListModel).Elems {
 			if elem.Type == oop.List {
 				left.Data.(*oop.ListModel).Elems[i] = readyData(p, arithmeticProcess{
@@ -350,7 +278,7 @@ func (p arithmeticProcess) solve() oop.Val {
 				}.solve())
 			} else {
 				left.Data.(*oop.ListModel).Elems[i] = readyData(p, oop.Val{
-					Data: fmt.Sprintf(fract.FloatFormat, solveArithmeticProcess(p.operator, str.Conv(arithmetic(p.operator, elem)), arith)),
+					Data: solveArithmeticProcess(p.operator, arithmetic(p.operator, elem), arith),
 					Type: oop.Int,
 				})
 			}
@@ -358,7 +286,7 @@ func (p arithmeticProcess) solve() oop.Val {
 		val = left
 	} else {
 		val = readyData(p, oop.Val{
-			Data: fmt.Sprintf(fract.FloatFormat, solveArithmeticProcess(p.operator, str.Conv(arithmetic(p.operator, p.leftVal)), str.Conv(arithmetic(p.operator, p.rightVal)))),
+			Data: solveArithmeticProcess(p.operator, arithmetic(p.operator, p.leftVal), arithmetic(p.operator, p.rightVal)),
 			Type: oop.Int,
 		})
 	}
@@ -502,7 +430,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 			result = &oop.Val{Data: tk.Val[1 : len(tk.Val)-1], Type: oop.String}
 			goto end
 		} else if tk.Val == "true" || tk.Val == "false" {
-			result = &oop.Val{Data: tk.Val, Type: oop.Bool}
+			result = &oop.Val{Data: tk.Val == "true", Type: oop.Bool}
 			goto end
 		} else if tk.Val == "none" {
 			result = &oop.Val{Data: tk.Val, Type: oop.None}
@@ -516,9 +444,10 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 			if tk.Val != "NaN" {
 				prs, _ := new(big.Float).SetString(tk.Val)
 				val, _ := prs.Float64()
-				tk.Val = fmt.Sprint(val)
+				result = &oop.Val{Data: val, Type: tk.Type}
+			} else {
+				result = &oop.Val{Data: math.NaN(), Type: tk.Type}
 			}
-			result = &oop.Val{Data: tk.Val, Type: tk.Type}
 			goto end
 		} else {
 			if tk.Type != fract.Name {
@@ -933,7 +862,7 @@ func (p *Parser) processListComprehension(tokens []obj.Token) *oop.Val {
 	l := loop{val: varVal}
 	l.run(func() {
 		elem.Val = l.b
-		if filterTokens == nil || p.prococessCondition(filterTokens) == "true" {
+		if filterTokens == nil || p.prococessCondition(filterTokens) {
 			list.PushBack(*p.processValTokens(selectTokens))
 		}
 	})

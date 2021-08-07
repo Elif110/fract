@@ -1,9 +1,6 @@
 package oop
 
 import (
-	"fmt"
-	"strconv"
-
 	"github.com/fract-lang/fract/pkg/fract"
 	"github.com/fract-lang/fract/pkg/obj"
 )
@@ -22,17 +19,17 @@ func NewListModel(elems ...Val) *ListModel {
 	list.Defs.Funcs = []*Fn{
 		{Name: "pushBack", Src: list.PushBackF, Params: []Param{{Name: "v", Params: true}}},
 		{Name: "pushFront", Src: list.pushFrontF, Params: []Param{{Name: "v", Params: true}}},
-		{Name: "index", Src: list.indexF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
+		{Name: "index", Src: list.indexF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: 0., Type: Int}}}},
 		{Name: "indexLast", Src: list.indexLastF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
 		{Name: "insert", Src: list.insertF, Params: []Param{{Name: "i"}, {Name: "v", Params: true}}},
 		{Name: "sub", Src: list.subF, Params: []Param{{Name: "start"}, {Name: "len"}}},
 		{Name: "removeAt", Src: list.removeAtF, Params: []Param{{Name: "i"}}},
-		{Name: "remove", Src: list.removeF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "0", Type: Int}}}},
+		{Name: "remove", Src: list.removeF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: 0., Type: Int}}}},
 		{Name: "removeLast", Src: list.removeLastF, DefaultParamCount: 1, Params: []Param{{Name: "v"}, {Name: "start", DefaultVal: Val{Data: "", Type: Int}}}},
 		{Name: "removeAll", Src: list.removeAllF, Params: []Param{{Name: "v"}}},
 		{Name: "removeRange", Src: list.removeRangeF, Params: []Param{{Name: "start"}, {Name: "to"}}},
 		{Name: "reverse", Src: list.reverseF},
-		{Name: "sort", Src: list.sortF, DefaultParamCount: 1, Params: []Param{{Name: "desc", DefaultVal: Val{Data: "false", Type: Bool}}}},
+		{Name: "sort", Src: list.sortF, DefaultParamCount: 1, Params: []Param{{Name: "desc", DefaultVal: Val{Data: false, Type: Bool}}}},
 		{Name: "unique", Src: list.uniqueF},
 		{Name: "clear", Src: list.clearF},
 	}
@@ -61,17 +58,17 @@ func (l *ListModel) indexF(tk obj.Token, args []VarDef) Val {
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
 	}
-	index, _ := strconv.Atoi(indexArg.String())
+	index := int(indexArg.Data.(float64))
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
 	elem := args[0].Val
 	for ; index < l.Len; index++ {
 		if l.Elems[index] == elem {
-			return Val{Data: fmt.Sprint(index), Type: Int}
+			return Val{Data: index, Type: Int}
 		}
 	}
-	return Val{Data: "-1", Type: Int}
+	return Val{Data: -1.0, Type: Int}
 }
 
 func (l *ListModel) indexLastF(tk obj.Token, args []VarDef) Val {
@@ -83,7 +80,7 @@ func (l *ListModel) indexLastF(tk obj.Token, args []VarDef) Val {
 	if indexArg.Data == "" {
 		index = l.Len - 1
 	} else {
-		index, _ = strconv.Atoi(indexArg.String())
+		index = int(indexArg.Data.(float64))
 	}
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
@@ -91,10 +88,10 @@ func (l *ListModel) indexLastF(tk obj.Token, args []VarDef) Val {
 	elem := args[0].Val
 	for ; index > 0; index-- {
 		if l.Elems[index] == elem {
-			return Val{Data: fmt.Sprint(index), Type: Int}
+			return Val{Data: index, Type: Int}
 		}
 	}
-	return Val{Data: "-1", Type: Int}
+	return Val{Data: -1.0, Type: Int}
 }
 
 func (l *ListModel) insertF(tk obj.Token, args []VarDef) Val {
@@ -102,7 +99,7 @@ func (l *ListModel) insertF(tk obj.Token, args []VarDef) Val {
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
 	}
-	index, _ := strconv.Atoi(indexArg.String())
+	index := int(indexArg.Data.(float64))
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
@@ -121,11 +118,11 @@ func (l *ListModel) subF(tk obj.Token, args []VarDef) Val {
 	if lenArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Length must be integer!")
 	}
-	index, _ := strconv.Atoi(startArg.String())
+	index := int(startArg.Data.(float64))
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
-	len, _ := strconv.Atoi(lenArg.String())
+	len := int(lenArg.Data.(float64))
 	list := NewListModel()
 	if len < 0 {
 		return Val{Data: list, Type: List}
@@ -192,7 +189,7 @@ func (l *ListModel) removeAtF(tk obj.Token, args []VarDef) Val {
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
 	}
-	index, _ := strconv.Atoi(indexArg.String())
+	index := int(indexArg.Data.(float64))
 	if index < 0 || index >= l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
@@ -206,7 +203,7 @@ func (l *ListModel) removeF(tk obj.Token, args []VarDef) Val {
 	if indexArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Start index must be integer!")
 	}
-	index, _ := strconv.Atoi(indexArg.String())
+	index := int(indexArg.Data.(float64))
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
@@ -215,10 +212,10 @@ func (l *ListModel) removeF(tk obj.Token, args []VarDef) Val {
 		if l.Elems[index] == elem {
 			l.Elems = append(l.Elems[:index], l.Elems[index+1:]...)
 			l.Len--
-			return Val{Data: "true", Type: Bool}
+			return Val{Data: true, Type: Bool}
 		}
 	}
-	return Val{Data: "false", Type: Bool}
+	return Val{Data: false, Type: Bool}
 }
 
 func (l *ListModel) removeLastF(tk obj.Token, args []VarDef) Val {
@@ -230,7 +227,7 @@ func (l *ListModel) removeLastF(tk obj.Token, args []VarDef) Val {
 	if indexArg.Data == "" {
 		index = l.Len - 1
 	} else {
-		index, _ = strconv.Atoi(indexArg.String())
+		index = int(indexArg.Data.(float64))
 	}
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
@@ -240,10 +237,10 @@ func (l *ListModel) removeLastF(tk obj.Token, args []VarDef) Val {
 		if l.Elems[index] == elem {
 			l.Elems = append(l.Elems[:index], l.Elems[index+1:]...)
 			l.Len--
-			return Val{Data: "true", Type: Bool}
+			return Val{Data: true, Type: Bool}
 		}
 	}
-	return Val{Data: "false", Type: Bool}
+	return Val{Data: false, Type: Bool}
 }
 
 func (l *ListModel) removeAllF(tk obj.Token, args []VarDef) Val {
@@ -267,11 +264,11 @@ func (l *ListModel) removeRangeF(tk obj.Token, args []VarDef) Val {
 	if lenArg.Type != Int {
 		fract.Panic(tk, obj.ValuePanic, "Length must be integer!")
 	}
-	index, _ := strconv.Atoi(startArg.String())
+	index := int(startArg.Data.(float64))
 	if index < 0 || index > l.Len {
 		fract.Panic(tk, obj.OutOfRangePanic, "Out of range!")
 	}
-	len, _ := strconv.Atoi(lenArg.String())
+	len := int(lenArg.Data.(float64))
 	if len < 0 {
 		return Val{}
 	} else if index+len > l.Len {

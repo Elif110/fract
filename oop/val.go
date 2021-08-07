@@ -99,6 +99,13 @@ func (d Val) String() string {
 		return "object.classins"
 	case None:
 		return "none"
+	case Int, Float:
+		return fmt.Sprint(d.Data)
+	case Bool:
+		if d.Data == true {
+			return "true"
+		}
+		return "false"
 	default:
 		if d.Data == nil {
 			return ""
