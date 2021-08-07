@@ -343,6 +343,7 @@ func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
 			param = oop.Param{Name: tk.Val, Params: params, Type: varType}
 			fn.Params = append(fn.Params, param)
 			paramName = false
+			varType = ""
 			continue
 		} else {
 			paramName = true

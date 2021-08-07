@@ -42,31 +42,31 @@ const (
 )
 
 // NameOfType is returns string name of specified object.
-func NameOfType(obj) {
-    code := type(obj)
-    if code == None {
+func NameOfType(const obj) {
+    const typeCode = type(obj)
+    if typeCode == None {
         return "None"
-    } else if code == Int {
+    } else if typeCode == Int {
         return "Int"
-    } else if code == Float {
+    } else if typeCode == Float {
         return "Float"
-    } else if code == String {
+    } else if typeCode == String {
         return "String"
-    } else if code == Bool {
+    } else if typeCode == Bool {
         return "Bool"
-    } else if code == Func {
+    } else if typeCode == Func {
         return "Func"
-    } else if code == List {
+    } else if typeCode == List {
         return "List"
-    } else if code == Package {
+    } else if typeCode == Package {
         return "Package"
-    } else if code == StructDef {
+    } else if typeCode == StructDef {
         return "StructDef"
-    } else if code == StructIns {
+    } else if typeCode == StructIns {
         return "StructIns"
-    } else if code == ClassDef {
+    } else if typeCode == ClassDef {
         return "ClassDef"
-    } else if code == ClassIns {
+    } else if typeCode == ClassIns {
         return "ClassIns"
     }
 }
@@ -80,7 +80,7 @@ class TypeInfo {
     )
 
     // Create instance for type information of specified object.
-    func TypeInfo(obj) {
+    func TypeInfo(const obj) {
         this.value = obj
         this.code = type(obj)
         this.name = NameOfType(this.code)
