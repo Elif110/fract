@@ -42,32 +42,32 @@ const (
 )
 
 // NameOfType is returns string name of specified object.
-fn NameOfType(obj) {
+func NameOfType(obj) {
     code := type(obj)
     if code == None {
-        ret "None"
+        return "None"
     } else if code == Int {
-        ret "Int"
+        return "Int"
     } else if code == Float {
-        ret "Float"
+        return "Float"
     } else if code == String {
-        ret "String"
+        return "String"
     } else if code == Bool {
-        ret "Bool"
+        return "Bool"
     } else if code == Func {
-        ret "Func"
+        return "Func"
     } else if code == List {
-        ret "List"
+        return "List"
     } else if code == Package {
-        ret "Package"
+        return "Package"
     } else if code == StructDef {
-        ret "StructDef"
+        return "StructDef"
     } else if code == StructIns {
-        ret "StructIns"
+        return "StructIns"
     } else if code == ClassDef {
-        ret "ClassDef"
+        return "ClassDef"
     } else if code == ClassIns {
-        ret "ClassIns"
+        return "ClassIns"
     }
 }
 
@@ -80,40 +80,40 @@ class TypeInfo {
     )
 
     // Create instance for type information of specified object.
-    fn TypeInfo(obj) {
+    func TypeInfo(obj) {
         this.value = obj
         this.code = type(obj)
         this.name = NameOfType(this.code)
     }
 
     // Name is returns string name of type.
-    fn Name() {
-        ret this.name
+    func Name() {
+        return this.name
     }
 
     // Code is returns code of type.
-    fn Code() {
-        ret this.code
+    func Code() {
+        return this.code
     }
 
     // IsEnumerable returns true if object is enumerable object,
     // returns false if not.
-    fn IsEnumerable() {
-        ret this.code == String || this.code == List || this.code == Map
+    func IsEnumerable() {
+        return this.code == String || this.code == List || this.code == Map
     }
 
     // IsNumeric is returns object is numeric type.
-    fn IsNumeric() {
-        ret this.code == Int || this.code == Float
+    func IsNumeric() {
+        return this.code == Int || this.code == Float
     }
 
     // IsInstance is returns object is instance of any class or struct.
-    fn IsInstance() {
-        ret this.code == ClassIns || this.code == StructIns
+    func IsInstance() {
+        return this.code == ClassIns || this.code == StructIns
     }
 
     // Value is returns value of object.
-    fn Value() {
-        ret this.value
+    func Value() {
+        return this.value
     }
 }

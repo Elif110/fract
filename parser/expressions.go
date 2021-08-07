@@ -711,7 +711,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 				fract.IPanic(valTokens[valTokensLen-1], obj.SyntaxPanic, "Invalid syntax!")
 			}
 			switch valTokens[0].Type {
-			case fract.Fn:
+			case fract.Func:
 				fn := &oop.Fn{
 					Name:   "anonymous",
 					Src:    p,

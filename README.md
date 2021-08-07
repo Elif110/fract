@@ -5,7 +5,7 @@
 <h1>The Fract Programming Language</h1>
 Fast, efficient, reliable, safe and simple. <br>
 Designed for powerful scripting programming.
-    
+
 <strong>
 
 [Website](https://fract-lang.github.io/website/) |
@@ -102,7 +102,7 @@ println(p) // {Name:Tony Surname:Stark}
 
 Classes can contain fields, methods and have a constructor method privately.
 
-```csharp
+```cpp
 package main
 
 class Employee {
@@ -114,19 +114,19 @@ class Employee {
   )
 
   // Constructor.
-  fn Employee(name, surname, age, salary=9000) {
+  func Employee(name, surname, age, salary=9000) {
     this.Name    = name.trim()
     this.Surname = surname.trim()
     this.Age     = age
     this.Salary  = salary
   }
 
-  fn FullName() {
-    ret this.Name + ' ' + this.Surname
+  func FullName() {
+    return this.Name + ' ' + this.Surname
   }
 
-  fn InfoString() {
-    ret (
+  func InfoString() {
+    return (
       'Name: '     + this.Name +
       ' Surname: ' + this.Surname +
       ' Age: '     + string(this.Age) +
@@ -175,7 +175,7 @@ Run code:
 ```
 $ ./fract main.fra
 Hello, World!
-$ 
+$
 ```
 
 <h2 id="how_to_compile">How to Compile</h2>

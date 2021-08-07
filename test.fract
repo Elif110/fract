@@ -1,8 +1,8 @@
 package test
 
 /*
-try {} ; ; fn a() {
-  println('TEST'); if false { ret 0 } else { ret 1 }
+try {} ; ; func a() {
+  println('TEST'); if false { return 0 } else { return 1 }
 }
 
 println(a())
@@ -94,9 +94,9 @@ class employee {
       this.salary = salary
   }
 
-  fn getName       { ret this.name }
+  fn getName       { return this.name }
   fn setName(name) { this.name = name }
-  fn string        { ret this.name + ' ' + this.surname + ' ' + string(this.salary) }
+  fn string        { return this.name + ' ' + this.surname + ' ' + string(this.salary) }
 }
 
 e := employee('Daniel', 'McVollo', '9000')
@@ -238,7 +238,7 @@ println(a, ' ', b, ' ', c)
 /*
 // Multiple returns test.
 fn func() {
-    ret 1, 2, 3
+    return 1, 2, 3
 }
 a, b, c := 1, func(), 30
 println(a, ' ', b, ' ', c)
@@ -250,10 +250,22 @@ println(error)
 println(error('Error Message'))
 */
 
+/*
 // Multiple definition ignore test.
-fn test() {
-  ret 1, 2, 3
+func test() {
+  return 1, 2, 3
 }
 
 a, _, b := test()
 println(a, ' ', b)
+*/
+
+// Function var typing test.
+// Constant.
+func test(mut a) {
+  a[0] = 90
+}
+list := [1, 2, 3]
+println(list)
+test(list)
+println(list)

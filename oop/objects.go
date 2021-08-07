@@ -25,4 +25,5 @@ type Param struct {
 	DefaultVal Val
 	Name       string
 	Params     bool
+	Type       string
 }

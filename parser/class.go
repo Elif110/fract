@@ -16,7 +16,7 @@ func (p *Parser) buildClass(name string, tokens []obj.Token) *oop.Val {
 		switch tokens[0].Type {
 		case fract.Var:
 			p.fvardec(&class.Defs, tokens)
-		case fract.Fn:
+		case fract.Func:
 			p.ffuncdec(&class.Defs, tokens)
 			if f := class.Defs.Funcs[len(class.Defs.Funcs)-1]; f.Name == class.Name {
 				if class.Constructor != nil {

@@ -18,7 +18,7 @@ func (p *Parser) Import() {
 		switch tokens := p.Tokens[p.index]; tokens[0].Type {
 		case fract.Var:
 			p.vardec(tokens)
-		case fract.Fn:
+		case fract.Func:
 			p.funcdec(tokens)
 		case fract.Struct:
 			p.structdec(tokens)

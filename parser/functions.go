@@ -83,7 +83,7 @@ func isParamSet(tokens []obj.Token) bool {
 }
 
 // paramsArgValues decompose and returns params values.
-func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int) oop.Val {
+func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int, mut bool) oop.Val {
 	values := oop.NewListModel()
 	resultVal := oop.Val{Type: oop.List}
 	braceCount := 0
@@ -112,7 +112,7 @@ func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int) oop.
 				params = true
 				valTokens = valTokens[:l-1]
 			}
-			val := *p.processValTokens(valTokens)
+			val := *p.processValue(valTokens, mut)
 			if params {
 				if val.Type != oop.List {
 					fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only lists!")
@@ -138,7 +138,7 @@ func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int) oop.
 			params = true
 			valTokens = valTokens[:l-1]
 		}
-		val := *p.processValTokens(valTokens)
+		val := *p.processValue(valTokens, mut)
 		if params {
 			if val.Type != oop.List {
 				fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only lists!")
@@ -192,15 +192,16 @@ func (p *Parser) processFuncArg(inf funcArgInfo) *oop.Var {
 				*inf.count++
 				paramSet = true
 				*inf.names = append(*inf.names, inf.tk.Val)
-				retv := &oop.Var{Name: inf.tk.Val}
+				resultVar.Name = inf.tk.Val
 				//Parameter is params typed?
 				if param.Params {
 					*inf.lastComma += 2
-					retv.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma)
+					resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma, param.Type == "mut")
 				} else {
-					retv.Val = *p.processValTokens(valTokens[2:])
+					resultVar.Val = *p.processValue(valTokens[2:], param.Type == "mut")
 				}
-				return retv
+				resultVar.Val.Const = param.Type == "const"
+				return resultVar
 			}
 		}
 		fract.IPanic(inf.tk, obj.NamePanic, "Parameter is not defined in this name: "+inf.tk.Val)
@@ -212,10 +213,11 @@ func (p *Parser) processFuncArg(inf funcArgInfo) *oop.Var {
 	*inf.names = append(*inf.names, resultVar.Name)
 	// Parameter is params typed?
 	if param.Params {
-		resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma)
+		resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma, param.Type == "mut")
 	} else {
-		resultVar.Val = *p.processValTokens(valTokens)
+		resultVar.Val = *p.processValue(valTokens, param.Type == "mut")
 	}
+	resultVar.Val.Const = param.Type == "const"
 	valTokens = nil
 	return resultVar
 }
@@ -299,15 +301,15 @@ func (p *Parser) funcCallModel(fn *oop.Fn, tokens []obj.Token) *funcCall {
 	return &funcCall{fn: fn, errTk: tk, args: args}
 }
 
-// Decompose function parameters.
+// Set arguments to parameters of function.
 func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
-	paramName, params, defaultDef := true, false, false
+	paramName, params, defaultDef, varType := true, false, false, ""
 	braceCount := 0
 	var param oop.Param
 	for i := 0; i < len(*tokens); i++ {
-		currentParam := (*tokens)[i]
-		if currentParam.Type == fract.Brace {
-			switch currentParam.Val {
+		tk := (*tokens)[i]
+		if tk.Type == fract.Brace {
+			switch tk.Val {
 			case "{", "[", "(":
 				braceCount++
 			default:
@@ -318,41 +320,47 @@ func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
 			continue
 		}
 		if paramName {
-			switch currentParam.Type {
+			switch tk.Type {
 			case fract.Params:
 				if params {
-					fract.IPanic(currentParam, obj.SyntaxPanic, "Invalid syntax!")
+					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
 				params = true
 				continue
 			case fract.Name:
-				if !isValidName(currentParam.Val) {
-					fract.IPanic(currentParam, obj.NamePanic, "Invalid name!")
+				if !isValidName(tk.Val) {
+					fract.IPanic(tk, obj.NamePanic, "Invalid name!")
 				}
+			case fract.Var:
+				if varType != "" || params {
+					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
+				}
+				varType = tk.Val
+				continue
 			default:
-				fract.IPanic(currentParam, obj.SyntaxPanic, "Parameter name is not found!")
+				fract.IPanic(tk, obj.SyntaxPanic, "Parameter name is not found!")
 			}
-			param = oop.Param{Name: currentParam.Val, Params: params}
+			param = oop.Param{Name: tk.Val, Params: params, Type: varType}
 			fn.Params = append(fn.Params, param)
 			paramName = false
 			continue
 		} else {
 			paramName = true
 			// Default value definition?
-			if currentParam.Val == "=" {
+			if tk.Val == "=" {
 				braceCount := 0
 				i++
 				start := i
 				for ; i < len(*tokens); i++ {
-					currentParam = (*tokens)[i]
-					if currentParam.Type == fract.Brace {
-						switch currentParam.Val {
+					tk = (*tokens)[i]
+					if tk.Type == fract.Brace {
+						switch tk.Val {
 						case "{", "[", "(":
 							braceCount++
 						default:
 							braceCount--
 						}
-					} else if currentParam.Type == fract.Comma {
+					} else if tk.Type == fract.Comma {
 						break
 					}
 				}
@@ -361,7 +369,7 @@ func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
 				}
 				param.DefaultVal = *p.processValTokens((*tokens)[start:i])
 				if param.Params && param.DefaultVal.Type != oop.List {
-					fract.IPanic(currentParam, obj.ValuePanic, "Params parameter is can only take list values!")
+					fract.IPanic(tk, obj.ValuePanic, "Params parameter is can only take list values!")
 				}
 				fn.Params[len(fn.Params)-1] = param
 				fn.DefaultParamCount++
@@ -369,9 +377,9 @@ func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
 				continue
 			}
 			if param.DefaultVal.Data == nil && defaultDef {
-				fract.IPanic(currentParam, obj.SyntaxPanic, "All parameters after a given parameter with a default value must take a default value!")
-			} else if currentParam.Type != fract.Comma {
-				fract.IPanic(currentParam, obj.SyntaxPanic, "Comma is not found!")
+				fract.IPanic(tk, obj.SyntaxPanic, "All parameters after a given parameter with a default value must take a default value!")
+			} else if tk.Type != fract.Comma {
+				fract.IPanic(tk, obj.SyntaxPanic, "Comma is not found!")
 			}
 		}
 	}
@@ -407,7 +415,7 @@ func (p *Parser) ffuncdec(defs *oop.DefMap, tokens []obj.Token) {
 		Line: p.index,
 		Src:  p,
 	}
-	// Decompose function parameters.
+	// Decompose function arguments.
 	if tokens[2].Val == "(" {
 		tokens = tokens[2:]
 		r := decomposeBrace(&tokens)

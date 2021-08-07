@@ -240,7 +240,7 @@ func (l *Lex) Token() obj.Token {
 		(l.lastTk.Type == fract.Brace && l.lastTk.Val != "}" && l.lastTk.Val != "]" && l.lastTk.Val != ")") ||
 		l.lastTk.Type == fract.StatementTerminator || l.lastTk.Type == fract.Loop ||
 		l.lastTk.Type == fract.Comma || l.lastTk.Type == fract.In || l.lastTk.Type == fract.If ||
-		l.lastTk.Type == fract.Else || l.lastTk.Type == fract.Ret || l.lastTk.Type == fract.Colon)) ||
+		l.lastTk.Type == fract.Else || l.lastTk.Type == fract.Return || l.lastTk.Type == fract.Colon)) ||
 		isKeyword(ln, "NaN"): // Numeric oop.
 		if chk == "" {
 			chk = "NaN"
@@ -457,12 +457,12 @@ func (l *Lex) Token() obj.Token {
 	case isKeyword(ln, "continue"):
 		tk.Val = "continue"
 		tk.Type = fract.Continue
-	case isKeyword(ln, "fn"):
-		tk.Val = "fn"
-		tk.Type = fract.Fn
-	case isKeyword(ln, "ret"):
-		tk.Val = "ret"
-		tk.Type = fract.Ret
+	case isKeyword(ln, "func"):
+		tk.Val = "func"
+		tk.Type = fract.Func
+	case isKeyword(ln, "return"):
+		tk.Val = "return"
+		tk.Type = fract.Return
 	case isKeyword(ln, "try"):
 		tk.Val = "try"
 		tk.Type = fract.Try

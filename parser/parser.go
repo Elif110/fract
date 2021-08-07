@@ -894,7 +894,7 @@ func (p *Parser) processExpression(tks []obj.Token) uint8 {
 			fract.IPanic(firstTk, obj.SyntaxPanic, "Continue keyword only used in loops!")
 		}
 		return fract.LOOPContinue
-	case fract.Ret:
+	case fract.Return:
 		if p.funcCount < 1 {
 			fract.IPanic(firstTk, obj.SyntaxPanic, "Return keyword only used in functions!")
 		}
@@ -935,7 +935,7 @@ func (p *Parser) processExpression(tks []obj.Token) uint8 {
 			}
 		}
 		return fract.FUNCReturn
-	case fract.Fn:
+	case fract.Func:
 		p.funcdec(tks)
 	case fract.Try:
 		return p.processTryCatch(tks)

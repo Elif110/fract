@@ -22,8 +22,8 @@ const (
 	In                  uint8 = 21
 	Break               uint8 = 22
 	Continue            uint8 = 23
-	Fn                  uint8 = 24
-	Ret                 uint8 = 25
+	Func                uint8 = 24
+	Return              uint8 = 25
 	Try                 uint8 = 26
 	Catch               uint8 = 27
 	Import              uint8 = 28
