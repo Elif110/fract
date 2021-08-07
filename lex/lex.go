@@ -241,9 +241,9 @@ func (l *Lex) Token() obj.Token {
 		l.lastTk.Type == fract.StatementTerminator || l.lastTk.Type == fract.Loop ||
 		l.lastTk.Type == fract.Comma || l.lastTk.Type == fract.In || l.lastTk.Type == fract.If ||
 		l.lastTk.Type == fract.Else || l.lastTk.Type == fract.Return || l.lastTk.Type == fract.Colon)) ||
-		isKeyword(ln, "NaN"): // Numeric oop.
+		isKeyword(ln, "nan"): // Numeric oop.
 		if chk == "" {
-			chk = "NaN"
+			chk = "nan"
 			l.Column += 3
 		} else {
 			// Remove punct.

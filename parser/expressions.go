@@ -514,7 +514,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 			} else {
 				tk.Type = oop.Int
 			}
-			if tk.Val != "NaN" {
+			if tk.Val != "nan" {
 				prs, _ := new(big.Float).SetString(tk.Val)
 				val, _ := prs.Float64()
 				tk.Val = fmt.Sprint(val)
