@@ -214,5 +214,5 @@ func Panic(tk obj.Token, args []oop.VarDef) oop.Val {
 }
 
 func Type(tk obj.Token, args []oop.VarDef) oop.Val {
-	return oop.Val{Data: fmt.Sprint(args[0].Val.Type), Type: oop.Int}
+	return oop.Val{Data: float64(args[0].Val.Type), Type: oop.Int}
 }

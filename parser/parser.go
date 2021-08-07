@@ -654,7 +654,9 @@ func (p *Parser) AddBuiltInFuncs() {
 
 func (p *Parser) processIf(tokens []obj.Token) uint8 {
 	blockIndex := findBlock(tokens)
-	blockTokens, conditionTokens := p.getBlock(tokens[blockIndex:]), tokens[1:blockIndex]
+	conditionTokens := tokens[1:blockIndex]
+	tokens = tokens[blockIndex:]
+	blockTokens := p.getBlock(tokens)
 	// Condition is empty?
 	if len(conditionTokens) == 0 {
 		first := tokens[0]
@@ -665,13 +667,11 @@ func (p *Parser) processIf(tokens []obj.Token) uint8 {
 	fnLen := len(p.defs.Funcs)
 	impLen := len(p.packages)
 	keywordState := fract.NA
+	if !condition {
+		goto rep
+	}
 	for _, tokens := range blockTokens {
-		// Condition is true?
-		if condition && keywordState == fract.NA {
-			if keywordState = p.processExpression(tokens); keywordState != fract.NA {
-				break
-			}
-		} else {
+		if keywordState = p.processExpression(tokens); keywordState != fract.NA {
 			break
 		}
 	}
@@ -694,17 +694,15 @@ rep:
 			first := tokens[1]
 			fract.IPanicC(first.File, first.Line, first.Column+len(first.Val), obj.SyntaxPanic, "Condition is empty!")
 		}
-		if condition {
+		if condition { // Executed before if block.
 			goto rep
 		}
 		condition = p.prococessCondition(conditionTokens)
+		if !condition {
+			goto rep
+		}
 		for _, tokens := range blockTokens {
-			// Condition is true?
-			if condition && keywordState == fract.NA {
-				if keywordState = p.processExpression(tokens); keywordState != fract.NA {
-					break
-				}
-			} else {
+			if keywordState = p.processExpression(tokens); keywordState != fract.NA {
 				break
 			}
 		}
@@ -715,11 +713,8 @@ rep:
 		goto end
 	}
 	for _, tokens := range blockTokens {
-		// Condition is true?
-		if keywordState == fract.NA {
-			if keywordState = p.processExpression(tokens); keywordState != fract.NA {
-				break
-			}
+		if keywordState = p.processExpression(tokens); keywordState != fract.NA {
+			break
 		}
 	}
 end:

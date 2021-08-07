@@ -122,7 +122,7 @@ func (v Val) Print() bool {
 	return true
 }
 
-// Is enumerable?
+// IsEnum returns true value is enumerable, returns false if not.
 func (v Val) IsEnum() bool {
 	switch v.Type {
 	case String, List, Map:
@@ -146,11 +146,8 @@ func (v Val) Len() int {
 }
 
 func (v Val) Equals(val Val) bool {
-	if v.Type != val.Type {
-		return false
-	}
-	if v.Type == String {
-		return v.String() == val.String()
+	if v.Type == val.Type {
+		return v.Data == val.Data
 	}
 	return reflect.DeepEqual(v.Data, val.Data)
 }
