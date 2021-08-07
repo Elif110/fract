@@ -243,7 +243,7 @@ func (l *Lex) Token() obj.Token {
 		l.lastTk.Type == fract.Else || l.lastTk.Type == fract.Return || l.lastTk.Type == fract.Colon)) ||
 		isKeyword(ln, "nan"): // Numeric oop.
 		if chk == "" {
-			chk = "nan"
+			chk = "NaN"
 			l.Column += 3
 		} else {
 			// Remove punct.
