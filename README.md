@@ -143,7 +143,7 @@ println(e.InfoString()) // Name: Daniel Surname: Garry Age: 44 Salary: 12550
 <h2 id="interactive_shell">Interactive Shell</h2>
 
 Fract has an interactive shell. You can try quickly without writing the codes to the file. <br>
-Exampe on Manjaro Linux;
+Example;
 ```shell
 $ ./fract
 Fract 0.0.1 (c) MIT License.
@@ -164,8 +164,8 @@ Success!
 
 <h2 id="how_to_run_fract_code">How to run Fract code</h2>
 
-Example on Manjaro Linux; <br>
-Fract file: ``main.fra``
+Example; <br>
+Fract file: ``main.fract``
 ```go
 package main
 
@@ -173,7 +173,7 @@ println("Hello, World!")
 ```
 Run code:
 ```
-$ ./fract main.fra
+$ ./fract main.fract
 Hello, World!
 $
 ```
