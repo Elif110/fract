@@ -142,7 +142,7 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 		if !isValidName(nameTK.Val) {
 			fract.IPanic(nameTK, obj.NamePanic, "Invalid name!")
 		}
-		if ln := p.defIndexByName(nameTK.Val); ln != -1 {
+		if ln := p.defLineByName(nameTK.Val); ln != -1 {
 			fract.IPanic(nameTK, obj.NamePanic, "\""+nameTK.Val+"\" is already defined at line: "+fmt.Sprint(ln))
 		}
 	} else {
@@ -159,7 +159,7 @@ func (p *Parser) processLoop(tokens []obj.Token) uint8 {
 			if !isValidName(elemName) {
 				fract.IPanic(tokens[2], obj.NamePanic, "Invalid name!")
 			}
-			if ln := p.defIndexByName(tokens[2].Val); ln != -1 {
+			if ln := p.defLineByName(tokens[2].Val); ln != -1 {
 				fract.IPanic(tokens[2], obj.NamePanic, "\""+elemName+"\" is already defined at line: "+fmt.Sprint(ln))
 			}
 		}

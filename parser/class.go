@@ -45,7 +45,7 @@ func (p *Parser) classdec(tokens []obj.Token) {
 	if nameTk.Type != fract.Name {
 		fract.IPanic(tokens[1], obj.SyntaxPanic, "Name is not valid!")
 	}
-	if line := p.defIndexByName(tokens[1].Val); line != -1 {
+	if line := p.defLineByName(tokens[1].Val); line != -1 {
 		fract.IPanic(tokens[1], obj.NamePanic, "\""+tokens[1].Val+"\" is already defined at line: "+fmt.Sprint(line))
 	}
 	classVal := *p.buildClass(nameTk.Val, tokens[2:])

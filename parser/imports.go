@@ -132,5 +132,11 @@ func (p *Parser) processImport(tokens []obj.Token) {
 		fract.Error(tk.File, tk.Line, tk.Column, err.Error())
 	}
 	imp.line = tokens[0].Line
+	if j == 2 { // Alias.
+		imp.name = tokens[1].Val
+	}
+	if ln := p.defLineByName(imp.name); ln != -1 {
+		fract.IPanic(tokens[0], obj.NamePanic, "\""+imp.name+"\" is already defined at line: "+fmt.Sprint(ln))
+	}
 	p.packages = append(p.packages, imp)
 }

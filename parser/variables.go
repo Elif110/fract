@@ -24,7 +24,7 @@ func (p *Parser) varadd(defs *oop.DefMap, inf varInfo, tokens []obj.Token) {
 	// Name is already defined?
 	var ln int
 	if &p.defs == defs { // Variable added to defmap of parser.
-		ln = p.defIndexByName(nameTk.Val)
+		ln = p.defLineByName(nameTk.Val)
 	} else { // Variable added to another defmap.
 		ln = defs.DefIndexByName(nameTk.Val)
 	}
@@ -144,7 +144,7 @@ func (p *Parser) getShortVarDecNames(tokens []obj.Token) []shortVarDecNameInfo {
 					}
 				}
 				// Name is already defined?
-				if ln := p.defIndexByName(tk.Val); ln != -1 {
+				if ln := p.defLineByName(tk.Val); ln != -1 {
 					fract.IPanic(tk, obj.NamePanic, "\""+tk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
 				}
 			}

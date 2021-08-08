@@ -834,7 +834,7 @@ func (p *Parser) processListComprehension(tokens []obj.Token) *oop.Val {
 	if nameTk.Type != fract.Name {
 		fract.IPanic(nameTk, obj.SyntaxPanic, "This is not a valid name!")
 	}
-	if line := p.defIndexByName(nameTk.Val); line != -1 {
+	if line := p.defLineByName(nameTk.Val); line != -1 {
 		fract.IPanic(nameTk, obj.NamePanic, "\""+nameTk.Val+"\" is already defined at line: "+fmt.Sprint(line))
 	}
 	if lenLoopTokens := len(loopTokens); lenLoopTokens < 3 {

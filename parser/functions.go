@@ -400,7 +400,7 @@ func (p *Parser) ffuncdec(defs *oop.DefMap, tokens []obj.Token) {
 	// Name is already defined?
 	var ln int
 	if &p.defs == defs { // Variable added to defmap of parser.
-		ln = p.defIndexByName(nameTk.Val)
+		ln = p.defLineByName(nameTk.Val)
 	} else { // Variable added to another defmap.
 		ln = defs.DefIndexByName(nameTk.Val)
 	}

@@ -303,8 +303,8 @@ func (p *Parser) defByName(n string) (int, rune) {
 	return -1, '-'
 }
 
-// defIndexByName returns index of name is exist name, returns -1 if not.
-func (p *Parser) defIndexByName(name string) int {
+// defLineByName returns line of name is exist name, returns -1 if not.
+func (p *Parser) defLineByName(name string) int {
 	if name[0] == '-' { // Ignore minus.
 		name = name[1:]
 	}
@@ -793,7 +793,7 @@ func (p *Parser) processTryCatch(tokens []obj.Token) uint8 {
 			}
 			nameTk := tokens[1]
 			if nameTk.Type == fract.Name {
-				if ln := p.defIndexByName(nameTk.Val); ln != -1 {
+				if ln := p.defLineByName(nameTk.Val); ln != -1 {
 					fract.IPanic(nameTk, obj.NamePanic, "\""+nameTk.Val+"\" is already defined at line: "+fmt.Sprint(ln))
 				}
 				p.defs.Vars = append(p.defs.Vars, &oop.Var{
