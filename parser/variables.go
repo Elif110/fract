@@ -113,7 +113,7 @@ func (p *Parser) vardec(tokens []obj.Token) { p.fvardec(&p.defs, tokens) }
 
 type shortVarDecNameInfo struct {
 	name    string
-	varType string
+	valType string
 }
 
 func (p *Parser) getShortVarDecNames(tokens []obj.Token) []shortVarDecNameInfo {
@@ -125,10 +125,10 @@ func (p *Parser) getShortVarDecNames(tokens []obj.Token) []shortVarDecNameInfo {
 		case fract.Var:
 			if info.name == "" {
 				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
-			} else if info.varType != "" {
+			} else if info.valType != "" {
 				fract.IPanic(tk, obj.SyntaxPanic, "Type repetition!")
 			}
-			info.varType = tk.Val
+			info.valType = tk.Val
 		case fract.Name:
 			if info.name != "" {
 				fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
@@ -155,7 +155,7 @@ func (p *Parser) getShortVarDecNames(tokens []obj.Token) []shortVarDecNameInfo {
 			}
 			names = append(names, info)
 			info.name = ""
-			info.varType = ""
+			info.valType = ""
 			lastIndex = index + 1
 		}
 	}
@@ -220,7 +220,7 @@ func (p *Parser) varsdec(tokens []obj.Token, setterIndex int) {
 			fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid name!")
 		}
 		for _, info := range names {
-			switch info.varType {
+			switch info.valType {
 			case "mut":
 				val.Mut = true
 			case "const":
@@ -256,7 +256,7 @@ create:
 			continue
 		}
 		val := values[index]
-		switch info.varType {
+		switch info.valType {
 		case "mut":
 			val.Mut = true
 		case "const":
@@ -303,11 +303,11 @@ func (p *Parser) varset(tokens []obj.Token) {
 		if tk.Type == fract.Operator && tk.Val[len(tk.Val)-1] == '=' {
 			setter = tk
 			if lastOpenBrace == -1 {
-				enumVal = p.processValuePart(valuePartInfo{mut: true, tokens: tokens[:i]})
+				enumVal = p.processValuePart(valuePartInfo{valType: "mut", tokens: tokens[:i]})
 				valTokens = tokens[i+1:]
 				break
 			}
-			enumVal = p.processValuePart(valuePartInfo{mut: true, tokens: tokens[:lastOpenBrace]})
+			enumVal = p.processValuePart(valuePartInfo{valType: "mut", tokens: tokens[:lastOpenBrace]})
 			valTokens = tokens[lastOpenBrace+1 : i-1]
 			// Index value is empty?
 			if len(valTokens) == 0 {

@@ -82,8 +82,20 @@ func isParamSet(tokens []obj.Token) bool {
 	return len(tokens) >= 2 && tokens[0].Type == fract.Name && tokens[1].Val == "="
 }
 
+// procFuncArg is process and returns function argument value
+// by specified tokens and parameter type.
+func (p *Parser) procFuncArgVal(tokens []obj.Token, paramType string) oop.Val {
+	if paramType != "" && paramType != "const" {
+		if paramType == "mut" || paramType == "const mut" {
+			return *p.processValue(tokens, "mut")
+		}
+		return *p.processValue(tokens, "var")
+	}
+	return *p.processValTokens(tokens)
+}
+
 // paramsArgValues decompose and returns params values.
-func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int, mut bool) oop.Val {
+func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int, paramType string) oop.Val {
 	values := oop.NewListModel()
 	resultVal := oop.Val{Type: oop.List}
 	braceCount := 0
@@ -112,7 +124,7 @@ func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int, mut 
 				params = true
 				valTokens = valTokens[:l-1]
 			}
-			val := *p.processValue(valTokens, mut)
+			val := p.procFuncArgVal(valTokens, paramType)
 			if params {
 				if val.Type != oop.List {
 					fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only lists!")
@@ -138,7 +150,7 @@ func (p *Parser) paramsArgValues(tokens []obj.Token, index, lastComma *int, mut 
 			params = true
 			valTokens = valTokens[:l-1]
 		}
-		val := *p.processValue(valTokens, mut)
+		val := p.procFuncArgVal(valTokens, paramType)
 		if params {
 			if val.Type != oop.List {
 				fract.IPanic(tk, obj.ValuePanic, "Notation is can used for only lists!")
@@ -196,11 +208,12 @@ func (p *Parser) processFuncArg(inf funcArgInfo) *oop.Var {
 				//Parameter is params typed?
 				if param.Params {
 					*inf.lastComma += 2
-					resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma, param.Type == "mut")
+					resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma, param.Type)
 				} else {
-					resultVar.Val = *p.processValue(valTokens[2:], param.Type == "mut")
+					resultVar.Val = p.procFuncArgVal(valTokens[2:], param.Type)
 				}
-				resultVar.Val.Const = param.Type == "const"
+				valTokens = nil
+				resultVar.Val.Const = param.Type == "const" || param.Type == "const var" || param.Type == "const mut"
 				return resultVar
 			}
 		}
@@ -213,11 +226,11 @@ func (p *Parser) processFuncArg(inf funcArgInfo) *oop.Var {
 	*inf.names = append(*inf.names, resultVar.Name)
 	// Parameter is params typed?
 	if param.Params {
-		resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma, param.Type == "mut")
+		resultVar.Val = p.paramsArgValues(inf.tokens, inf.index, inf.lastComma, param.Type)
 	} else {
-		resultVar.Val = *p.processValue(valTokens, param.Type == "mut")
+		resultVar.Val = p.procFuncArgVal(valTokens, param.Type)
 	}
-	resultVar.Val.Const = param.Type == "const"
+	resultVar.Val.Const = param.Type == "const" || param.Type == "const var" || param.Type == "const mut"
 	valTokens = nil
 	return resultVar
 }
@@ -303,7 +316,7 @@ func (p *Parser) funcCallModel(fn *oop.Fn, tokens []obj.Token) *funcCall {
 
 // Set arguments to parameters of function.
 func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
-	paramName, params, defaultDef, varType := true, false, false, ""
+	paramName, params, defaultDef, valType := true, false, false, ""
 	braceCount := 0
 	var param oop.Param
 	for i := 0; i < len(*tokens); i++ {
@@ -332,18 +345,24 @@ func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
 					fract.IPanic(tk, obj.NamePanic, "Invalid name!")
 				}
 			case fract.Var:
-				if varType != "" || params {
+				if valType != "" || params {
+					if !params {
+						if valType == "const" && tk.Val != "const" {
+							valType += " " + tk.Val
+							continue
+						}
+					}
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
-				varType = tk.Val
+				valType = tk.Val
 				continue
 			default:
 				fract.IPanic(tk, obj.SyntaxPanic, "Parameter name is not found!")
 			}
-			param = oop.Param{Name: tk.Val, Params: params, Type: varType}
+			param = oop.Param{Name: tk.Val, Params: params, Type: valType}
 			fn.Params = append(fn.Params, param)
 			paramName = false
-			varType = ""
+			valType = ""
 			continue
 		} else {
 			paramName = true

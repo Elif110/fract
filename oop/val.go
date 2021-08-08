@@ -40,7 +40,7 @@ func (d Val) Immut() Val {
 	case Map:
 		cpy := NewMapModel()
 		for k, v := range d.Data.(MapModel).Map {
-			cpy.Map[*k.Get(false)] = *v.Get(false)
+			cpy.Map[*k.Get("var")] = *v.Get("var")
 		}
 		val.Data = cpy
 	case List:
@@ -48,7 +48,7 @@ func (d Val) Immut() Val {
 		src := *d.Data.(*ListModel)
 		cpy.Elems = make(ListType, src.Len)
 		for index, element := range src.Elems {
-			cpy.Elems[index] = *element.Get(false)
+			cpy.Elems[index] = *element.Get("var")
 		}
 		cpy.Len = src.Len
 		val.Data = cpy
@@ -59,13 +59,17 @@ func (d Val) Immut() Val {
 }
 
 // Get is returns value by mutability.
-func (d *Val) Get(mut bool) *Val {
-	if !d.Mut && !mut { //! Immutability.
+func (d Val) Get(valType string) *Val {
+	if valType == "mut" {
+		d.Mut = true
+		return &d
+	}
+	if (valType == "" && !d.Mut) || valType == "var" { //! Immutability.
 		result := new(Val)
 		*result = d.Immut()
 		return result
 	}
-	return d
+	return &d
 }
 
 func (d Val) String() string {

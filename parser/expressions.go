@@ -345,13 +345,13 @@ func readyData(process arithmeticProcess, val oop.Val) oop.Val {
 }
 
 // Select elements of enumerable object.
-func (p *Parser) selectEnumerable(mut bool, v oop.Val, tk obj.Token, s interface{}) *oop.Val {
+func (p *Parser) selectEnumerable(valType string, v oop.Val, tk obj.Token, s interface{}) *oop.Val {
 	var result oop.Val
 	switch v.Type {
 	case oop.List:
 		index := s.([]int)
 		if len(index) == 1 {
-			return v.Data.(*oop.ListModel).Elems[index[0]].Get(mut)
+			return v.Data.(*oop.ListModel).Elems[index[0]].Get(valType)
 		}
 		list := oop.NewListModel()
 		for _, pos := range index {
@@ -389,11 +389,16 @@ func (p *Parser) selectEnumerable(mut bool, v oop.Val, tk obj.Token, s interface
 }
 
 type valuePartInfo struct {
-	tokens []obj.Token
-	mut    bool // Force to mutability.
+	tokens  []obj.Token
+	valType string // Force to mutability or immutability.
+	/*
+		mut   -> Force to mutability.
+		var   -> Force to immutability.
+		empty -> Type of value.
+	*/
 }
 
-func (p *Parser) processNameValue(mut bool, tk obj.Token) *oop.Val {
+func (p *Parser) processNameValue(valType string, tk obj.Token) *oop.Val {
 	var result *oop.Val
 	defIndex, defType := p.defByName(tk.Val)
 	if defIndex == -1 {
@@ -408,18 +413,18 @@ func (p *Parser) processNameValue(mut bool, tk obj.Token) *oop.Val {
 	case 'p': // Package.
 		result = &oop.Val{Data: p.packages[defIndex], Type: oop.Package}
 	case 'v': // Value.
-		result = p.defs.Vars[defIndex].Val.Get(mut)
+		result = p.defs.Vars[defIndex].Val.Get(valType)
 	}
 	return result
 }
 
 func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 	var result *oop.Val
-	if part.tokens[0].Type == fract.Var && part.tokens[0].Val == "mut" {
+	if tk := part.tokens[0]; tk.Type == fract.Var && (tk.Val == "mut" || tk.Val == "var") {
 		if len(part.tokens) == 1 {
-			fract.IPanic(part.tokens[0], obj.SyntaxPanic, "Value is not given!")
+			fract.IPanic(tk, obj.SyntaxPanic, "Value is not given!")
 		}
-		part.mut = true
+		part.valType = tk.Val
 		part.tokens = part.tokens[1:]
 		result = p.processValuePart(part)
 		goto end
@@ -465,14 +470,15 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 			nameTk := part.tokens[j+1]
 			valTk := part.tokens[j]
 			part.tokens = part.tokens[:j]
-			part.mut = true
+			valType := part.valType
+			part.valType = "mut"
 			val := p.processValuePart(part)
-			part.mut = false
+			part.valType = valType
 			switch val.Type {
 			case oop.Package:
 				impInf := val.Data.(*importInfo)
 				checkPublic(nil, nameTk)
-				result = impInf.src.processNameValue(part.mut, nameTk)
+				result = impInf.src.processNameValue(part.valType, nameTk)
 				goto end
 			case oop.StructIns:
 				ins := val.Data.(oop.StructInstance)
@@ -505,7 +511,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 					if p.defs.VarIndexByName("this") != -1 {
 						result = &ins.Defs.Vars[defIndex].Val
 					} else {
-						result = ins.Defs.Vars[defIndex].Val.Get(part.mut)
+						result = ins.Defs.Vars[defIndex].Val.Get(part.valType)
 					}
 				}
 				goto end
@@ -529,7 +535,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 				fract.IPanic(valTk, obj.ValuePanic, "Object is not support sub fields!")
 			}
 		}
-		result = p.processNameValue(part.mut, tk)
+		result = p.processNameValue(part.valType, tk)
 		goto end
 	case fract.Brace:
 		braceCount := 0
@@ -558,10 +564,10 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 				if len(part.tokens) == 0 {
 					fract.IPanic(tk, obj.SyntaxPanic, "Invalid syntax!")
 				}
-				result = p.processValue(part.tokens, part.mut)
+				result = p.processValue(part.tokens, part.valType)
 				goto end
 			}
-			val := p.processValuePart(valuePartInfo{tokens: valTokens, mut: part.mut})
+			val := p.processValuePart(valuePartInfo{tokens: valTokens, valType: part.valType})
 			switch val.Type {
 			case oop.Func: // Function call.
 				result = p.funcCallModel(val.Data.(*oop.Fn), part.tokens[len(valTokens):]).Call()
@@ -604,11 +610,11 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 				result = p.processEnumerableValue(part.tokens)
 				goto end
 			}
-			val := p.processValuePart(valuePartInfo{mut: part.mut, tokens: valTokens})
+			val := p.processValuePart(valuePartInfo{valType: part.valType, tokens: valTokens})
 			if !val.IsEnum() {
 				fract.IPanic(valTokens[0], obj.ValuePanic, "Index accessor is cannot used with not enumerable values!")
 			}
-			result = p.selectEnumerable(part.mut, *val, tk, enumerableSelections(*val, *p.processValTokens(part.tokens[len(valTokens)+1 : len(part.tokens)-1]), tk))
+			result = p.selectEnumerable(part.valType, *val, tk, enumerableSelections(*val, *p.processValTokens(part.tokens[len(valTokens)+1 : len(part.tokens)-1]), tk))
 			goto end
 		case "}":
 			var valTokens []obj.Token
@@ -665,7 +671,7 @@ func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 	}
 	fract.IPanic(part.tokens[0], obj.ValuePanic, "Invalid value!")
 end:
-	result.Mut = part.mut
+	result.Mut = part.valType == "mut"
 	return result
 }
 
@@ -907,13 +913,13 @@ func (p *Parser) processEnumerableValue(tokens []obj.Token) *oop.Val {
 	return p.processListValue(tokens)
 }
 
-func (p *Parser) processValue(tks []obj.Token, mut bool) *oop.Val {
+func (p *Parser) processValue(tks []obj.Token, valType string) *oop.Val {
 	// Is conditional expression?
 	if j, _ := findConditionOperator(tks); j != -1 {
 		return &oop.Val{Data: p.prococessCondition(tks), Type: oop.Bool}
 	}
 	processes := arithmeticProcesses(tks)
-	part := valuePartInfo{mut: mut}
+	part := valuePartInfo{valType: valType}
 	if len(processes) == 1 {
 		part.tokens = processes[0]
 		return p.processValuePart(part)
@@ -974,5 +980,5 @@ func (p *Parser) processValue(tks []obj.Token, mut bool) *oop.Val {
 }
 
 func (p *Parser) processValTokens(tks []obj.Token) *oop.Val {
-	return p.processValue(tks, false)
+	return p.processValue(tks, "")
 }
