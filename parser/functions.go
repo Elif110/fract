@@ -343,6 +343,8 @@ func (p *Parser) setParams(fn *oop.Fn, tokens *[]obj.Token) {
 			case fract.Name:
 				if !isValidName(tk.Val) {
 					fract.IPanic(tk, obj.NamePanic, "Invalid name!")
+				} else if tk.Val == fn.Name {
+					fract.IPanic(tk, obj.NamePanic, "Parameter name is not same with function name!")
 				}
 			case fract.Var:
 				if valType != "" || params {
