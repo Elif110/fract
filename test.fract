@@ -263,7 +263,7 @@ println(a, ' ', b)
 // Function var typing test.
 // Constant.
 func test(mut a) {
-  a[0] = 90
+    a[0] = 90
 }
 list := [1, 2, 3]
 println(list)

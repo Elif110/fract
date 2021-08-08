@@ -231,7 +231,7 @@ func (p *Parser) getBlock(tokens []obj.Token) [][]obj.Token {
 	if tokens[0].Type != fract.Brace || tokens[0].Val != "{" {
 		fract.IPanic(tokens[0], obj.SyntaxPanic, "Invalid syntax!")
 	}
-	braceCount := 0
+	braceCount := 0 // Actually is 1 cause first token is open bracket({).
 	for i, tk := range tokens {
 		if tk.Type == fract.Brace {
 			switch tk.Val {
@@ -654,9 +654,11 @@ func (p *Parser) AddBuiltInFuncs() {
 
 func (p *Parser) processIf(tokens []obj.Token) uint8 {
 	blockIndex := findBlock(tokens)
-	conditionTokens := tokens[1:blockIndex]
-	tokens = tokens[blockIndex:]
-	blockTokens := p.getBlock(tokens)
+	ptokens := p.Tokens
+	pindex := p.index
+	p.Tokens = [][]obj.Token{}
+	p.index = -1
+	blockTokens, conditionTokens := p.getBlock(tokens[blockIndex:]), tokens[1:blockIndex]
 	// Condition is empty?
 	if len(conditionTokens) == 0 {
 		first := tokens[0]
@@ -688,6 +690,8 @@ rep:
 	}
 	if len(tokens) > 1 && tokens[1].Type == fract.If { // Else if.
 		blockIndex = findBlock(tokens)
+		p.Tokens = [][]obj.Token{}
+		p.index = -1
 		blockTokens, conditionTokens = p.getBlock(tokens[blockIndex:]), tokens[2:blockIndex]
 		// Condition is empty?
 		if len(conditionTokens) == 0 {
@@ -709,6 +713,7 @@ rep:
 		goto rep
 	}
 	blockTokens = p.getBlock(tokens[1:])
+	p.Tokens = p.Tokens[1:]
 	if condition {
 		goto end
 	}
@@ -718,6 +723,8 @@ rep:
 		}
 	}
 end:
+	p.Tokens = append(ptokens, p.Tokens...)
+	p.index = pindex
 	p.defs.Vars = p.defs.Vars[:varLen]
 	p.defs.Funcs = p.defs.Funcs[:fnLen]
 	p.packages = p.packages[:impLen]
