@@ -40,14 +40,16 @@ func (d Val) Immut() Val {
 	case Map:
 		cpy := NewMapModel()
 		for k, v := range d.Data.(MapModel).Map {
-			cpy.Map[k] = v
+			cpy.Map[*k.Get(false)] = *v.Get(false)
 		}
 		val.Data = cpy
 	case List:
 		cpy := NewListModel()
 		src := *d.Data.(*ListModel)
 		cpy.Elems = make(ListType, src.Len)
-		copy(cpy.Elems, src.Elems)
+		for index, element := range src.Elems {
+			cpy.Elems[index] = *element.Get(false)
+		}
 		cpy.Len = src.Len
 		val.Data = cpy
 	default:

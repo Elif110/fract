@@ -260,6 +260,7 @@ a, _, b := test()
 println(a, ' ', b)
 */
 
+/*
 // Function var typing test.
 // Constant.
 func test(mut a) {
@@ -268,4 +269,12 @@ func test(mut a) {
 list := [1, 2, 3]
 println(list)
 test(list)
+println(list)
+*/
+
+// Deep mutable test.
+list := [[0], 2, 3, 4, 5]
+b := list
+b[0][0] = 90
+println(b)
 println(list)
