@@ -76,6 +76,8 @@ fib(0, 1)
 
 Although Fract is still in early development, future codes will not be much different from what they are now. Since there is no main version yet, it may undergo syntax changes, but these will not be major changes. Fract is relatively fast and stable. As his library expands, so will his abilities. However, it will continue to be a simple and plain language in the future.
 
+[See Fract Roadmap](https://github.com/fract-lang/fract/projects/2)
+
 <h2 id="object_oriented_programming">Object Oriented Programming</h2>
 
 Fract has the advantages of the object-oriented programming approach and aims to do so without violating the goals of readability and simplicity.
