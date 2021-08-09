@@ -60,20 +60,20 @@ func (d Val) Immut() Val {
 
 // Get is returns value by mutability.
 //! Val d is must be pointer!
-func (d *Val) Get(valType string) *Val {
+func (v *Val) Get(valType string) *Val {
 	if valType == "mut" {
-		return d
+		return &Val{Data: v.Data, Type: v.Type, Mut: true, Const: v.Const}
 	}
-	if (valType == "" && !d.Mut) || valType == "var" { //! Immutability.
+	if (valType == "" && !v.Mut) || valType == "var" { //! Immutability.
 		result := new(Val)
-		*result = d.Immut()
+		*result = v.Immut()
 		return result
 	}
-	return d
+	return v
 }
 
-func (d Val) String() string {
-	switch d.Type {
+func (v Val) String() string {
+	switch v.Type {
 	case Func:
 		return "object.func"
 	case Package:
@@ -83,13 +83,13 @@ func (d Val) String() string {
 	case ClassDef:
 		return "object.class"
 	case List:
-		return fmt.Sprint(d.Data.(*ListModel).Elems)
+		return fmt.Sprint(v.Data.(*ListModel).Elems)
 	case Map:
-		str := fmt.Sprint(d.Data.(MapModel).Map)
+		str := fmt.Sprint(v.Data.(MapModel).Map)
 		return "{" + str[4:len(str)-1] + "}"
 	case StructIns:
 		var sb strings.Builder
-		ins := d.Data.(StructInstance)
+		ins := v.Data.(StructInstance)
 		sb.WriteString("struct{")
 		for _, f := range ins.Fields.Vars {
 			sb.WriteString(f.Name)
@@ -106,17 +106,17 @@ func (d Val) String() string {
 	case None:
 		return "none"
 	case Int, Float:
-		return fmt.Sprint(d.Data)
+		return fmt.Sprint(v.Data)
 	case Bool:
-		if d.Data == true {
+		if v.Data == true {
 			return "true"
 		}
 		return "false"
 	default:
-		if d.Data == nil {
+		if v.Data == nil {
 			return ""
 		}
-		return d.Data.(string)
+		return v.Data.(string)
 	}
 }
 
