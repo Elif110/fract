@@ -93,9 +93,9 @@ func (p *Parser) ready() {
 }
 
 func (p *Parser) importPackage() {
-	dir, _ := os.Getwd()
-	if srcPathDir := path.Dir(p.Lex.File.Path); srcPathDir != "." {
-		dir = path.Join(dir, srcPathDir)
+	dir := path.Dir(p.Lex.File.Path)
+	if dir == "." {
+		dir = p.Lex.File.Path
 	}
 	infos, err := ioutil.ReadDir(dir)
 	if err != nil {
