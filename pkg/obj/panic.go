@@ -23,4 +23,10 @@ type Panic struct {
 
 func (p Panic) String() string { return p.Msg }
 
-func (p Panic) Panic() { fmt.Println(p); os.Exit(1) }
+func (p Panic) Panic(exit bool) {
+	fmt.Println(p)
+	if exit {
+		os.Exit(1)
+	}
+	panic(p)
+}

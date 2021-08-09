@@ -582,7 +582,7 @@ func (p *Parser) AddBuiltInFuncs() {
 			Src:               functions.Exit,
 			Params: []oop.Param{{
 				Name:       "code",
-				DefaultVal: oop.Val{Data: "0", Type: oop.Int},
+				DefaultVal: oop.Val{Data: 0., Type: oop.Int},
 			}},
 		}, &oop.Fn{
 			Name:              "len",
@@ -598,7 +598,7 @@ func (p *Parser) AddBuiltInFuncs() {
 				{Name: "to"},
 				{
 					Name:       "step",
-					DefaultVal: oop.Val{Data: "1", Type: oop.Int},
+					DefaultVal: oop.Val{Data: 1., Type: oop.Int},
 				},
 			},
 		}, &oop.Fn{

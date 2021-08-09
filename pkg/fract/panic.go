@@ -1,6 +1,7 @@
 package fract
 
 import (
+	"os"
 	"fmt"
 	"strings"
 
@@ -18,7 +19,7 @@ func PanicC(f *obj.File, col, ln int, t, m string) {
 	if TryCount > 0 {
 		panic(e)
 	}
-	e.Panic()
+	e.Panic(!InteractiveShell)
 }
 
 func Panic(tk obj.Token, t, m string) { PanicC(tk.File, tk.Column, tk.Line, t, m) }
@@ -31,7 +32,7 @@ func IPanicC(f *obj.File, ln, col int, t, m string) {
 			str.Full(4+col-2, ' '), t, m),
 		Type: t,
 	}
-	e.Panic()
+	e.Panic(!InteractiveShell)
 }
 
 // Interpreter panic.
@@ -40,5 +41,5 @@ func IPanic(tk obj.Token, t, m string) { IPanicC(tk.File, tk.Line, tk.Column, t,
 // Error is text interpreter panic.
 func Error(f *obj.File, ln, col int, m string) {
 	fmt.Printf("File: %s\nPosition: %d:%d\n%s\n", f.Path, ln, col, m)
-	panic("")
+	os.Exit(1)
 }
