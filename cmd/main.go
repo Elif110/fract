@@ -100,7 +100,6 @@ func catch(e obj.Panic) {
 	if e.Msg == "" {
 		return
 	}
-	fmt.Println("Fract is panicked, sorry this is a problem with Fract!")
 	fmt.Println(e.Msg)
 }
 
