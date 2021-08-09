@@ -420,15 +420,6 @@ func (p *Parser) processNameValue(valType string, tk obj.Token) *oop.Val {
 
 func (p *Parser) processValuePart(part valuePartInfo) *oop.Val {
 	var result *oop.Val
-	if tk := part.tokens[0]; tk.Type == fract.Var && (tk.Val == "mut" || tk.Val == "var") {
-		if len(part.tokens) == 1 {
-			fract.IPanic(tk, obj.SyntaxPanic, "Value is not given!")
-		}
-		part.valType = tk.Val
-		part.tokens = part.tokens[1:]
-		result = p.processValuePart(part)
-		goto end
-	}
 	// Single value.
 	if tk := part.tokens[0]; len(part.tokens) == 1 {
 		if tk.Val[0] == '\'' || tk.Val[0] == '"' {
